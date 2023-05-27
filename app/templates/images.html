@@ -1,0 +1,104 @@
+{% extends "layout.html" %}
+
+{% block title %}
+   Images
+{% endblock %}
+
+
+    {%block main%}
+        <div class="main-box">
+            <div class="header">
+                <h1>{{ g.model.username }} <span class="elt">> {{type}}</span></h1>
+                <div class="action-links scroll">
+                    <a href="./images" id="" class="eleveted-a types">
+                        Images
+                    </a>
+                    <a href="./profile" id="" class="eleveted-a types" >
+                        Profile
+                    </a>
+                    <a href="/models" id="" class="eleveted-a types" >
+                        Change model
+                    </a>
+                </div>
+            </div>
+            <div class="main-container">
+                <div class="holder image-holder scroll">
+                    {%if images %}
+                        <ul class="images" id="images">
+                            {%for img in images%}
+                                <li>
+                                    <img src="{{img}}" alt="">
+                                </li>
+                            {%endfor%}
+                        </ul>
+                    {%else%}
+                        <div class="no-image">
+                            <div class="file-upload upload-image">
+                                <input type="file" name="file" disabled>
+                                <label for="file">
+                                <i class="far fa-folder-open"></i>
+                                Choose a file
+                                </label>
+                            </div>
+                        </div>
+                    {%endif%}
+                </div>
+                {%if images|length > 0%}
+                    <div class="bottom-grid-nav for-upload  no-show">
+                        <div class="grid-sum">
+                            <span>
+                                {{page}} / {{ (total_page + limit - 1) // limit }}
+                            </span>
+                        </div>
+                        <div class="navs">
+                            <a href="/images/{{type}}?page={% if page > 1%}{{page-1}}{%else%}1{%endif%}&limit={{limit}}" class="prev eleveted-a">Less</a>
+                            <a href="/images/{{type}}?page={% if page < (total_page + limit - 1) // limit%}{{ page+1}}{%else%}1{%endif%}&limit={{limit}}"
+                             class="next  eleveted-a">More</a>
+                            <a href="/images/{{type}}?page={{ (total_page + limit - 1) // limit }}&limit={{limit}}" class="end  eleveted-a">Last</a>
+                        </div>
+                        <div class="upload-image">
+                            <a href="" class="eleveted-a">
+                                upload more
+                            </a>
+                        </div>
+                    </div>
+                {%endif%}
+            </div>
+        </div>
+        <style>
+            .types.active{
+                background-color: cyan;
+            }
+            .elt{
+                font-size: smaller;
+                color: #999999;
+            }
+        </style>
+        <script>
+            const url = new URL(window.location.href);
+            const myprofile = url.pathname.split("/")[2];
+
+            window.onload = function() {
+                // Find the <span> element by its id
+                const spanElement = document.getElementById('elt');
+
+                // Set the text content of the <span> element
+                spanElement.textContent = myprofile;
+                };
+
+            // Get the anchor elements
+            const imagesLink = document.querySelector('a[href="./images"]');
+            const profileLink = document.querySelector('a[href="./profile"]');
+
+            // Remove the "active" class from both anchor elements
+            imagesLink.classList.remove('active');
+            profileLink.classList.remove('active');
+
+            // Add the "active" class based on the value of myprofile
+            if (myprofile === 'images') {
+            imagesLink.classList.add('active');
+            } else if (myprofile === 'profile') {
+            profileLink.classList.add('active');
+            }
+            </script>
+    {%endblock%}

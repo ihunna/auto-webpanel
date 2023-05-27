@@ -1,0 +1,147 @@
+{% extends "includes.html"%}
+{%block content%}
+    <section class="navbar">
+        <div class="user-card">
+            <div class="details">
+                <h5>
+                    {{ g.admin.full_name }}
+                </h5>
+                <span>
+                    {{g.admin.email}}
+                </span>
+                <span>
+                    <i class="fa fa-caret-down"></i>
+                </span>
+            </div>
+            <div class="user-image">
+                <p class="image">
+                    {{ g.admin.full_name.split()[0][0] }}{{ g.admin.full_name.split()[1][0] }}
+                </p>
+            </div>
+            <span class="close-menu-btn">
+                <i class="fa fa-close"></i>
+            </span>
+        </div>
+        <nav>
+            <form action="#">
+                <span>
+                    <i class="fa fa-search"></i>
+                </span>
+                <input type="search" placeholder="Search...">
+            </form>
+            <ul>
+                <li>
+                    <span>10+</span>
+                    <i class="fa fa-bell"></i>
+                </li>
+                <li class="model-tag">
+                    {% if g.model %}
+                        {{g.model.username}}
+                    {%else%}
+                        set model
+                    {%endif%}
+                 </li>
+                <li class="platform-tag">
+                    {% if g.platform %}
+                        {{g.platform.name}}
+                    {%else%}
+                        set platform
+                    {%endif%}
+                </li>
+                <li>
+                    <i class="fa fa-cog"></i>
+                </li>
+                <li class="menu-btn" id="menu-btn">
+                    <i class="fas fa-bars"></i>
+                </li>
+            </ul>
+        </nav>
+    </section>
+    <section class="main">
+        <div class="sidebar">
+            <ul class="links services">
+                <li>actions</li>
+                <li  class="{% if g.page == 'accounts' %}active{% endif %}">
+                    <a href="/accounts">
+                        <i class="fas fa-user-friends"></i>
+                        Accounts
+                    </a>
+                </li>
+                <li class="{% if g.page == 'create-accounts' %}active{% endif %}">
+                    <a href="/create-accounts">
+                        <i class="fa fa-user-plus"></i>
+                        Create accounts
+                    </a>
+                </li>
+                <li class="{% if g.page == 'swipes' %}active{% endif %}">
+                    <a href="/swipe">
+                        <i class="fas fa-hand-point-up"></i>
+                        &nbsp; Swipe
+                    </a>
+                </li>
+                <li class="{% if g.page == 'send-msg' %}active{% endif %}">
+                    <a href="/send-msg">
+                        <i class="fa fa-paper-plane"></i>
+                        Send messages
+                    </a>
+                </li>
+                 <li class="{% if g.page == 'images' %}active{% endif %}">
+                    <a href="/images/profile">
+                        <i class="fas fa-folder-open"></i>
+                        Images
+                    </a>
+                </li>
+                <li class="{% if g.page == 'tasks' %}active{% endif %}">
+                    <a href="/tasks">
+                        <i class="fas fa-tasks"></i>
+                       Tasks
+                    </a>
+                </li>
+            </ul>
+            <ul class="links models">
+                <li>models</li>
+                <li class="{% if g.page == 'models' %}active{% endif %}">
+                    <a href="/models">
+                        <i class="fas fa-user-friends"></i>
+                        Models
+                    </a>
+                </li>
+                <li class="{% if g.page == 'add-model' %}active{% endif %}">
+                    <a href="/models?action=add-model">
+                        <i class="fa fa-user-plus"></i>
+                        Add model
+                    </a>
+                </li>
+            </ul>
+            <ul class="links platforms">
+                <li>platforms</li>
+                <li class="{% if g.page == 'platforms' %}active{% endif %}">
+                    <a href="/">
+                        <i class="fa-brands fa-app-store"></i>
+                        Platforms
+                    </a>
+                </li>
+            </ul>
+            <ul class="links user">
+                <li>user</li>
+                <li class="{% if g.page == 'admins' %}active{% endif %}"">
+                    <i class="fas fa-user-friends"></i>
+                    <a href="/admins">
+                        Users 
+                    </a>
+                </li>
+                <li class="{% if g.page == 'settings' %}active{% endif %}">
+                    <i class="fa fa-cog"></i>
+                    <a href="/settings">
+                        Settings
+                    </a>
+                </li>
+            </ul>
+        </div>
+        {%block main%}{% endblock%}
+    </section>
+    <div class="overlay">
+    </div>
+    <div class="modal-holder">
+    </div>
+{% endblock%}

@@ -1,0 +1,617 @@
+.overlay.show-menu{
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    z-index: 1111;
+}
+
+.modal-holder > .modal.for-s-item-display{
+    width: 40%;
+    height: 90%;
+}
+
+.modal-holder > .modal.for-m-item-display{
+    width: 90%;
+    max-height: 90%;
+}
+.modal-holder > 
+.modal > 
+.m-item-display 
+> li 
+> .item-header > .item-hd .item-name-age > h3{
+    font-size: 16px;
+}
+
+.modal-holder > 
+.modal > 
+.m-item-display 
+> li 
+> .item-header > .item-hd .item-name-age > h3 > .v-icon > i{
+    font-size: 13px;
+}
+
+.modal-holder > 
+.modal > 
+.m-item-display 
+> li 
+> .item-header > .item-hd .item-name-age > h3:last-child{
+    font-size: 18px;
+}
+
+.modal-holder > 
+.modal > 
+.m-item-display 
+> li 
+> .item-header > .item-hd > .item-location{
+    font-size: 12px;
+}
+
+.modal-holder > 
+.modal > 
+.m-item-display 
+> li 
+> .item-header > .item-hd > .item-stats{
+    gap: 10px;
+    z-index: 2;
+    font-size: 12px;
+}
+
+.onboarding{
+    background: none;
+}
+
+.onboarding::after{
+    display: none;
+}
+
+.onboarding > .onboarding-holder{
+    background: none;
+    border: 4px solid var(--soft-white);
+    width: 50%;
+}
+
+.holder{
+    position:relative;
+}
+
+td.actions{
+    width: 100%;
+    grid-template-columns: repeat(1,1fr);
+}
+
+.table-bottom{
+    bottom: 30px;
+}
+
+.bottom-grid-nav{
+    bottom: 30px;
+    width: 80%;
+    left: 10%;
+}
+
+.table-bottom, .bottom-grid-nav{
+    bottom: 10px;
+}
+
+.op-holder > .op-card:after{
+    width: 15%;
+}
+
+.op-holder > .op-card{
+    height: auto;
+    width: 90%;
+}
+
+.form-holder > form{
+    width: 90%;
+}
+
+.navbar > .user-card, .main > .sidebar{
+    flex: 30%;
+    max-width: 30%;
+}
+
+.navbar > nav, .main > .main-box{
+    flex: 70%;
+    max-width: 70%;
+}
+
+.navbar > nav > form{
+    flex: 25%;
+    max-width: 25%;
+}
+.navbar > nav > form > span{
+    right: 5px;
+}
+
+.navbar > nav > ul{
+    flex: 65%;
+    max-width: 65%;
+    justify-content: flex-end;
+    align-items: flex-end;
+    margin: auto 0;
+    padding-right:  20px;
+}
+
+.navbar > nav > ul > li{
+    margin: auto 10px;
+}
+
+.navbar > nav > ul > li:nth-child(2){
+    flex: 50%;
+    max-width: 50%;
+}
+
+.main > .main-box > .header{
+    flex-direction: column;
+    height: 80px;
+}
+
+.main > .main-box > .header > h1{
+    font-size: 18px;
+    margin: auto 0;
+}
+
+.main > .main-box > .header > .action-links{
+    margin: auto 0;
+}
+
+
+.main > .main-box > .main-container{
+    height: calc(100% - 80px);
+}
+
+.main > 
+.main-box > 
+.main-container > .image-holder > .images{
+    grid-template-columns: repeat(2,1fr);
+    grid-template-rows: repeat(2,1fr);
+}
+
+.main > .main-box > .main-container > .profile-holder{
+    grid-template-columns: 1fr;
+}
+
+.main > .main-box > .main-container > .profile-holder > .profile-card{
+    width: 70%;
+    height: 550px;
+    margin:auto;
+}
+
+.main > .main-box > .main-container > .profile-holder > .profile-details{
+    width: 70%;
+    height: 100%;
+    margin: auto;
+}
+
+
+.main > 
+.main-box > 
+.main-container > 
+.profile-holder > 
+.profile-card > 
+.profile-card-details > .d-status p.bg-success{
+    background: none;
+    color: var(--success);
+}
+
+.main > 
+.main-box > 
+.main-container > 
+.profile-holder > 
+.profile-card > 
+.profile-card-details > .d-status p.bg-danger{
+    background: none;
+    color: var(--danger);
+}
+
+.main > 
+.main-box > 
+.main-container > 
+.profile-holder > 
+.profile-card > 
+.profile-card-details > .d-status p.bg-warning{
+    background: none;
+    color: var(--warning);
+}
+
+.main > 
+.main-box > 
+.main-container > 
+.profile-holder > 
+.profile-details > 
+.p-details-items > li{
+    margin: 5px 0;
+}
+
+.main > 
+.main-box > 
+.main-container > 
+.profile-holder > 
+.profile-details > .p-details-items{
+    grid-template-columns: repeat(1,1fr);
+}
+
+.main > 
+.main-box > 
+.main-container > 
+.profile-holder > 
+.profile-details > .p-details-images > span{
+    left: 70%;
+}
+
+.main > 
+.main-box > 
+.main-container > 
+.profile-holder > 
+.profile-details > .p-details-actions{
+    grid-template-columns: repeat(1,1fr);
+}
+
+@media screen and (max-width: 767px){
+    #menu-btn{
+        display: block;
+    }
+
+    
+    .op-holder > .op-card > .op-card-actions{
+        position: relative;
+        top: auto;
+        right: auto;
+        margin: 10px 0;
+    }
+
+    .op-holder > .op-card > .op-card-actions > a{
+        padding: 2.5px 10px;
+        font-size: 13px;
+    }
+
+    .navbar > .user-card{
+        position: fixed;
+        top: 0;
+        left: -1000px;
+        right: 0;
+        height: 50px;
+        max-width: 65%;
+        z-index: 2222;
+        transition: left 0.5s ease-in-out
+    }
+
+    .navbar > .user-card.show-menu{
+        left: 0;
+    }
+
+    .navbar > .user-card.no-show{
+        left: -1000px;
+    }
+
+    
+    .navbar > .user-card > .close-menu-btn{
+        position: fixed;
+        top: 16px;
+        right: 20px;
+    }
+    
+    .close-menu-btn.show-menu{
+        display: block;
+    }
+
+    .close-menu-btn.no-show{
+        display: none;
+    }
+    
+    .navbar > .user-card > .close-menu-btn > i{
+        font-size: 20px;
+    }
+
+    .navbar > nav{
+        flex: 100%;
+        max-width: 100%;
+    }
+
+    .navbar > nav > form{
+        display: none;
+    }
+
+    .navbar > nav > ul{
+        padding: 10px 0;
+        max-width: 100%;
+        justify-content: center;
+    }
+
+    .navbar > nav > ul > li{
+        margin: auto;
+    }
+
+    .navbar > nav > ul > li:nth-child(2){
+        max-width: fit-content;
+    }
+
+    .navbar > nav > ul > li:first-child > span{
+        position: absolute;
+        top: -8px;
+        right:2px;
+        font-size: 8px;
+        padding: 2px 4px;
+    }
+    
+    .navbar > nav > ul > li > i{
+        font-size: 20px;
+    }   
+
+    .main > .sidebar{
+        position: fixed;
+        top: 50px;
+        left: -1000px;
+        right: 0;
+        z-index: 2222;
+        height: 100%;
+        max-width: 65%;
+        transition: left 0.5s ease-in-out;
+    }
+
+    .main > .sidebar.show-menu{
+        left: 0;
+    }
+
+    .main > .sidebar.no-show{
+        left: -1000px;
+    }
+
+    .main > .main-box{
+        flex: 100%;
+        max-width: 100%;
+    }
+
+    .main > .main-box > .header{
+        padding: 10px 25px;
+    }
+  
+    .main > .main-box > .header > .action-links > a{
+        font-size: 12px;
+        width: 100%;
+    }
+
+    .modal-holder > .modal.for-s-item-display{
+        width: 90%;
+        max-height: 90%;
+    }
+
+    .modal-holder > .modal > .m-item-display{
+        grid-template-columns:repeat(1,1fr);
+    }
+
+    .modal-holder > 
+    .modal > 
+    .m-item-display 
+    > li{
+        margin: auto;
+        width: 80%;
+    }
+
+    .bottom-grid-nav.for-upload{
+        grid-template-columns: repeat(1,1fr);
+        grid-template-rows: minmax(auto-fit,1fr)
+    }
+
+    .bottom-grid-nav.for-upload > *{
+        margin: 5px 0;
+    }
+
+    .bottom-grid-nav > .navs > a{
+        padding: 5px 8px;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > 
+    .bottom-grid-nav > 
+    .upload-image{
+        display: flex;
+        justify-content: start;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > .image-holder > .images{
+        padding-bottom: 100px;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > .image-holder > .images > li{
+        height: 150px;
+    }
+}
+
+@media screen and (max-width:425.99px) {
+    .model-tag,.platform-tag{
+        font-size: 12px !important;
+    }
+    .alert{
+        top: auto;
+        bottom: 10px;
+        width: 90%;
+        max-width: 90%;
+        border-radius: 0;
+    }
+
+    .alert.show{
+        right: 5%;
+    }
+
+    td > .eleveted-a{
+        padding: 0;
+        border: none;
+        box-shadow: none;
+        background: none;
+      }
+      td > .eleveted-a:first-child{
+        padding: 0;
+        border: none;
+      }
+
+
+    .onboarding > .onboarding-holder{
+        width: 90%;
+    }
+
+    .main > .main-box > .header{
+        height: 100px;
+    }
+
+    .main > .main-box > .header > h1{
+        margin: 2px 0;
+        padding: 0;
+    }
+    .main > .main-box > .header > .action-links{
+        margin: 2px auto;
+        justify-items: flex-end;
+        align-items: flex-end;
+        width: 90vw;
+        white-space: nowrap;
+        padding: 10px 5px;
+    }
+
+    .main > .main-box > .main-container{
+        height: calc(100% - 100px);
+    }
+
+    table{
+        overflow-x: scroll;
+    }
+
+    td{
+        font-size: 12px;
+    }
+
+
+    .main > 
+    .main-box > 
+    .main-container > 
+    .profile-holder > .profile-card{
+        width: 90%;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > 
+    .profile-holder > .profile-details{
+        width: 90%;
+    }
+
+    .form-holder{
+        padding: 5px;
+    }
+
+    .form-holder > h2{
+        font-size: 18px;
+        margin: 10px auto;
+    }
+
+    .form-holder > form{
+        margin: 10px auto;
+    }
+    .form-holder > form > div > label{
+        font-size: 14px;
+    }
+
+
+    .op-alert{
+        max-height: 250px;
+        padding: 10px;
+    }
+
+    .op-alert > h4{
+        font-size: 14px;
+        width: 95%;
+    }
+
+    .op-alert > .close{
+        top: 10px;
+        right: 10px;
+        font-size: 14px;
+    }
+
+    .op-holder > .op-card > h2{
+        font-size: 16px;
+    }
+
+    .op-holder > .op-card > div{
+        margin: 2.5px 0;
+        font-size: 13px;
+    }
+    
+    .op-holder > .op-card > .op-spinner > i{
+       font-size: 14px;
+    }
+
+    .modal-holder > 
+    .modal > 
+    .m-item-display 
+    > li{
+        margin: auto;
+        width: 95%;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > .image-holder > .no-image{
+        width: 80%;
+        height: 50%;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > .image-holder > .no-image > label{
+        font-size: 12px;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > .image-holder > .images > li{
+        height: 130px;
+    }
+}
+
+@media screen  and (max-width:374.99px){
+    .model-tag{
+        display: none;
+    }
+    .main > 
+    .main-box > 
+    .main-container > 
+    .profile-holder > .profile-card{
+        width: 98%;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > 
+    .profile-holder > 
+    .profile-card > 
+    .profile-card-details > .d-status{
+        flex-direction: column;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > 
+    .profile-holder > .profile-details{
+        width: 98%;
+    }
+
+    .form-holder > form{
+        width: 98%;
+        padding: 8px;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > .image-holder > .images > li{
+        height: 100px;
+    }
+
+}
+
+

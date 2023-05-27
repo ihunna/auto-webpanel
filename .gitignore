@@ -1,0 +1,11 @@
+.env
+venv
+accounts.json
+__pycache__
+app/__pycache__
+app/flask_session
+app/okcupid.db
+app.zip
+proxies.txt
+app/data/proxies
+test.py

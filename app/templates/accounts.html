@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Accounts
+{% endblock %}
+    {%block main%}
+        <div class="main-box">
+            <div class="header">
+                <h1>Account details</h1>
+                <div class="action-links scroll">
+                    <a href="/create-accounts" class="eleveted-a">
+                        add more
+                    </a>
+                    <a href="" class="eleveted-a delete click-on-an-account-to-delete">
+                        delete an account
+                    </a>
+                    <a href="" class="eleveted-a">
+                        sort by
+                    </a>
+                </div>
+            </div>
+
+            <div class="main-container">
+                <div class="holder table-holder scroll">
+                    <table class="scroll">
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {%for account in accounts%}
+                        <tr>
+                            <td>{{account.user_data.data.me.displayname}}</td>
+                            <td>{{account.user_data.data.me.emailAddress}}</td>
+                            <td class="actions">
+                                <a href="/accounts?id={{account.user_data.data.me.id}}&action=delete-account" class="eleveted-a">delete</a>
+                                <a href="/account-page?id={{account.user_data.data.me.id}}" class="eleveted-a">view</a>
+                            </td>
+                        </tr>
+                        {%endfor%}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-bottom">
+                    <div class="table-sum">
+                        {{sum}} / {{total}}
+                    </div>
+                    <div class="table-nav">
+                        <a class="prev">
+                            <i class="fa fa-angle-left"></i>
+                        </a>
+                        <a class="next">
+                            <i class="fa fa-angle-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endblock%}

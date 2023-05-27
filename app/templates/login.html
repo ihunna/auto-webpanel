@@ -1,0 +1,33 @@
+{%extends "includes.html"%}
+
+{% block title %}
+    Login
+{% endblock %}
+
+{%block content%}
+    <div class="onboarding">
+        <div class="onboarding-holder scroll">
+            <div class="onboarding-form-heading">
+                <h2>Login to dashboard</h2>
+            </div>
+            <div class="errors">
+            </div>
+            <form action="" class="onboarding-form" id="login-form">
+                <div>
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div>
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <br>
+                <input type="submit">
+            </form>
+            <div class="form-bottom-links">
+                <a href="#">Forgot password?</a>
+                <a href="/signup">Don't have an account?</a>
+            </div>
+        </div>
+    </div>
+{%endblock%}

@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Tasks
+{% endblock %}
+
+
+    {%block main%}
+        <div class="main-box">
+            <div class="header">
+                <h1>Tasks</h1>
+                <div class="action-links scroll">
+                    <a href="/accounts" class="eleveted-a">
+                        accounts
+                    </a>
+                    <a href="/create-accounts" class="eleveted-a">
+                        create accounts
+                    </a>
+                    <a href="" class="eleveted-a">
+                        sort by
+                    </a>
+                </div>
+            </div>
+
+            <div class="main-container">
+                <div class="holder scroll task-holder op-holder">
+                    {% for task in tasks%}
+                        <div class="op-card">
+                            <div>
+                                <h2>
+                                    {{task.type}}
+                                </h2>
+                            </div>
+                            <div>
+                                <strong>Status : </strong>
+                                <span>{{task.status}}</span>
+                            </div>
+                            <div>
+                                <strong>Started at : </strong>
+                                <span>{{task.start_time}}</span>
+                            </div>
+                            <div>
+                                <strong>Progress : </strong>
+                                <span>{{task_status.progress}}%</span>
+                            </div>
+                            {% if task.status == "Running"%}
+                                <span class="op-spinner bg-warning">
+                                    <i class="fa fa-spinner fa-spin"></i>
+                                </span>
+                            {%elif task.status == "Completed"%}
+                                <span class="op-spinner bg-success">
+                                    <i class="fa fa-check"></i>
+                                </span>
+                            {%elif task.status == "Failed"%}
+                            <span class="op-spinner bg-danger">
+                                <i class="fa fa-close"></i>
+                            </span>
+                            {%endif%}
+                        </div>
+                    {%endfor%}
+                </div>
+            </div>
+        </div>
+    {%endblock%}

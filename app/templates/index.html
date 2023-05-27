@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Platforms
+{% endblock %}
+
+
+    {%block main%}
+        <div class="main-box">
+            <div class="header">
+                <h1>Platforms</h1>
+                <div class="action-links scroll">
+                    <a href="/" class="eleveted-a">
+                        platforms
+                    </a>
+                    <a href="/accounts" class="eleveted-a">
+                        accounts
+                    </a>
+                    <a href="/?action=add-platform" class="eleveted-a">
+                        add platform
+                    </a>
+                </div>
+            </div>
+
+            <div class="main-container">
+                {%if platforms %}
+                    <div class="holder scroll task-holder op-holder">
+                        {% for platform in platforms%}
+                        <div class="op-card">
+                                <div>
+                                    <h2>
+                                        {{platform.name}}
+                                    </h2>
+                                </div>
+                                <div>
+                                    <strong>Added at : </strong>
+                                    <span>{{platform.added_at}}</span>
+                                </div>
+                                <div>
+                                    <strong>Added by : </strong>
+                                    <span>{{platform.added_by}}</span>
+                                </div>
+                                <span class="op-card-actions">
+                                    <a href="/?platform={{platform.id}}" class="bg-success">Set</a>
+                                    <a href="/?platform={{platform.id}}&action=delete-platform" class="bg-danger">Delete</a>
+                                </span>
+                            </div>
+                        {%endfor%}
+                    </div>
+                {%elif action and action == 'add-platform'%}
+                <div class="holder scroll form-holder">
+                    <h2>
+                        Add platform
+                    </h2>
+                    <form action="" class="op-form" id="platform-form">
+                        <div>
+                            <label for="platfrom-name">Platform name</label>
+                            <input type="text" id="platform-name" name="platform-name" required>
+                        </div>
+                        <input type="submit"> 
+                    </form>
+                </div>
+                {%endif%}
+            </div>
+        </div>
+    {%endblock%}

@@ -1,0 +1,109 @@
+{% extends "layout.html" %}
+
+{% block title %}
+   Models
+{% endblock %}
+
+
+    {%block main%}
+        <div class="main-box">
+            <div class="header">
+                <h1>Models</h1>
+                <div class="action-links scroll">
+                    <a href="/accounts" class="eleveted-a">
+                        accounts
+                    </a>
+                    <a href="/models" class="eleveted-a">
+                       models
+                    </a>
+                    <a href="/models?action=add-model" class="eleveted-a">
+                        add model
+                    </a>
+                </div>
+            </div>
+
+            <div class="main-container">
+                {%if models%}
+                    <div class="holder scroll task-holder op-holder">
+                        {% for model in models%}
+                        <div class="op-card">
+                                <div>
+                                    <h2>
+                                        {{model.full_name}}
+                                    </h2>
+                                </div>
+                                <div>
+                                    <strong>Username : </strong>
+                                    <span>@{{model.username}}</span>
+                                </div>
+                                <div>
+                                    <strong>Added at : </strong>
+                                    <span>{{model.added_at}}</span>
+                                </div>
+                                <span class="op-card-actions">
+                                    <a href="/models?model={{model.id}}&action=set-model" class="bg-success">Set</a>
+                                    <a href="/models?model={{model.id}}&action=edit-model" class="bg-warning">Edit</a>
+                                    <a href="/models?model={{model.id}}&action=delete-model" class="bg-danger">Delete</a>
+                                </span>
+                        </div>
+                        {%endfor%}
+                    </div>
+                {%elif action == 'edit-model'%}
+                    <div class="holder scroll form-holder">
+                        <h2>
+                            {{model.full_name}}
+                        </h2>
+                        <form action="" class="op-form edit-model" id="model-form">
+                            <div>
+                                <label for="model-fullname">Full name</label>
+                                <input type="text" id="model-fullname" name="model-fullname" value="{{model.full_name}}">
+                            </div>
+                            <div>
+                                <label for="model-uname">Username</label>
+                                <input type="text" id="model-uname" name="model-uname" value="{{model.username}}">
+                            </div>
+                            <div>
+                                <label for="model-swipe-percent">Swipe percentage</label>
+                                <input type="text" id="model-swipe-percent" name="model-swipe-percent" value="{{model.swipe_percent}}">
+                            </div>
+                            <input type="hidden" class="not-edit" id="model-id" name="model-id" value="{{model.id}}">
+                            <div>
+                                <label for="model-added_at">Added date</label>
+                                <input type="text" id="model-added_at" name="model-added_at" value="{{model.added_at}}" disabled>
+                            </div>
+                            <div>
+                                <label for="model-accounts">No. of accounts</label>
+                                <input type="number" id="model-accounts" name="model-accounts" value=2 disabled>
+                            </div>
+                            <div>
+                                <label for="model-images">No. of images</label>
+                                <input type="number" id="model-images" name="model-images" value=10 disabled>
+                            </div>
+                            <input type="submit" value="Edit"> 
+                        </form>
+                    </div>
+                {%elif action == 'add-model'%}
+                    <div class="holder scroll form-holder">
+                        <h2>
+                            Add model
+                        </h2>
+                        <form action="" class="op-form" id="model-form">
+                            <div>
+                                <label for="model-fullname">Full name</label>
+                                <input type="text" id="model-fullname" name="model-fullname" required>
+                            </div>
+                            <div>
+                                <label for="model-uname">Username</label>
+                                <input type="text" id="model-uname" name="model-uname" required>
+                            </div>
+                            <div>
+                                <label for="model-swipe-percent">Swipe percentage</label>
+                                <input type="text" id="model-swipe-percent" name="model-swipe-percent" placeholder="40/60" required>
+                            </div>
+                            <input type="submit"> 
+                        </form>
+                    </div>
+                {%endif%}
+            </div>
+        </div>
+    {%endblock%}

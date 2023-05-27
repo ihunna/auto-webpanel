@@ -1,0 +1,36 @@
+{%extends "includes.html"%}
+
+{% block title %}
+    Signup
+{% endblock %}
+
+{%block content%}
+    <div class="onboarding">
+        <div class="onboarding-holder scroll">
+            <div class="onboarding-form-heading">
+                <h2>Register and account</h2>
+            </div>
+            <div class="errors">
+            </div>
+            <form action="" class="onboarding-form" id="signup-form">
+                <div>
+                    <label for="full-name">Full name</label>
+                    <input type="text" id="full-name" name="full-name" required>
+                </div>
+                <div>
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div>
+                    <label for="password">Password (min:8 chars)</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <br>
+                <input type="submit">
+            </form>
+            <div class="form-bottom-links">
+                <a href="/login">Already have an account?</a>
+            </div>
+        </div>
+    </div>
+{%endblock%}

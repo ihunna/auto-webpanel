@@ -1,0 +1,118 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Swipe Page
+{% endblock %}
+{% block platform %}
+    {% if platform != None%}
+        {{platform.name}}
+    {%else%}
+        set platform
+    {% endif %}
+{% endblock %}
+
+{% block model %}
+    {% if model%}
+        @{{model.username}}
+    {%else%}
+       set model
+    {% endif %}
+{% endblock %}
+
+    {%block main%}
+        <div class="main-box">
+            <div class="header">
+                <h1>Swipe</h1>
+                <div class="action-links scroll">
+                    <a href="" class="eleveted-a">
+                        home
+                    </a>
+                    <a href="" class="eleveted-a">
+                        swipes
+                    </a>
+                    <a href="" class="eleveted-a">
+                        sort by
+                    </a>
+                </div>
+            </div>
+
+            <div class="main-container">
+                {% if running %}
+                 <div class="op-alert">
+                     <h4>
+                         A swiping operation is already running, please wait till it's done!
+                     </h4>
+                     <div class="op-action">
+                         <a href="">
+                             view operations
+                         </a>
+                     </div>
+                     <span class="close">
+                         <i class="fa fa-close"></i>
+                     </span>
+                 </div>
+                 <div class="holder scroll op-holder">
+                     <div class="op-card">
+                         <h2>
+                             {{task_status.type}}
+                         </h2>
+                         <div>
+                             <strong>Status : </strong>
+                             <span>{{task_status.status}}</span>
+                         </div>
+                         <div>
+                             <strong>Started at : </strong>
+                             <span>{{task_status.start_time}}</span>
+                         </div>
+                         <div>
+                            <strong>Progress : </strong>
+                            <span>{{task_status.progress}}%</span>
+                        </div>
+                         {% if task_status.status == "Running"%}
+                                 <span class="op-spinner bg-warning">
+                                     <i class="fa fa-spinner fa-spin"></i>
+                                 </span>
+                         {%elif task_status.status == "Completed"%}
+                             <span class="op-spinner bg-success">
+                                 <i class="fa fa-check"></i>
+                             </span>
+                         {%elif task_status.status == "Failed"%}
+                         <span class="op-spinner bg-danger">
+                             <i class="fa fa-close"></i>
+                         </span>
+                         {%endif%}
+                     </div>
+                 </div>
+                 {%else%}
+                     <div class="holder scroll form-holder">
+                         <h2>
+                             Fill the form with the required details
+                         </h2>
+                         <form action="" class="op-form" id="swipe-op-form">
+                             <div>
+                                 <label for="op-count">No. of swipes per account</label>
+                                 <input type="number" id="op-count" name="op-count" required>
+                             </div>
+                             <div>
+                                <label for="op-count">Swipe percentage</label>
+                                <input type="number" id="op-count" name="swp-percentage" required>
+                            </div>
+                             <!-- <div>
+                                 <label for="img-count">No. of images to upload</label>
+                                 <input type="number" id="img-count" name="img-count" required>
+                             </div> -->
+                             <!-- <div>
+                                 <label for="bio">Enter bio (enter multiple sep. by double comma ",,")</label>
+                                 <textarea type="text" id="bio" name="bio" required></textarea>
+                             </div> -->
+                             <div>
+                                 <label for="max-workers">No. of concurrent actions (optional)</label>
+                                 <input type="number" id="max-workers" name="max-workers">
+                             </div>
+                             <input type="submit">
+                         </form>
+                     </div>
+                 {%endif%}
+            </div>
+        </div>
+{%endblock%}

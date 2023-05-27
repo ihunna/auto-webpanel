@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Admins
+{% endblock %}
+    {%block main%}
+        <div class="main-box">
+        <div class="header">
+                <h1>Admins</h1>
+                <div class="action-links scroll">
+                    <a href="/accounts" class="eleveted-a">
+                        accounts
+                    </a>
+                    <a href="/" class="eleveted-a delete click-on-an-account-to-delete">
+                        platforms
+                    </a>
+                    <a href="/models" class="eleveted-a">
+                        models
+                    </a>
+                </div>
+            </div>
+
+            <div class="main-container">
+                <div class="holder table-holder scroll">
+                    <table  class="scroll">
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody class="scroll">
+                        {%for admin in admins%}
+                        <tr>
+                            <td>{{admin.full_name}}</td>
+                            <td>{{admin.email}}</td>
+                            <td >
+                                <span class="admin-badge 
+                                {% if admin.role == 'super-admin' %}super-admin
+                                {%else%}admin
+                                {% endif %}">
+                                    {{admin.role}}
+                                </span>
+                            </td>
+                            <td>{{admin.status}}</td>
+                            <td class="actions">
+                                {%if g.admin.id != admin.id%}
+                                <a href="/admins?id={{admin.id}}&action={%if admin.status == 'active'%}block{%else%}unblock{%endif%}&status={{admin.status}}&page={{page}}"
+                                 class="eleveted-a">{%if admin.status == 'active'%}block {%else%} unblock {%endif%}</a>
+                                    {%if admin.role =='admin' and admin.status == 'active'%}
+                                        <a href="/admins?id={{admin.id}}&action=make-super&status={{admin.status}}&page={{page}}" class="eleveted-a">make super</a>
+                                    {%endif%}
+                                {%else%}
+                                <br>
+                                {%endif%}
+                            </td>
+                        </tr>
+                        {%endfor%}
+                        </tbody>
+                    </table>
+                
+                </div>
+                <div class="table-bottom">
+                    <div class="table-sum">
+                        {{page}} / {{ (total_page + limit - 1) // limit }}
+                    </div>
+                    <div class="table-nav">
+                        <a href="/admins?page={% if page > 1%}{{ page-1}} {%else%}1 {%endif%}" class="prev">
+                            <i class="fa fa-angle-left"></i>
+                        </a>
+                        <a href="/admins?page={% if page < (total_page + limit - 1) // limit%}{{ page+1}} {%else%}1 {%endif%}" class="next">
+                            <i class="fa fa-angle-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endblock%}
