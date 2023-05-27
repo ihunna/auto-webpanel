@@ -594,11 +594,19 @@ td.actions{
         flex-direction: column;
     }
 
+
     .main > 
     .main-box > 
     .main-container > 
     .profile-holder > .profile-details{
-        width: 98%;
+        height: auto;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > 
+    .profile-holder > .profile-details > .map{
+        height: 200px;
     }
 
     .form-holder > form{

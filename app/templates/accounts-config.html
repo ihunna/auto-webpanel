@@ -96,6 +96,8 @@
             .menu-options > li{
                 margin: auto 0;
                 padding: 2.5px 10px;
+                font-weight: 400;
+                font-size: 12px;
             }
 
             .content-holder{
@@ -136,6 +138,18 @@
             textarea::-webkit-scrollbar {
                 width: 0;
                 height: 0;
+            }
+            @media screen and (max-width: 999.9px){
+                
+                .menu-options{
+                grid-template-columns: repeat(3,1fr);
+            }
+            }
+            @media screen and (max-width: 345.9px){
+                
+                .menu-options{
+                grid-template-columns: repeat(2,1fr);
+            }
             }
         </style>
     <script>

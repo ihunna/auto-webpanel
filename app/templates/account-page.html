@@ -44,7 +44,6 @@
                             background-repeat: no-repeat;
                             background-size: cover;
                             background-position:top">
-                                <!-- <img src="../../images/1172082582405921790.jpeg" alt=""> -->
                             </div>
                             <div class="profile-card-details">
                                 <h4>
@@ -83,6 +82,20 @@
                             </div>
                         </div>
                         <div class="profile-details">
+                            {%if action == 'map'%}
+                            <div id="map" class="map p-details-actions"></div>
+                            <div class="p-details-actions">
+                                <a href="" class="delete Do-you-want-to-delete-this-account?">
+                                    Update location
+                                </a>
+                                <a href="" class="delete Do-you-want-to-delete-this-account?">
+                                    Edit account
+                                </a>
+                                <a href="/account-page?account={{account.user_data.data.me.id}}" class="upload-account-image">
+                                    Account details
+                                </a>
+                            </div>
+                            {%else%}
                             <ul class="p-details-items">
                                 <li>
                                     <i class="fa fa-envelope"></i>
@@ -105,23 +118,17 @@
                                 </li>
                             </ul>
                             <div class="p-details-bio">
-                                    <div class="container">
-                                        <i class="fa fa-map-marker"></i>
-                                        <input type="text" id="locInput" value=" {{account.user_data.data.me.userLocation.publicName[0]}}, {{account.user_data.data.me.userLocation.publicName[1]}}" class="text-style bio-input" readonly>
-                                        <button class="" id="updateButtonl">Update</button>
-                                    </div>
+                                <div class="p-details-bio-item">
+                                    <i class="fa fa-map-marker"></i> &nbsp;
+                                    {{account.user_data.data.me.userLocation.publicName[0]}}, {{account.user_data.data.me.userLocation.publicName[1]}}
                                 </div>
-                                    <!-- {{account.user_data.data.me.userLocation.publicName[0]}}, {{account.user_data.data.me.userLocation.publicName[1]}} -->
+                                <a href="/account-page?account={{account.user_data.data.me.id}}&action=map" class="">map</a>
+                            </div>
                                 
-                            
                             <div class="p-details-bio">
-                                <div class="container">
-                                    <input type="text" id="bioInput" value="{{account.bio}}" class="text-style bio-input" readonly>
-                                    <button class="" id="updateButton">Update</button>
+                                <div class="p-details-bio-item bio-desc">
+                                    {{account.user_data.data.me.userLocation.publicName[0]}}, {{account.user_data.data.me.userLocation.publicName[1]}}
                                 </div>
-                                <!-- <p>
-                                    {{account.bio}}
-                                </p> -->
                             </div>
                             <ul class="p-details-images" id="profile-images">
                                 {%for image in images%}
@@ -156,15 +163,31 @@
                                     View potential matches
                                 </a>
                             </div>
-                            <div id="map" class="map p-details-actions"></div>
+                            {%endif%}
                         </div>
                     </div>
                 </div>
             </div>
         <style>
-            .container {
+            .p-details-bio {
             display: flex;
-            align-items: center;
+            align-items: left;
+            justify-content: space-between;
+            }
+
+            .p-details-bio > div{
+                flex: 70%;
+                margin: auto;
+            }
+
+            .p-details-bio > a{
+                width: fit-content;
+                text-align: right;
+                font-weight: 500;
+                background: #cbadff;
+                border-radius: 10px;
+                padding: 2.5px 10px;
+                margin: auto;
             }
 
             .bio-input {
@@ -182,7 +205,7 @@
                 outline: none;
             }  
             .map{
-                height: 40%;
+                height: 70%;
             }
         
             

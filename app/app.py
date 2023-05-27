@@ -395,7 +395,8 @@ def accounts():
 @check_model
 def account_page():
 	g.page = 'accounts'
-	id = request.args.get('id')
+	id = request.args.get('account')
+	action = request.args.get('action')
 	is_account = False
 	if id:
 		account = {}
@@ -411,8 +412,11 @@ def account_page():
 						if i >=3:break
 						images.append(image)
 				else:images.append(account['user_data']['data']['me']['primaryImage'])
-		if is_account:return render_template('account-page.html',account=account,images=images,
-					   model=session['MODEL'])
+		
+		if is_account:
+			if action == 'map':
+				return render_template('account-page.html',account=account,images=images,action=action)
+			return render_template('account-page.html',account=account,images=images)
 		else:return redirect('/')
 	return redirect('/')
 

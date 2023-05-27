@@ -36,8 +36,8 @@
                             <td>{{account.user_data.data.me.displayname}}</td>
                             <td>{{account.user_data.data.me.emailAddress}}</td>
                             <td class="actions">
-                                <a href="/accounts?id={{account.user_data.data.me.id}}&action=delete-account" class="eleveted-a">delete</a>
-                                <a href="/account-page?id={{account.user_data.data.me.id}}" class="eleveted-a">view</a>
+                                <a href="/accounts?account={{account.user_data.data.me.id}}&action=delete-account" class="eleveted-a">delete</a>
+                                <a href="/account-page?account={{account.user_data.data.me.id}}" class="eleveted-a">view</a>
                             </td>
                         </tr>
                         {%endfor%}
