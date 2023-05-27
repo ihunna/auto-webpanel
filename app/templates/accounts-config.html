@@ -1,0 +1,203 @@
+{% extends "layout.html" %}
+
+{% block title %}
+   Images
+{% endblock %}
+{% block platform %}
+    {% if platform != None%}
+        {{platform.name}}
+    {%else%}
+        set platform
+    {% endif %}
+{% endblock %}
+
+{% block model %}
+    {% if model%}
+        @{{model.username}}
+    {%else%}
+       set model
+    {% endif %}
+{% endblock %}
+
+
+{% block main %}
+        <div class="main-box">
+            <div class="header">
+                <h1>Configurations</h1>
+                <div class="action-links scroll">
+                    <a href="/create-accounts" class="eleveted-a">
+                        add more
+                    </a>
+                    <a href="" class="eleveted-a delete click-on-an-account-to-delete">
+                        delete an account
+                    </a>
+                    <a href="" class="eleveted-a">
+                        sort by
+                    </a>
+                </div>
+            </div>
+            <div class="menu">
+                <ul class="menu-options">
+                    {% for title, content in file_contents.items() %}
+                        <li class="title-options eleveted-a" onclick="showTextarea('{{ title }}');handleClick(this)">{{ title }}</li>
+                    {% endfor %}
+                    <li style="display: none;"></li>
+                    <!-- <li class="title-options different" onclick="showImagearea('imageArea')">Image_file</li> -->
+                </ul>
+            </div>
+            <div class="main-container">
+                <div class="holder config-holder scroll">
+                    {% for title, content in file_contents.items() %}
+                    <div id="{{ title }}-container" class=" content-holder" style="display: none;">
+                        <h3 style="padding: 10px 10px;"><u>{{ title }}</u></h3>
+                        <textarea id="{{ title }}-textarea" rows="10" cols="50" style="width: 100%;">{{ content }}</textarea>
+                        <br>
+                        <p id="{{ title }}-message" class="message" style="display: none;"></p>
+                    </div>
+                    {% endfor %}
+                    <button class="save-button" onclick="saveContent('{{ title }}')">Save Changes</button>
+                </div>
+            </div>
+        </div>
+        <style>
+            body{
+                overflow: hidden;
+            }
+            /* Files Buttons */
+                .holder.config-holder{
+                    height: calc(100% - 150px);
+                    margin: 10px auto;
+                    position: relative;
+                }
+                .title-options:hover {
+                background-color: #cbadff;
+                }
+
+                .title-options:active {
+                background-color: #e0e0e0;
+                }
+                
+            .activated{
+                background-color: #cbadff
+            }
+
+            .menu{
+                width: 100%;
+                margin: 0;
+            }
+            .menu-options{
+                max-height: 100px;
+                display: grid;
+                grid-template-columns: repeat(6,1fr);
+                justify-items: center;
+                width: 100%;
+                gap: 10px;
+            }
+            .menu-options > li{
+                margin: auto 0;
+                padding: 2.5px 10px;
+            }
+
+            .content-holder{
+                width: 100%;
+                height: 100%;
+            }
+            
+            /* Button style */
+            .save-button {
+                position: absolute;
+                padding: 8px 16px;
+                /* background-color: #cbadff; */
+                color: black;
+                border: none;
+                border-radius: 4px;
+                font-size: 16px;
+                cursor: pointer;
+                bottom: 20px;
+                right: 40px;
+                padding: 10px 20px;
+                background: #000000;
+                color: var(--soft-white);
+                font-weight: 500;
+            }
+
+            .save-button:hover {
+                background-color: #f1f1f1;
+                color: #000000;
+            }
+            textarea {
+                width: 100%;
+                height: 90%;
+                border: none;
+                overflow-y: visible;
+                outline: 0;
+                padding: 20px;
+                }
+            textarea::-webkit-scrollbar {
+                width: 0;
+                height: 0;
+            }
+        </style>
+    <script>
+        function showTextarea(title) {
+            var containerId = title + '-container';
+            var containerElement = document.getElementById(containerId);
+            var message = document.getElementById(title + '-message');
+
+            // Hide all textareas
+            var textareaContainers = document.querySelectorAll('#textarea-container > div');
+            textareaContainers.forEach(function (container) {
+                container.style.display = 'none';
+                message.style.display='none';
+            });
+
+            // Show the selected textarea
+            containerElement.style.display = 'block';
+        }
+        function handleClick(element) {
+            var allLiElements = document.querySelectorAll('.title-options');
+            allLiElements.forEach(function(li) {
+            li.classList.remove('activated');
+            });
+            
+            element.classList.add('activated');
+        }
+
+        function saveContent(title) {
+            var textarea = document.getElementById(title + '-textarea');
+            var message = document.getElementById(title + '-message');
+
+            // Prepare the data to be sent
+            var data = {
+                title: title,
+                content: textarea.value
+            };
+
+            // Send the POST request to the server
+            fetch('/account-configs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                // Handle the response
+                if (response.ok) {
+                    message.textContent = 'File content saved successfully.';
+                    message.style.color = 'green';
+                } else {
+                    message.textContent = 'Error occurred while saving file content.';
+                    message.style.color = 'red';
+                }
+                message.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                message.textContent = 'Error occurred while saving file content.';
+                message.style.color = 'red';
+                message.style.display = 'block';
+            });
+        }
+    </script>
+{% endblock %}
