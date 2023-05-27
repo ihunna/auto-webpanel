@@ -418,6 +418,8 @@ def account_page():
 
 @app.route('/create-accounts',methods=['POST'])
 @login_required
+@check_platform
+@check_model
 def create_accounts():
 	global account_task,account_task_id,account_task_start_time, account_task_status
 
@@ -570,8 +572,50 @@ def show_tasks():
 		} for task in tasks]
 	return render_template('tasks.html',tasks=tasks)
 
+@app.route('/account-configs',methods=['GET'])
+@login_required
+@check_platform
+def get_configuration():
+    g.page = 'account-configs'
+    file_contents = {}
+    for file_name, file_path in file_paths:
+        try:
+            with open(file_path, 'r') as file:
+                file_contents[file_name] = file.read()
+        except FileNotFoundError:
+            return f"File not found: {file_path}"
+    
+    return render_template('accounts-config.html', file_contents=file_contents)
+
+@app.route('/account-configs',methods=['POST'])
+@login_required
+@check_platform
+def update_file_content():
+    data = request.get_json()
+    title = data['title']
+    new_content = data['content']
+
+    def get_file_path_based_on_title(title):
+        path=None
+        for key, p in file_paths:
+            if key == title:
+                path=p
+                break
+        return path
+    
+    path = get_file_path_based_on_title(title)
+    if not path: return jsonify({'error': 'File not found.'}), 404
+
+    else:
+        with open(path, 'w') as file:
+            file.write(new_content)
+
+        return jsonify({'message': 'File content updated successfully.'}), 200
+
 @app.route('/upload-images/<type>',methods=['POST'])
 @login_required
+@check_platform
+@check_model
 def upload_image(type):
 	try:
 		image_list = request.get_json()['data']
