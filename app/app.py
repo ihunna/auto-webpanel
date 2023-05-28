@@ -1,4 +1,4 @@
-from app_actions import start_task
+#from app_actions import start_task
 from app_configs import *
 
 
@@ -365,6 +365,7 @@ def login():
 @app.route('/accounts',methods=['GET'])
 @login_required
 @check_platform
+@check_model
 def accounts():
 	g.page = 'accounts'
 	accounts = []
@@ -416,10 +417,31 @@ def account_page():
 		if is_account:
 			if action == 'map':
 				return render_template('account-page.html',account=account,images=images,action=action)
+			elif action == 'edit-account':
+				return render_template('account-page.html',account=account,images=images,action=action)
 			return render_template('account-page.html',account=account,images=images)
 		else:return redirect('/')
 	return redirect('/')
 
+@app.route('/account-page/<action>',methods=['POST'])
+@login_required
+@check_platform
+@check_model
+def account_action(action):
+	try:
+		if action=='edit-account':
+			return jsonify({'msg': 'account updated successfully'}), 200
+		elif action=='map-update':
+			data = request.json['data']
+			longitude = data['long']
+			latitude = data['lat']
+			print(longitude, latitude)
+
+			return jsonify({'msg': 'location updated successfully'}), 200
+	except:
+		return jsonify({'msg': 'Error'}), 404
+
+	
 @app.route('/create-accounts',methods=['POST'])
 @login_required
 @check_platform
