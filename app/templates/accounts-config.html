@@ -48,14 +48,14 @@
             <div class="main-container">
                 <div class="holder config-holder scroll">
                     {% for title, content in file_contents.items() %}
-                    <div id="{{ title }}-container" class=" content-holder" style="display: none;">
+                    <div id="{{ title }}-container" class="content-holder" style="display: none;">
                         <h3 style="padding: 10px 10px;"><u>{{ title }}</u></h3>
                         <textarea id="{{ title }}-textarea" rows="10" cols="50" style="width: 100%;">{{ content }}</textarea>
                         <br>
                         <p id="{{ title }}-message" class="message" style="display: none;"></p>
                     </div>
+                    <button id="{{ title }}-button" class="save-button" onclick="saveContent('{{ title }}')">Save Changes</button>
                     {% endfor %}
-                    <button class="save-button" onclick="saveContent('{{ title }}')">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -121,6 +121,7 @@
                 background: #000000;
                 color: var(--soft-white);
                 font-weight: 500;
+                display: none;
             }
 
             .save-button:hover {
@@ -157,16 +158,19 @@
             var containerId = title + '-container';
             var containerElement = document.getElementById(containerId);
             var message = document.getElementById(title + '-message');
+            var button = document.getElementById(title + '-button');
 
             // Hide all textareas
-            var textareaContainers = document.querySelectorAll('#textarea-container > div');
+            var textareaContainers = document.querySelectorAll('.content-holder');
             textareaContainers.forEach(function (container) {
                 container.style.display = 'none';
                 message.style.display='none';
+                button.style.display='none';
             });
 
             // Show the selected textarea
             containerElement.style.display = 'block';
+            button.style.display='block'
         }
         function handleClick(element) {
             var allLiElements = document.querySelectorAll('.title-options');
