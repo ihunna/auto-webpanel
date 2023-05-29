@@ -83,87 +83,447 @@
                         </div>
                         <div class="profile-details">
                             {%if action == 'map'%}
-                            <div id="map" class="map p-details-actions"></div>
-                            <br>
-                            <div class="p-details-actions">
-                                <a href="" class="delete Do-you-want-to-delete-this-account?">
-                                    Update location
-                                </a>
-                                <a href="/account-page?account={{account.user_data.data.me.id}}&action=edit-account" class="delete Do-you-want-to-delete-this-account?">
-                                    Edit account
-                                </a>
-                                <a href="/account-page?account={{account.user_data.data.me.id}}" class="upload-account-image">
-                                    Account details
-                                </a>
-                            </div>
-                            {%else%}
-                            <ul class="p-details-items">
-                                <li>
-                                    <i class="fa fa-envelope"></i>
-                                    {{account.user_data.data.me.emailAddress}}
-                                </li>
-                                <li>
-                                    <i class="fas fa-phone-square"></i>
-                                    +1{{account.phone.number}}
-                                </li>
-                                <li>
-                                    <i class="fa fa-venus-mars"></i>
-                                    {%if account.user_data.data.me.binaryGenderLetter == 'f'%}
-                                        Female
-                                    {%else%}
-                                        Male
-                                    {%endif%}
-                                </li>
-                                <li style="display: none;">
-
-                                </li>
-                            </ul>
-                            <div class="p-details-bio">
-                                <div class="p-details-bio-item">
-                                    <i class="fa fa-map-marker"></i> &nbsp;
-                                    {{account.user_data.data.me.userLocation.publicName[0]}}, {{account.user_data.data.me.userLocation.publicName[1]}}
-                                </div>
-                                <a href="/account-page?account={{account.user_data.data.me.id}}&action=map" class="">map</a>
-                            </div>
-                                
-                            <div class="p-details-bio">
-                                <div class="p-details-bio-item bio-desc">
-                                    {{account.user_data.data.me.userLocation.publicName[0]}}, {{account.user_data.data.me.userLocation.publicName[1]}}
-                                </div>
-                            </div>
-                            <ul class="p-details-images" id="profile-images">
-                                {%for image in images%}
-                                <li>
-                                    <img src="{{image.square800}}" class="clickable-image" accountId="{{id}}" alt="">
-                                </li>
-                                {%endfor%}
-                                
-                                <span>
-                                    <a href="" class="view-all">
-                                        view all
+                                <div id="map" class="map p-details-actions"></div>
+                                <input id="locInput" value="" style="display: none;" title="none" />
+                                <div class="p-details-actions">
+                                    <a href="" class="" id="updateButton">
+                                        Update location
                                     </a>
-                                </span>
-                            </ul>
-                            <div class="p-details-actions">
-                                <a href="" class="delete Do-you-want-to-delete-this-account?">
-                                    Delete account
-                                </a>
-                                <a href="" class="upload-account-image">
-                                    Add images
-                                </a>
-                                <a href="" class="view-matches m">
-                                View matches
-                                </a>
-                                <a href="" class="view-matches l">
-                                    View likes
-                                </a>
-                                <a href="" class="view-matches lm">
-                                    View liked me
-                                </a>
-                                <a href="" class="view-matches pm">
-                                    View potential matches
-                                </a>
-                            </div>
+                                    <a  href="/account-page?account={{account.user_data.data.me.id}}&action=edit-account" class="edit-account">
+                                        Edit account
+                                    </a>
+                                    <a href="/account-page?account={{account.user_data.data.me.id}}" class="upload-account-image">
+                                        Account details
+                                    </a>
+                                </div>
+                                <script
+                                src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBFhK9-HFdkegWcsmq6ue770uDIlRX5CdI&callback=initMap&v=weekly"
+                                defer
+                              ></script>
+                                <script>
+                                    window.onload = function() {
+                                        // This code will be executed when the window has finished loading
+                                        initMap();
+                                    };
+                                    function initMap() {
+                                        const myLatlng = { lat: -25.363, lng: 131.044 };
+                                        const map = new google.maps.Map(document.getElementById("map"), {
+                                            zoom: 4,
+                                            center: myLatlng,
+                                        });
+                                        // Create the initial InfoWindow.
+                                        let infoWindow = new google.maps.InfoWindow({
+                                            content: "Click the map to get Lat/Lng!",
+                                            position: myLatlng,
+                                        });
+                        
+                                        infoWindow.open(map);
+                                        // Configure the click listener.
+                                        map.addListener("click", (mapsMouseEvent) => {
+                                            // Close the current InfoWindow.
+                                            infoWindow.close();
+                                            // Create a new InfoWindow.
+                                            const latLng = mapsMouseEvent.latLng;
+                                            const latitude = latLng.lat();
+                                            const longitude = latLng.lng();
+                                            document.getElementById("updateButton").addEventListener("click", function() {
+                                                // Call your function here
+                                                sendLocationToServer(longitude, latitude);
+                                            });
+                                                    
+                                            // Update the value of the input field
+                                            document.getElementById("locInput").value = `${latitude}, ${longitude}`;
+                                            infoWindow = new google.maps.InfoWindow({
+                                            position: mapsMouseEvent.latLng,
+                                            });
+                                            infoWindow.setContent(
+                                            JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2)
+                                            );
+                                            infoWindow.open(map);
+                                        });
+                                    }
+                                    function sendLocationToServer(longitude, latitude) {                             
+                                        const url = `/account-page/map-update`;
+                                        const data = {
+                                            data: {
+                                                long: longitude,
+                                                lat: latitude
+                                            }
+                                        };
+                                        
+                                        fetch(url, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json'
+                                            },
+                                            body: JSON.stringify(data)
+                                        })
+                                        .then(response => {
+                                            if (response.ok) {
+                                                console.log('Location data sent successfully');
+                                            } else {
+                                                console.error('Failed to send location data');
+                                            };
+                                        })
+                                        .catch(error => {
+                                            console.error('Error occurred while sending location data:', error);
+                                        });
+                                    }
+                                    window.initMap = initMap;
+                                </script>
+                            {% elif action== 'edit-account'%}
+                                <div class="holder scroll form-holder">
+                                    <h2>
+                                        Edit-Account
+                                    </h2>
+                                    <form action="" class="op-form edit-account" id="account-form">
+                                        <div>
+                                            <label for="profile_height">Person's physical height</label>
+                                            <input type="int" id="profile_heigh" name="profile_heigh" value="{{account.profile_heigh}}">
+                                        </div>
+                                        <div>
+                                            <label for="profile_body_type">Person's body type</label>
+                                            <select id="profile_body_type" name="profile_body_type">
+                                                <option value="">{{account.profile_body_type}}</option>
+                                                <option value="2">Thin</option>
+                                                <option value="3">Overweight</option>
+                                                <option value="5">Average build</option>
+                                                <option value="6">Fit</option>
+                                                <option value="8">Jacked</option>
+                                                <option value="9">A little extra</option>
+                                                <option value="10">Curvy</option>
+                                                <option value="11">Full figured</option>
+                                            </select>
+                                            
+                                        </div>
+                                        <div>
+                                            <label for="profile_ethnicities">Person's body type</label>
+                                            <select id="profile_ethnicities" name="profile_ethnicities" class="multiple" multiple>
+                                                <option value="1">Asian</option>
+                                                <option value="3">Black</option>
+                                                <option value="7">Hispanic / Latin</option>
+                                                <option value="5">Indian</option>
+                                                <option value="2">Middle Eastern</option>
+                                                <option value="4">Native American</option>
+                                                <option value="6">Pacific Islander</option>
+                                                <option value="8">White</option>
+                                                <option value="9">Other ethnicity</option>
+                                            </select>
+                                            <script>
+                                                var selectedEthnicities = '{{account.profile_ethnicities}}'; // Assuming account.profile_ethnicities is an array of selected ethnicity IDs
+                                                
+                                                var ethnicityDropdown = document.getElementById('ethnicities');
+                                                for (var i = 0; i < ethnicityDropdown.options.length; i++) {
+                                                if (selectedEthnicities.includes(parseInt(ethnicityDropdown.options[i].value))) {
+                                                    ethnicityDropdown.options[i].selected = true;
+                                                }
+                                                }
+                                            </script>
+                                        </div>
+                                        <input type="hidden" class="not-edit" id="account-id" name="account-id" value="{{account.id}}">
+                                        <div>
+                                            <label for="profile_religion">Person's religion</label>
+                                            <ul>
+                                                <li>
+                                                <label for="religion">Religion:</label>
+                                                <select id="religion" name="religion">
+                                                <option value="">Select religion</option>
+                                                <option value="2">Agnosticism</option>
+                                                <option value="3">Atheism</option>
+                                                <option value="4">Christianity</option>
+                                                <option value="5">Judaism</option>
+                                                <option value="6">Catholicism</option>
+                                                <option value="7">Islam</option>
+                                                <option value="8">Hinduism</option>
+                                                <option value="9">Buddhism</option>
+                                                <option value="11">Sikh</option>
+                                                <option value="10">Other religion</option>
+                                                </select>
+                                                </li>
+                                                <li>
+                                                <label for="seriousness">Religious Seriousness:</label>
+                                                <select id="seriousness">
+                                                <option value="">Select seriousness</option>
+                                                <option value="null">None</option>
+                                                <option value="2">It's important</option>
+                                                <option value="3">It's not important</option>
+                                                <option value="4">Laughing about it</option>
+                                                </select>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <label for="profile_astro_sign">Person's astrological sign:</label>
+                                                <select id="profile_astro_sign" name="profile_astro_sign">
+                                                <option value="">{{account.profile_astro_sign}}</option>
+                                                <option value="1">Aquarius</option>
+                                                <option value="2">Pisces</option>
+                                                <option value="3">Aries</option>
+                                                <option value="4">Taurus</option>
+                                                <option value="5">Gemini</option>
+                                                <option value="6">Cancer</option>
+                                                <option value="7">Leo</option>
+                                                <option value="8">Virgo</option>
+                                                <option value="9">Libra</option>
+                                                <option value="10">Scorpio</option>
+                                                <option value="11">Sagittarius</option>
+                                                <option value="12">Capricorn</option>
+                                                </select>
+                                        </div>
+                                        <div>
+                                            <label for="profile_politics">Person's political beliefs: </label>
+                                                <select id="profile_politics" name="profile_politics">
+                                                <option value="">{{account.profile_politics}}</option>
+                                                <option value="1">Liberal</option>
+                                                <option value="2">Moderate</option>
+                                                <option value="3">Conservative</option>
+                                                <option value="4">Other political beliefs</option>
+                                                </select>
+                                        </div>
+                                        <div>
+                                            <label for="profile_occupation_status">Person's Employment Status:</label>
+                                                <select id="profile_occupation_status" name="profile_occupation_status">
+                                                <option value="">{{account.profile_occupation_status}}</option>
+                                                <option value="1">Employed full-time</option>
+                                                <option value="2">Employed part-time</option>
+                                                <option value="3">Freelance worker</option>
+                                                <option value="4">Self-employed</option>
+                                                <option value="5">Unemployed</option>
+                                                <option value="6">Retired</option>
+                                                </select>
+                                        </div>
+                                        <div>
+                                            <label for="profile_occupation">Person's Employment: </label>
+                                            <input type="text" id="profile_occupation" name="profile_occupation" value="{{account.profile_occupation}}">
+                                        </div>
+                                        <div>
+                                            <label for="profile_education_category">Persons's Education Level:</label>
+                                                <select id="profile_education_category" name="profile_education_category">
+                                                <option value="">{{account.profile_education_category}}</option>
+                                                <option value="1">High school</option>
+                                                <option value="2">Trade/tech school</option>
+                                                <option value="10">In college</option>
+                                                <option value="11">Undergraduate degree</option>
+                                                <option value="12">In grad school</option>
+                                                <option value="13">Graduate degree</option>
+                                                </select>
+                                        </div>
+                                        <input type="hidden" class="not-edit" id="account-id" name="account-id" value="{{account.id}}">
+                                        <div>
+                                            <label for="profile_school_name">Person's physical height</label>
+                                            <input type="text" id="profile_school_name" name="profile_school_name" value="{{account.profile_school_name}}">
+                                        </div>
+                                        <div>
+                                            <label for="profile_known_languages">Person's Known Languages:</label>
+                                                <select id="profile_known_languages" name="profile_known_languages" class="multiple" multiple>
+                                                <option value="74">English</option>
+                                                <option value="17">Dutch</option>
+                                                <option value="22">French</option>
+                                                <option value="25">German</option>
+                                                <option value="58">Spanish</option>
+                                                </select>
+                                        </div>
+                                        <div>
+                                            <label for="profile_diet">Person's Diet:</label>
+                                                <select id="profile_diet" name="profile_diet">
+                                                <option value="">{{account.profile_diet}}</option>
+                                                <option value="1">Omnivore</option>
+                                                <option value="2">Vegetarian</option>
+                                                <option value="3">Vegan</option>
+                                                <option value="4">Kosher</option>
+                                                <option value="5">Halal</option>
+                                                <option value="7">Gluten Free</option>
+                                                <option value="8">Pescatarian</option>
+                                                <option value="9">Jain</option>
+                                                <option value="10">Lactovegetarian</option>
+                                                <option value="11">Intermittent Fasting</option>
+                                                <option value="12">Ketogenic</option>
+                                                </select>
+                                        </div>
+                                        <div>
+                                            <label for="profile_smoking">Person's Smoking Habit:</label>
+                                                <select id="profile_smoking">
+                                                <option value="">{{account.profile_smoking}}</option>
+                                                <option value="1">Often</option>
+                                                <option value="2">Sometimes</option>
+                                                <option value="5">Never</option>
+                                                </select>
+                                        </div>
+                                        <div>
+                                            <label for="profile_drinking">Person's Drinking Habit:</label>
+                                                <select id="profile_drinking" name="profile_drinking">
+                                                <option value="">{{account.profile_drinking}}</option>
+                                                <option value="2">Often</option>
+                                                <option value="3">Sometimes</option>
+                                                <option value="6">Never</option>
+                                                </select>
+                                        </div>
+                                        <div>
+                                            <label for="profile_marijuana">Person's Weed Smoking Habit:</label>
+                                                <select id="profile_marijuana" name="profile_marijuana">
+                                                <option value="">{{account.profile_marijuana}}</option>
+                                                <option value="24">Often</option>
+                                                <option value="16">Sometimes</option>
+                                                <option value="8">Never</option>
+                                                </select>
+                                        </div>
+                                        <div>
+                                            <label for="profile_children">Person's Children:</label>
+                                            <select id="profile_children" name="profile_children">
+                                            <option value="">{{account.profile_children}}</option>
+                                            <option value="1">Doesn't have kids but might want them</option>
+                                            <option value="2">Doesn't have kids but wants them</option>
+                                            <option value="3">Doesn't have kids and doesn't want them</option>
+                                            <option value="4">Has kid(s) and doesn't want more</option>
+                                            <option value="5">Has kid(s) and might want more</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="profile_pets">Person's Pets:</label>
+                                                <select id="profile_pets" name="profile_pets" class="multiple" multiple>
+                                                <option value="1">{{account.profile_pets}}</option>
+                                                <option value="2">Has other pet(s)</option>
+                                                <option value="3">Has cat(s)</option>
+                                                <option value="4">Has dog(s)</option>
+                                                </select>
+                                        </div>
+                                        <div>
+                                            <label for="bio">Person's self-summary:</label>
+                                            <input type="text" id="bio" name="bio" value="{{account.bio}}">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="aspirations">Person's current goal:</label>
+                                            <input type="text" id="aspirations" name="aspirations" value="{{account.aspirations}}">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="talent">Person's talent:</label>
+                                            <input type="text" id="talent" name="talent" value="{{account.talent}}">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="traits">Person's golden rule:</label>
+                                            <input type="text" id="traits" name="traits" value="{{account.traits}}">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="needs">Person's needs:</label>
+                                            <input type="text" id="needs" name="needs" value="{{account.needs}}">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="hobbies">Person's hobbies:</label>
+                                            <input type="text" id="hobbies" name="hobbies" value="{{account.hobbies}}">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="moments">Person's perfect day:</label>
+                                            <input type="text" id="moments" name="moments" value="{{account.moments}}">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="secrets">Person's secrets:</label>
+                                            <input type="text" id="secrets" name="secrets" value="{{account.secrets}}">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="dating">Person's dating preferences:</label>
+                                            <input type="text" id="dating" name="dating" value="{{account.dating}}">
+                                        </div>
+                                        
+                                        <input type="submit" value="Edit"> 
+                                    </form>
+                                </div>
+                                <style>
+                                    select{
+                                        outline:none;
+                                        border: 2px solid #ddd;
+                                        border: 1px solid var(--soft-white);
+                                        height: 30px;
+                                        padding: 0px 5px;
+                                    }
+                                    .multiple{
+                                        height: 80px;
+                                    }
+                                    .form-holder{
+                                        height: 70vh;
+                                        border: none;
+                                        width: 100%;
+                                    }
+                                    #account-form > div{
+                                        margin-bottom: 10px;
+                                        padding: 10px 10px;
+                                    }
+                                </style>
+                            {%else%}
+                                <ul class="p-details-items">
+                                    <li>
+                                        <i class="fa fa-envelope"></i>
+                                        {{account.user_data.data.me.emailAddress}}
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-phone-square"></i>
+                                        +1{{account.phone.number}}
+                                    </li>
+                                    <li>
+                                        <i class="fa fa-venus-mars"></i>
+                                        {%if account.user_data.data.me.binaryGenderLetter == 'f'%}
+                                            Female
+                                        {%else%}
+                                            Male
+                                        {%endif%}
+                                    </li>
+                                    <li style="display: none;">
+
+                                    </li>
+                                </ul>
+                                <div class="p-details-bio">
+                                    <div class="p-details-bio-item">
+                                        <i class="fa fa-map-marker"></i> &nbsp;
+                                        {{account.user_data.data.me.userLocation.publicName[0]}}, {{account.user_data.data.me.userLocation.publicName[1]}}
+                                    </div>
+                                    <a href="/account-page?account={{account.user_data.data.me.id}}&action=map" class="">map</a>
+                                </div>
+                                    
+                                <div class="p-details-bio">
+                                    <div class="p-details-bio-item bio-desc">
+                                        {{account.user_data.data.me.userLocation.publicName[0]}}, {{account.user_data.data.me.userLocation.publicName[1]}}
+                                    </div>
+                                </div>
+                                <ul class="p-details-images" id="profile-images">
+                                    {%for image in images%}
+                                    <li>
+                                        <img src="{{image.square800}}" class="clickable-image" accountId="{{id}}" alt="">
+                                    </li>
+                                    {%endfor%}
+                                    
+                                    <span>
+                                        <a href="" class="view-all">
+                                            view all
+                                        </a>
+                                    </span>
+                                </ul>
+                                <div class="p-details-actions">
+                                    <a href="" class="delete Do-you-want-to-delete-this-account?">
+                                        Delete account
+                                    </a>
+                                    <a href="" class="upload-account-image">
+                                        Add images
+                                    </a>
+                                    <a href="/account-page?account={{account.user_data.data.me.id}}&action=edit-account" class="edit-account">
+                                        Edit Account
+                                    </a>
+                                    <a href="" class="view-matches m">
+                                    View matches
+                                    </a>
+                                    <a href="" class="view-matches l">
+                                        View likes
+                                    </a>
+                                    <a href="" class="view-matches lm">
+                                        View liked me
+                                    </a>
+                                </div>
                             {%endif%}
                         </div>
                     </div>
@@ -271,81 +631,4 @@
             });
         });
         </script> -->
-        <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBFhK9-HFdkegWcsmq6ue770uDIlRX5CdI&callback=initMap&v=weekly"
-        defer
-      ></script>
-        <script>
-            window.onload = function() {
-                // This code will be executed when the window has finished loading
-                initMap();
-            };
-            function initMap() {
-                const myLatlng = { lat: -25.363, lng: 131.044 };
-                const map = new google.maps.Map(document.getElementById("map"), {
-                    zoom: 4,
-                    center: myLatlng,
-                });
-                // Create the initial InfoWindow.
-                let infoWindow = new google.maps.InfoWindow({
-                    content: "Click the map to get Lat/Lng!",
-                    position: myLatlng,
-                });
-
-                infoWindow.open(map);
-                // Configure the click listener.
-                map.addListener("click", (mapsMouseEvent) => {
-                    // Close the current InfoWindow.
-                    infoWindow.close();
-                    // Create a new InfoWindow.
-                    const latLng = mapsMouseEvent.latLng;
-                    const latitude = latLng.lat();
-                    const longitude = latLng.lng();
-                    document.getElementById("updateButtonl").addEventListener("click", function() {
-                        // Call your function here
-                        sendLocationToServer(longitude, latitude);
-                    });
-                            
-                    // Update the value of the input field
-                    document.getElementById("locInput").value = `${latitude}, ${longitude}`;
-                    infoWindow = new google.maps.InfoWindow({
-                    position: mapsMouseEvent.latLng,
-                    });
-                    infoWindow.setContent(
-                    JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2)
-                    );
-                    infoWindow.open(map);
-                });
-            }
-            function sendLocationToServer(longitude, latitude) {
-                const id = '{{id}}'; // Replace 'your_id' with the actual ID value
-                
-                const url = `/update/loc/${id}`;
-                const data = {
-                    data: {
-                        long: longitude,
-                        lat: latitude
-                    }
-                };
-                
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => {
-                    if (response.ok) {
-                        console.log('Location data sent successfully');
-                    } else {
-                        console.error('Failed to send location data');
-                    };
-                })
-                .catch(error => {
-                    console.error('Error occurred while sending location data:', error);
-                });
-            }
-            window.initMap = initMap;
-        </script>
     {%endblock%}

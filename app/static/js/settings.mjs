@@ -144,6 +144,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             });
         })
     }catch(error){con.log(error)}
+
     try{
         const adminForm = doc.querySelector('#admin-form');
         adminForm.addEventListener('submit',(e)=>{
@@ -171,7 +172,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             e.preventDefault();
             const formData = new FormData(accountForm);
             
-            const url = '/account/edit-account'
+            const url = '/account-page/edit-account'
             sendRequest('POST', url, null, formData).then(response => {
                 showHide('show',[alertBox],response,{'bg':colorSuccess,'color':colorLessWhite});
                 setTimeout(() => showHide('no-show',[alertBox]), 5000)
@@ -183,6 +184,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             });
         })
     }catch(error){con.log(error)}
+    
     try{
         const signupForm = doc.querySelector('#signup-form');
         signupForm.addEventListener('submit',(e)=>{
