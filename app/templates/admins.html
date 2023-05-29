@@ -14,13 +14,48 @@
                     <a href="/" class="eleveted-a delete click-on-an-account-to-delete">
                         platforms
                     </a>
-                    <a href="/models" class="eleveted-a">
-                        models
+                    <a href="/admins" class="eleveted-a">
+                        admins
                     </a>
                 </div>
             </div>
 
             <div class="main-container">
+                {%if action == 'admin-settings'%}
+                <div class="holder scroll form-holder">
+                    <h2>
+                        {{admin.full_name}}
+                    </h2>
+                    <form action="" class="op-form edit-admin" id="admin-form">
+                        <div>
+                            <label for="admin-fullname">Full name</label>
+                            <input type="text" id="admin-fullname" name="admin-fullname" value="{{admin.full_name}}">
+                        </div>
+                        <div>
+                            <label for="admin-email">Email</label>
+                            <input type="text" id="admin-email" name="admin-email" value="{{admin.email}}">
+                        </div>
+                        <input type="hidden" class="not-edit" id="admin-id" name="admin-id" value="{{admin.id}}">
+                        <div>
+                            <label for="admin-created_at">Created date</label>
+                            <input type="text" id="admin-created_at" name="admin-created_at" value="{{admin.created_at}}" disabled>
+                        </div>
+                        <div>
+                            <label for="admin-accounts">No. of accounts</label>
+                            <input type="number" id="admin-accounts" name="admin-accounts" value={{admin_accounts}} disabled>
+                        </div>
+                        <div>
+                            <label for="admin-images">No. of images</label>
+                            <input type="number" id="admin-images" name="admin-images" value={{admin_images}} disabled>
+                        </div>
+                        <div>
+                            <label for="admin-tasks">No. of images</label>
+                            <input type="number" id="admin-tasks" name="admin-tasks" value={{admin_tasks}} disabled>
+                        </div>
+                        <input type="submit" value="Edit"> 
+                    </form>
+                </div>
+                {%else%}
                 <div class="holder table-holder scroll">
                     <table  class="scroll">
                         <thead>
@@ -76,6 +111,7 @@
                         </a>
                     </div>
                 </div>
+                {%endif%}
             </div>
         </div>
     {% endblock%}

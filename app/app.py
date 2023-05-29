@@ -90,62 +90,110 @@ def add_platform():
 		print(error)
 		return jsonify({'msg':'error adding platform'}),500
 
-@app.route('/admins',methods=['GET','POST'])
+@app.route('/admins',methods=['GET'])
 @login_required
 def admins():
-	if request.method == 'GET':
-		g.page = 'admins'
-		action = request.args.get('action')
+	g.page = 'admins'
+	action = request.args.get('action')
+	db = conn()
+	cursor = db.cursor()
+	if  action and action == 'make-super':
+		admin_id = request.args.get('id')
+		admin_status = request.args.get('status')
+		admin = session.get('ADMIN')
+		if admin['role'] == 'super-admin' and admin_status == 'active':
+			cursor.execute('''UPDATE admins SET role =? WHERE id =?''',('super-admin',admin_id))
+			db.commit()
+	
+	elif  action and action == 'admin-settings':
+		admin = session.get('ADMIN')
+		admin_id = admin['id']
+		
 		db = conn()
 		cursor = db.cursor()
-		if  action and action == 'make-super':
-			admin_id = request.args.get('id')
-			admin_status = request.args.get('status')
-			admin = session.get('ADMIN')
-			if admin['role'] == 'super-admin' and admin_status == 'active':
-				cursor.execute('''UPDATE admins SET role =? WHERE id =?''',('super-admin',admin_id))
+		cursor.execute('SELECT COUNT(*) FROM images WHERE user_id=?',
+		(admin_id,))
+		admin_images = cursor.fetchone()[0]
+
+		cursor.execute('SELECT COUNT(*) FROM accounts WHERE user_id=?',
+		(admin_id,))
+		admin_accounts = cursor.fetchone()[0]
+
+		cursor.execute('SELECT COUNT(*) FROM tasks WHERE user_id=?',
+		(admin_id,))
+		admin_tasks = cursor.fetchone()[0]
+		return render_template('admins.html', action = action,admin=admin,
+			admin_images=admin_images,admin_accounts=admin_accounts,admin_tasks=admin_tasks)
+	
+	elif  action and action == 'block':
+		admin_id = request.args.get('id')
+		admin_status = request.args.get('status')
+
+		admin = session.get('ADMIN')
+		if admin['role'] == 'super-admin' and admin_status == 'active':
+			cursor.execute('''UPDATE admins SET status =?, role=? WHERE id =?''',('blocked','admin',admin_id,))
+			db.commit()
+
+	elif  action and action == 'unblock':
+		admin_id = request.args.get('id')
+		admin_status = request.args.get('status')
+
+		admin = session.get('ADMIN')
+		if admin['role'] == 'super-admin' and admin_status == 'block':
+			cursor.execute('''UPDATE admins SET status =? WHERE id =?''',('active',admin_id))
+			db.commit()
+
+	page = int(request.args.get('page', 1))
+	limit = int(request.args.get('limit', 4))
+
+	cursor.execute('SELECT COUNT(*) FROM admins')
+	total_page = cursor.fetchone()[0]
+
+	offset = (page - 1) * limit if page < total_page else 0
+
+	cursor.execute('''SELECT * FROM admins ORDER BY created_at DESC LIMIT ? OFFSET ?''',(limit,offset))
+	admins = cursor.fetchall()
+
+	admins = [{
+		'id':admin[0],
+		'full_name':admin[1],
+		'email':admin[2],
+		'password':admin[3],
+		'role':admin[4],
+		'status':admin[5],
+		'created_at':admin[6]
+	}for admin in admins]
+
+	for admin in admins:app.config['ADMINS'].update({admin['id']:admin})
+	return render_template('admins.html',admins=admins,page=page, limit=limit,total_page=total_page)
+
+@app.route('/admins/<action>', methods=['POST'])
+@login_required
+def admin(action):
+	try:
+		if action =='edit-admin':
+			full_name = request.form.get('admin-fullname')
+			email = request.form.get('admin-email')
+			emails = [e['email'] for e in list(app.config['ADMINS'].values())]
+			admin_id = session.get('ADMIN')['id']
+			db = conn()
+			cursor = db.cursor()
+
+			if email not in emails:
+				cursor.execute('''UPDATE admins 
+				SET full_name=?,email=? WHERE id=? 
+				''',(full_name,email,admin_id))
 				db.commit()
-		elif  action and action == 'block':
-			admin_id = request.args.get('id')
-			admin_status = request.args.get('status')
-
-			admin = session.get('ADMIN')
-			if admin['role'] == 'super-admin' and admin_status == 'active':
-				cursor.execute('''UPDATE admins SET status =?, role=? WHERE id =?''',('blocked','admin',admin_id,))
+			else:
+				cursor.execute('''UPDATE admins 
+				SET full_name=? WHERE id=? 
+				''',(full_name,admin_id))
 				db.commit()
+			return jsonify({'msg':'admin updated successfully'}),200
+	except Exception as error:
+		print(error)
+		return jsonify({'msg':'error updating admin'}),400
 
-		elif  action and action == 'unblock':
-			admin_id = request.args.get('id')
-			admin_status = request.args.get('status')
-
-			admin = session.get('ADMIN')
-			if admin['role'] == 'super-admin' and admin_status == 'block':
-				cursor.execute('''UPDATE admins SET status =? WHERE id =?''',('active',admin_id))
-				db.commit()
-
-		page = int(request.args.get('page', 1))
-		limit = int(request.args.get('limit', 4))
-
-		cursor.execute('SELECT COUNT(*) FROM admins')
-		total_page = cursor.fetchone()[0]
-
-		offset = (page - 1) * limit if page < total_page else 0
-
-		cursor.execute('''SELECT * FROM admins ORDER BY created_at DESC LIMIT ? OFFSET ?''',(limit,offset))
-		admins = cursor.fetchall()
-
-		admins = [{
-			'id':admin[0],
-			'full_name':admin[1],
-			'email':admin[2],
-			'password':admin[3],
-			'role':admin[4],
-			'status':admin[5],
-			'created_at':admin[6]
-		}for admin in admins]
-
-		for admin in admins:app.config['ADMINS'].update({admin['id']:admin})
-		return render_template('admins.html',admins=admins,page=page, limit=limit,total_page=total_page)
 
 @app.route('/models', methods = ['GET'])
 @login_required
@@ -184,7 +232,23 @@ def models():
 				return redirect(url)
 			elif action == 'edit-model':
 				model=app.config['MODELS'][model_id]
-				return render_template('models.html',model=model,action=action)
+				admin_id = session.get('ADMIN')['id']
+				db = conn()
+				cursor = db.cursor()
+				cursor.execute('SELECT COUNT(*) FROM images WHERE model=? AND user_id=?',
+               	(model_id, admin_id))
+				model_images = cursor.fetchone()[0]
+
+				cursor.execute('SELECT COUNT(*) FROM accounts WHERE model=? AND user_id=?',
+               	(model_id,admin_id))
+				model_accounts = cursor.fetchone()[0]
+
+				cursor.execute('SELECT COUNT(*) FROM tasks WHERE model=? AND user_id=?',
+               	(model_id,admin_id))
+				model_tasks = cursor.fetchone()[0]
+
+				return render_template('models.html',model=model,action=action,
+			   	model_images=model_images,model_accounts=model_accounts,model_tasks=model_tasks)
 		
 			elif action == 'delete-model':
 				db = conn()
@@ -251,6 +315,7 @@ def model(action):
 
 				return jsonify({'msg':'model added successfully'}),200
 			return jsonify({'msg':'model already exists'}),400
+		
 		elif action == 'edit-model':
 			full_name = request.form.get('model-fullname')
 			username = request.form.get('model-uname')
@@ -696,7 +761,8 @@ def images(type):
                (model_id, type, admin_id))
 		total_page = cursor.fetchone()[0]
 
-		offset = (page - 1) * limit if page < total_page else 0
+		offset = (page - 1) * limit if page <= total_page else 0
+
 		cursor.execute('SELECT data FROM images WHERE model=? AND type=? AND user_id=? LIMIT ? OFFSET ?',
                (model_id, type, admin_id, limit, offset))
 		images = cursor.fetchall()

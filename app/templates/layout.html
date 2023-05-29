@@ -49,7 +49,9 @@
                     {%endif%}
                 </li>
                 <li>
-                    <i class="fa fa-cog"></i>
+                    <a href="/admins?action=admin-settings&admin={{g.admin.id}}">
+                        <i class="fa fa-cog"></i>
+                    </a>
                 </li>
                 <li class="menu-btn" id="menu-btn">
                     <i class="fas fa-bars"></i>
@@ -138,7 +140,7 @@
                 </li>
                 <li class="{% if g.page == 'settings' %}active{% endif %}">
                     <i class="fa fa-cog"></i>
-                    <a href="/settings">
+                    <a href="/admins?action=admin-settings&admin={{g.admin.id}}">
                         Settings
                     </a>
                 </li>

@@ -145,6 +145,27 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         })
     }catch(error){con.log(error)}
     try{
+        const adminForm = doc.querySelector('#admin-form');
+        adminForm.addEventListener('submit',(e)=>{
+            e.preventDefault();
+            const formData = new FormData(adminForm);
+            
+            sendRequest('POST', '/admins/edit-admin', null, formData).then(response => {
+                adminForm.reset()
+                showHide('show',[alertBox],response,{'bg':colorSuccess,'color':colorLessWhite});
+                setTimeout(() => {
+                    showHide('no-show',[alertBox]);
+                    window.location.href='/admins'
+                }, 5000)
+            })
+            .catch(error => {
+                showHide('show',[alertBox],error,{'bg':colorDanger,'color':colorLessWhite});
+                setTimeout(() => showHide('no-show',[alertBox]), 5000)
+                con.error(error);
+            });
+        })
+    }catch(error){con.log(error)}
+    try{
         const accountForm = doc.querySelector('#account-form');
         accountForm.addEventListener('submit',(e)=>{
             e.preventDefault();

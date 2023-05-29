@@ -111,18 +111,19 @@ def conn():
 		cursor.execute('''
 					CREATE TABLE IF NOT EXISTS accounts
 					(id TEXT PRIMARY KEY,
+					user_id TEXT,
 					data TEXT,
 					email TEXT,
+					model TEXT,
 					notifications TEXT,
 					swipes INTEGER,
 					messages INTEGER,
 					likes INTEGER,
-					user_id TEXT,
 					timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)
 					''')
 		#create tasks table
 		cursor.execute(''' CREATE TABLE IF NOT EXISTS tasks
-		(id TEXT PRIMARY KEY,user_id TEXT,type TEXT,start_time DATETIME DEFAULT CURRENT_TIMESTAMP, status TEXT, progress INTEGER)''')
+		(id TEXT PRIMARY KEY,user_id TEXT,model TEXT,type TEXT,start_time DATETIME DEFAULT CURRENT_TIMESTAMP, status TEXT, progress INTEGER)''')
 
 		#create images table
 		cursor.execute('''CREATE TABLE IF NOT EXISTS images
