@@ -702,6 +702,12 @@ li >
     font-size: 15px;
 }
 
+.form-holder > form > div > label > span,
+.onboarding > .onboarding-holder > form > div,label >span{
+    font-size: 13px;
+    color: var(--soft-text);
+}
+
 .form-holder > form > div > input:focus, textarea:focus,select:focus,
 .onboarding > .onboarding-holder > form > div > input:focus, textarea:focus{
     outline:none;
@@ -729,6 +735,7 @@ li >
 .form-holder > form > div > textarea{
     min-height:70px;
     max-height: 100px;
+    text-align: left;
 }
 
 .holder.image-holder{

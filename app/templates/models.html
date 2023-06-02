@@ -55,7 +55,7 @@
                         </h2>
                         <form action="" class="op-form edit-model" id="model-form">
                             <div>
-                                <label for="model-fullname">Full name</label>
+                                <label for="model-fullname">Full name &nbsp;<span>format: firstname surname</label>
                                 <input type="text" id="model-fullname" name="model-fullname" value="{{model.full_name}}">
                             </div>
                             <div>
@@ -63,8 +63,12 @@
                                 <input type="text" id="model-uname" name="model-uname" value="{{model.username}}">
                             </div>
                             <div>
-                                <label for="model-swipe-percent">Swipe percentage</label>
+                                <label for="model-swipe-percent">Swipe percentage &nbsp;<span>format: swipe left/swipe right</label>
                                 <input type="text" id="model-swipe-percent" name="model-swipe-percent" value="{{model.swipe_percent}}">
+                            </div>
+                            <div>
+                                <label for="model-socials">Socials &nbsp;<span>format: platform/handle,</label>
+                                    <textarea id="model-socials" name="model-socials" class="scroll">{% for social in model.socials %}{{ social.platform }}/{{ social.handle }}, {% endfor %}</textarea>
                             </div>
                             <input type="hidden" class="not-edit" id="model-id" name="model-id" value="{{model.id}}">
                             <div>
@@ -93,7 +97,7 @@
                         </h2>
                         <form action="" class="op-form" id="model-form">
                             <div>
-                                <label for="model-fullname">Full name</label>
+                                <label for="model-fullname">Full name &nbsp;<span>format: firstname surname</label>
                                 <input type="text" id="model-fullname" name="model-fullname" required>
                             </div>
                             <div>
@@ -101,8 +105,12 @@
                                 <input type="text" id="model-uname" name="model-uname" required>
                             </div>
                             <div>
-                                <label for="model-swipe-percent">Swipe percentage</label>
+                                <label for="model-swipe-percent">Swipe percentage &nbsp;<span>format: swipe left/swipe right</label>
                                 <input type="text" id="model-swipe-percent" name="model-swipe-percent" placeholder="40/60" required>
+                            </div>
+                            <div>
+                                <label for="model-socials">Socials &nbsp;<span>format: platform/handle,</span></label>
+                                <textarea id="model-socials" name="model-socials" value={{model_socials}}></textarea>
                             </div>
                             <input type="submit" value="submit"> 
                         </form>

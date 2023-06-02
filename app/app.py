@@ -229,13 +229,13 @@ def models():
 		cursor = db.cursor()
 		cursor.execute('''SELECT * FROM models ORDER BY added_at DESC''')
 		models = cursor.fetchall()
-
 		models = [{
 			'id':model[0],
 			'full_name':str(model[2]),
 			'username':model[3],
-			'added_at':model[5],
-			'swipe_percent':model[4]
+			'added_at':model[6],
+			'swipe_percent':model[4],
+			'socials':ast.literal_eval(model[5])
 		} for model in models]
 
 		for model in models:app.config['MODELS'].update({model['id']:model})
@@ -277,11 +277,10 @@ def models():
 				cursor = db.cursor()
 				cursor.execute('''DELETE FROM models WHERE id =?''',(model_id,))
 				db.commit()
-				username = app.config['MODELS'][model_id]['username']
 
 				for folder in os.listdir(image_folder):
-					if folder == username:
-						shutil.rmtree(f'{image_folder}\\{username}')
+					if folder == model_id:
+						shutil.rmtree(f'{image_folder}\\{model_id}')
 			
 				del app.config['MODELS'][model_id]
 				if session.get('MODEL') and model_id == session.get('MODEL')['id']: 
@@ -296,12 +295,24 @@ def model(action):
 			full_name = request.form.get('model-fullname')
 			username = request.form.get('model-uname')
 			swipe_percent = request.form.get('model-swipe-percent')
+			socials = request.form.get('model-socials')
+			socials = socials.split(',')
+
+			model_socials = []
+			for social in socials:
+				social = social.split('/')
+				platform = social[0]
+				handle = social[1]
+				model_socials.append({"platform":platform,"handle":handle})
+
+			print(model_socials)
+
 			user_id = session.get('ADMIN')['id']
 			model_id = str(uuid.uuid4())
 
 			usernames = [u['username'] for u in list(app.config['MODELS'].values())]
 			if username not in usernames:
-				location = f'{app_folder}\\images\\{model_id}'
+				location = os.path.join(app_folder,'images',model_id)
 				if os.path.exists(location):
 					return jsonify({'msg': 'Folder already exists'}), 400
 				
@@ -309,8 +320,8 @@ def model(action):
 				cursor = db.cursor()
 
 				cursor.execute('''INSERT INTO models
-				(id,user_id,full_name,username,swipe_percent) VALUES (?,?,?,?,?)
-				''',(model_id,user_id,full_name,username,swipe_percent))
+				(id,user_id,full_name,username,swipe_percent,socials) VALUES (?,?,?,?,?,?)
+				''',(model_id,user_id,full_name,username,swipe_percent,str(model_socials)))
 				db.commit()
 
 				cursor.execute('''SELECT * FROM models WHERE id =?''',(model_id,))
@@ -330,8 +341,9 @@ def model(action):
 						'id':model[0],
 						'full_name':str(model[2]),
 						'username':model[3],
-						'added_at':model[5],
-						'swipe_percent':model[4]
+						'added_at':model[6],
+						'swipe_percent':model[4],
+						'socials':ast.literal_eval(model[5])
 					}})
 				else:return jsonify({'msg':'error adding model'}),200
 
@@ -344,11 +356,21 @@ def model(action):
 			swipe_percent = request.form.get('model-swipe-percent')
 			model_id = request.form.get('model-id')
 
+			socials = request.form.get('model-socials')
+			socials = socials.split(',')	
+			model_socials = [
+				{
+					"platform":social.split('/')[0],
+					"handle":social.split('/')[1]
+				} for social in socials if social.strip()]
+
+			print(model_socials)
+
 			db = conn()
 			cursor = db.cursor()
 			cursor.execute('''UPDATE models 
-			SET full_name=?,username=?,swipe_percent =? WHERE id=? 
-			''',(full_name,username,swipe_percent,model_id,))
+			SET full_name=?,username=?,swipe_percent =?, socials=? WHERE id=? 
+			''',(full_name,username,swipe_percent,str(model_socials),model_id,))
 			db.commit()
 			return jsonify({'msg':'model updated successfully'}),200
 	except Exception as error:

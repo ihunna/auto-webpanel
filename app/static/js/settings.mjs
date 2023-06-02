@@ -233,7 +233,10 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 signupForm.reset();
                 con.log(response)
                 showHide('show',[alertBox],'Signup successful',{'bg':colorSuccess,'color':colorLessWhite});
-                setTimeout(() => showHide('no-show',[alertBox]), 5000);
+                setTimeout(() => {
+                    showHide('no-show',[alertBox]), 
+                    window.location.href = '/login';},
+                5000);
             })
             .catch(error => {
                 const errors = doc.querySelector('.errors');

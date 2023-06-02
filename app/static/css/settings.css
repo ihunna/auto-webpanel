@@ -6,7 +6,7 @@
 }
 
 :root{
-    --primary: #876cc4;
+    --primary: #82774A;
     --success: #028152;
     --danger: #fa1e59;
     --secondary:#f2a90d;
@@ -645,6 +645,14 @@ section{
     padding: 5px 16px 10px 16px;
     box-shadow: 0.2px 0.2px 10px #e2e2e2;
 }
+
+/* .main > 
+.main-box > 
+.main-container > 
+.profile-holder > 
+.profile-details > .p-details-bio > .bio-desc{
+    max-height: 150px;
+} */
 
 .main > 
 .main-box > 
