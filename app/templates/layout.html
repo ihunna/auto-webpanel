@@ -17,7 +17,7 @@
                 <p class="image">
                     {% set name_parts = g.admin.full_name.split() %}
                     {% if name_parts|length > 1 %}
-                        {{ name_parts[0][0] }} {{ name_parts[1][0] }} 
+                        {{ name_parts[0][0] }}{{ name_parts[1][0] }} 
                     {% else %}
                         {{ name_parts[0][0] }}
                     {% endif %}
