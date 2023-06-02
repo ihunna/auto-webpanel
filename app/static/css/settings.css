@@ -12,7 +12,7 @@
     --secondary:#f2a90d;
     --soft-white:#f1f1f1;
     --warning: #fcd889;
-    --soft-text: #919191;;
+    --soft-text: #919191;
 }
 
 html {
@@ -87,6 +87,24 @@ input[type="submit"]{
     font-weight: 500;
 }
 
+select[multiple]{
+    height: 100px;
+    padding: 10px;
+}
+
+select[multiple]::-webkit-scrollbar {
+    width: 2px;
+}
+
+select[multiple]::-webkit-scrollbar-track {
+    background-color: var(--soft-white);
+}
+
+select[multiple]::-webkit-scrollbar-thumb {
+    background-color: #ddd;
+    border-radius: 5px;
+  }
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -95,10 +113,8 @@ table {
 
   th,
   td {
-    padding: 12px;
+   
     text-align: center;
-    border-bottom: 1px solid #ddd;
-    cursor:default;
   }
 
   th:last-child,td:last-child{
@@ -114,25 +130,26 @@ table {
     color: #333;
   }
 
-  td{
-    font-size: 14px;
-  }
-
-  tbody {
+  /* tbody {
     overflow-y: auto;
     height: 200px;
+  } */
+
+  tbody tr{
+    position: relative;
+    border-bottom: 1px solid #ddd;
+    cursor:default;
+    overflow-x: auto;
   }
 
   thead,
   tbody tr {
-    display: table;
     width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
   }
 
   tbody td,
   thead th{
+    padding: 12px;
     width: auto;
     word-wrap:break-word;
   }
@@ -143,26 +160,47 @@ table {
     text-overflow: ellipsis;
   }
 
-  td.actions{
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 10px;
-    justify-items: end;
+  td.actions > i{
+    font-size: 18px;
+    padding: 5px 20px;
+   cursor: pointer;
   }
 
-  td > .eleveted-a{
+  td.actions > .action-btns{
+    position: absolute;
+    top: 1px;
+    right: 5%;
+    max-width:200px;
+    background: var(--soft-white);
+    display: none;
+    grid-template-columns: repeat(1,1fr);
+    padding: 10px;
+    z-index: 1;
+    transition:display 0.8s ease-in;
+  }
+
+  td.actions > .action-btns.show{
+    display: grid;
+  }
+
+  td.actions > .action-btns.no-show{
+    display: none;
+  }
+
+  td.actions > .action-btns > .eleveted-a{
     border: 1.5px solid #000000;
     color: #000000;
     padding: 5px 14px;
     border-radius: 20px;
-    margin: 0;
+    margin: 5px 0;
     background: #ffffff;
   }
 
-  td > .eleveted-a:first-child{
+  td.actions > .action-btns > .eleveted-a.danger{
     border: 1.5px solid var(--danger);
     color: var(--danger);
   }
+
 
 
   tbody tr:hover {

@@ -689,7 +689,11 @@ li >
 .form-holder > form > div,.onboarding > .onboarding-holder > form > div{
     display: flex;
     flex-direction: column;
-    margin: 7px 0;
+    margin: 10px 0;
+}
+
+.form-holder > form > div > .p-religion{
+    margin: 0;
 }
 
 .form-holder > form > div > label,
@@ -698,23 +702,29 @@ li >
     font-size: 15px;
 }
 
-.form-holder > form > div > input:focus, textarea:focus,
+.form-holder > form > div > input:focus, textarea:focus,select:focus,
 .onboarding > .onboarding-holder > form > div > input:focus, textarea:focus{
     outline:none;
     border: 2px solid #ddd;
 }
 
-.form-holder > form > div > input, textarea,
+.form-holder > form > div > input, textarea,select,
 .onboarding > .onboarding-holder > form > div > input{
-    border: 1px solid var(--soft-white);
+    outline:none;
+    border: 1.5px solid var(--soft-white);
 }
 
-.form-holder > form > div > input,
+.form-holder > form > div > input,select,
 .onboarding > .onboarding-holder > form > div > input
 {
     height: 30px;
     padding: 0px 5px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none;
 }
+
 
 .form-holder > form > div > textarea{
     min-height:70px;

@@ -10,7 +10,7 @@ from uszipcode import SearchEngine
 from dotenv import load_dotenv
 from functools import wraps
 
-from flask import Flask, flash, redirect, render_template,send_file, abort, url_for,request, session,jsonify,g
+from flask import Flask, flash, redirect, render_template,send_file, abort, url_for,request, session,jsonify,g,send_from_directory
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -26,6 +26,7 @@ database_file = os.path.join(app_folder,'okcupid.db')
 image_folder = os.path.join(app_folder,'images')
 
 
+lander_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "./static"))
 data_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "./data"))
 
 names_file = os.path.join(data_folder, 'names.txt')
@@ -80,6 +81,7 @@ Session(app)
 
 app.config['DATABASE'] = database_file
 app.config['IMAGE_FOLDER'] = image_folder
+app.config['LANDER'] = os.path.join(lander_folder,'index.html')
 app.config['PLATFORMS']:dict = {}
 app.config['MODELS']:dict = {}
 app.config['ADMINS']:dict = {}

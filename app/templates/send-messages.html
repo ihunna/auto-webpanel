@@ -24,14 +24,14 @@
             <div class="header">
                 <h1>Send messages</h1>
                 <div class="action-links scroll">
-                    <a href="" class="eleveted-a">
+                    <a href="/messages" class="eleveted-a">
+                        messages
+                    </a>
+                    <a href="/accounts" class="eleveted-a">
+                        accounts
+                    </a>
+                    <a href="/dashboard" class="eleveted-a">
                         home
-                    </a>
-                    <a href="" class="eleveted-a">
-                        swipes
-                    </a>
-                    <a href="" class="eleveted-a">
-                        sort by
                     </a>
                 </div>
             </div>
@@ -64,10 +64,6 @@
                              <strong>Started at : </strong>
                              <span>{{task_status.start_time}}</span>
                          </div>
-                         <div>
-                            <strong>Progress : </strong>
-                            <span>{{task_status.progress}}%</span>
-                        </div>
                          {% if task_status.status == "Running"%}
                                  <span class="op-spinner bg-warning">
                                      <i class="fa fa-spinner fa-spin"></i>
@@ -109,11 +105,10 @@
                                  <label for="max-workers">No. of concurrent actions (optional)</label>
                                  <input type="number" id="max-workers" name="max-workers">
                              </div>
-                             <input type="submit">
+                             <input type="submit" value="submit">
                          </form>
                      </div>
                  {%endif%}
             </div>
         </div>
-    {% endif %}
 {%endblock%}

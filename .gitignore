@@ -9,3 +9,4 @@ app.zip
 proxies.txt
 app/data/proxies
 test.py
+postman-collection.json

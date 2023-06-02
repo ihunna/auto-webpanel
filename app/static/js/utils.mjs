@@ -31,7 +31,7 @@ const showHide = (action='show',e=Array,text=String,styles=Array) =>{
     }
 }
 
-const createModal = (element=Element,type=String,items=Array,text=String,cat=String) => {
+const createModal = (element=Element,type=String,items=Array,text=String,cat=String,action=String) => {
     element.innerHTML = ``;
     const m = doc.createElement('div'); 
     m.classList.remove('for-m-item-display');
@@ -60,19 +60,19 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
         yesLink.textContent = 'Yes';
         yesAction.appendChild(yesLink); 
         m.appendChild(yesAction);
-
+        
         yesLink.addEventListener('click',(e)=>{
           e.preventDefault();
-
-          text = `Deleting ${cat}`;
+          let url = cat==='admin'?`/admins/${action}`:`/delete/${cat}`
+          text = cat !=='admin'?`Deleting ${cat}`:`Updating admin`
           showHide('no-show',[overlay,modal]);
           showHide('show',[alertBox],text,{'bg':colorSuccess,'color':colorLessWhite});
 
-          sendRequest('POST',`/delete/${cat}`,{'data':items})
+          sendRequest('POST',url,{'data':items})
           .then(response => {
             showHide('no-show',[alertBox]);
             con.log(response)
-            showHide('show',[alertBox],`${cat} deleting successful`,{'bg':colorSuccess,'color':colorLessWhite});
+            showHide('show',[alertBox],response,{'bg':colorSuccess,'color':colorLessWhite});
             setTimeout(() => {
               showHide('no-show',[alertBox])
               window.location.reload();
@@ -81,7 +81,7 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
           })
           .catch(error => {
             showHide('no-show',[alertBox]);
-            showHide('show',[alertBox],`${cat} deleting unsuccessful`,{'bg':colorDanger,'color':colorLessWhite});
+            showHide('show',[alertBox],error,{'bg':colorDanger,'color':colorLessWhite});
             setTimeout(() => showHide('no-show',[alertBox]), 5000);
             con.error(error);
           });
@@ -94,81 +94,88 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
         const ul = doc.createElement('ul');
         ul.classList.add('m-item-display', 'scroll');
 
-        for (let i = 0; i < 8; i++){
-            const li = doc.createElement('li');
+        items.forEach(e =>{
+            if (e.__typename === 'StackMatch'){
+              const li = doc.createElement('li');
+              const itemHeaderDiv = doc.createElement('div');
+              itemHeaderDiv.classList.add('item-header');
+              itemHeaderDiv.style.background = `url('${e.match.user.primaryImage.square800}')`;
+              itemHeaderDiv.style.backgroundRepeat = 'no-repeat';
+              itemHeaderDiv.style.backgroundSize = 'cover';
+              itemHeaderDiv.style.backgroundPosition = 'center';
 
-            const itemHeaderDiv = doc.createElement('div');
-            itemHeaderDiv.classList.add('item-header');
-            itemHeaderDiv.style.background = "url('../../images/low-angle-businessman.jpg')";
-            itemHeaderDiv.style.backgroundRepeat = 'no-repeat';
-            itemHeaderDiv.style.backgroundSize = 'cover';
-            itemHeaderDiv.style.backgroundPosition = 'center';
+              const itemHeaderOverlayDiv = doc.createElement('div');
+              itemHeaderOverlayDiv.classList.add('item-header-overlay');
+              itemHeaderDiv.appendChild(itemHeaderOverlayDiv);
 
-            const itemHeaderOverlayDiv = doc.createElement('div');
-            itemHeaderOverlayDiv.classList.add('item-header-overlay');
-            itemHeaderDiv.appendChild(itemHeaderOverlayDiv);
+              const likeHeartDiv = doc.createElement('div');
+              likeHeartDiv.classList.add('like-heart');
+              const likeIconElement = doc.createElement('i');
+              let like = e.match.targetLikes?'fas':'far'
+              likeIconElement.classList.add(like, 'fa-heart');
+              likeHeartDiv.appendChild(likeIconElement);
+              itemHeaderDiv.appendChild(likeHeartDiv);
 
-            const likeHeartDiv = doc.createElement('div');
-            likeHeartDiv.classList.add('like-heart');
-            const likeIconElement = doc.createElement('i');
-            likeIconElement.classList.add('fas', 'fa-heart', 'liked');
-            likeHeartDiv.appendChild(likeIconElement);
-            itemHeaderDiv.appendChild(likeHeartDiv);
+              const itemHdDiv = doc.createElement('div'); 
+              itemHdDiv.classList.add('item-hd');
 
-            const itemHdDiv = doc.createElement('div'); 
-            itemHdDiv.classList.add('item-hd');
+              const itemNameAgeDiv = doc.createElement('div');
+              itemNameAgeDiv.classList.add('item-name-age');
+              const itemNameElement = doc.createElement('h3');
+              itemNameElement.classList.add('item-name');
+              itemNameElement.textContent = e.match.user.displayname;
+              if (e.selfieVerifiedStatus !== 'UNVERIFIED'){
+                const vIconSpan = doc.createElement('span');
+                vIconSpan.classList.add('v-icon');
+                const vIconElement = doc.createElement('i');
+                vIconElement.classList.add('fas', 'fa-check-circle');
+                vIconSpan.appendChild(vIconElement);
+                itemNameElement.appendChild(vIconSpan);
+              }
+              itemNameAgeDiv.appendChild(itemNameElement);
+              const itemAgeElement = doc.createElement('h3');
+              itemAgeElement.classList.add('item-age');
+              itemAgeElement.textContent = e.match.user.age;
+              itemNameAgeDiv.appendChild(itemAgeElement);
+              itemHdDiv.appendChild(itemNameAgeDiv);
 
-            const itemNameAgeDiv = doc.createElement('div');
-            itemNameAgeDiv.classList.add('item-name-age');
-            const itemNameElement = doc.createElement('h3');
-            itemNameElement.classList.add('item-name');
-            itemNameElement.textContent = 'Kevin Debrun';
-            const vIconSpan = doc.createElement('span');
-            vIconSpan.classList.add('v-icon');
-            const vIconElement = doc.createElement('i');
-            vIconElement.classList.add('fas', 'fa-check-circle');
-            vIconSpan.appendChild(vIconElement);
-            itemNameElement.appendChild(vIconSpan);
-            itemNameAgeDiv.appendChild(itemNameElement);
-            const itemAgeElement = doc.createElement('h3');
-            itemAgeElement.classList.add('item-age');
-            itemAgeElement.textContent = '23';
-            itemNameAgeDiv.appendChild(itemAgeElement);
-            itemHdDiv.appendChild(itemNameAgeDiv);
+              const itemLocationDiv = doc.createElement('div');
+              itemLocationDiv.classList.add('item-location');
+              const locationIconElement = doc.createElement('i');
+              locationIconElement.classList.add('fa', 'fa-map-marker');
+              itemLocationDiv.appendChild(locationIconElement);
+              let location = e.match.user.userLocation
+              let country_code = location.countryCode
+              location = `${location.publicName}`.replace('[','').replace(']','').split(',')
+              itemLocationDiv.textContent = `${location},${country_code}`;
+              itemHdDiv.appendChild(itemLocationDiv);
 
-            const itemLocationDiv = doc.createElement('div');
-            itemLocationDiv.classList.add('item-location');
-            const locationIconElement = doc.createElement('i');
-            locationIconElement.classList.add('fa', 'fa-map-marker');
-            itemLocationDiv.appendChild(locationIconElement);
-            itemLocationDiv.textContent = 'New York, United States';
-            itemHdDiv.appendChild(itemLocationDiv);
+              const itemStatsDiv = doc.createElement('div');
+              itemStatsDiv.classList.add('item-stats');
+              const likedMeDiv = doc.createElement('div');
+              likedMeDiv.classList.add('eleveted-a');
+              likedMeDiv.textContent = e.match.targetLikes?'liked me':"didn't like me"
+              const matchedDiv = doc.createElement('div');
+              matchedDiv.classList.add('eleveted-a');
+              matchedDiv.textContent = 'matched';
+              itemStatsDiv.appendChild(likedMeDiv);
+              itemStatsDiv.appendChild(matchedDiv);
+              itemHdDiv.appendChild(itemStatsDiv);
 
-            const itemStatsDiv = doc.createElement('div');
-            itemStatsDiv.classList.add('item-stats');
-            const likedMeDiv = doc.createElement('div');
-            likedMeDiv.classList.add('eleveted-a');
-            likedMeDiv.textContent = 'liked me';
-            const matchedDiv = doc.createElement('div');
-            matchedDiv.classList.add('eleveted-a');
-            matchedDiv.textContent = 'matched';
-            itemStatsDiv.appendChild(likedMeDiv);
-            itemStatsDiv.appendChild(matchedDiv);
-            itemHdDiv.appendChild(itemStatsDiv);
+              itemHeaderDiv.appendChild(itemHdDiv);
+              li.appendChild(itemHeaderDiv);
 
-            itemHeaderDiv.appendChild(itemHdDiv);
-            li.appendChild(itemHeaderDiv);
+              const itemBioDiv = doc.createElement('div');
+              itemBioDiv.classList.add('item-bio', 'scroll');
+              const bioParagraph = doc.createElement('p');
+              let bio = e.match.user.essaysWithUniqueIds
+              bioParagraph.textContent = bio.length > 0?bio[0].processedContent:'';
+              itemBioDiv.appendChild(bioParagraph);
+              li.appendChild(itemBioDiv);
 
-            const itemBioDiv = doc.createElement('div');
-            itemBioDiv.classList.add('item-bio', 'scroll');
-            const bioParagraph = doc.createElement('p');
-            bioParagraph.textContent = 'From Florida, just moved to DC!';
-            itemBioDiv.appendChild(bioParagraph);
-            li.appendChild(itemBioDiv);
-
-            ul.appendChild(li);
-        }
-        
+              ul.appendChild(li);
+            }
+        })      
         m.appendChild(ul);
     }
 

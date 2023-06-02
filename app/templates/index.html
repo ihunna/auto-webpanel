@@ -10,13 +10,13 @@
             <div class="header">
                 <h1>Platforms</h1>
                 <div class="action-links scroll">
-                    <a href="/" class="eleveted-a">
+                    <a href="/platforms" class="eleveted-a">
                         platforms
                     </a>
                     <a href="/accounts" class="eleveted-a">
                         accounts
                     </a>
-                    <a href="/?action=add-platform" class="eleveted-a">
+                    <a href="/platforms?action=add-platform" class="eleveted-a">
                         add platform
                     </a>
                 </div>
@@ -41,8 +41,8 @@
                                     <span>{{platform.added_by}}</span>
                                 </div>
                                 <span class="op-card-actions">
-                                    <a href="/?platform={{platform.id}}" class="bg-success">Set</a>
-                                    <a href="/?platform={{platform.id}}&action=delete-platform" class="bg-danger">Delete</a>
+                                    <a href="platforms?platform={{platform.id}}" class="bg-success">Set</a>
+                                    <a href="platforms?platform={{platform.id}}&action=delete-platform" class="bg-danger">Delete</a>
                                 </span>
                             </div>
                         {%endfor%}
@@ -57,7 +57,7 @@
                             <label for="platfrom-name">Platform name</label>
                             <input type="text" id="platform-name" name="platform-name" required>
                         </div>
-                        <input type="submit"> 
+                        <input type="submit" value="submit"> 
                     </form>
                 </div>
                 {%endif%}

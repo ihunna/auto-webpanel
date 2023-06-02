@@ -425,6 +425,9 @@ td.actions{
 }
 
 @media screen and (max-width:425.99px) {
+    td.actions > .action-btns{
+        right: 15%;
+    }
     .model-tag,.platform-tag{
         font-size: 12px !important;
     }
@@ -510,10 +513,17 @@ td.actions{
     }
 
     .form-holder > form{
+        align-content: center;
+        position: relative;
         margin: 10px auto;
     }
-    .form-holder > form > div > label{
+    .form-holder > form > div{
+        width: 220px;
+        margin: 10px auto;
+    }
+    .form-holder > form > div > *{
         font-size: 14px;
+        width: 100%;
     }
 
 
@@ -618,6 +628,9 @@ td.actions{
     .main-box > 
     .main-container > .image-holder > .images > li{
         height: 100px;
+    }
+    .form-holder > form > div{
+        max-width: 80%;
     }
 
 }

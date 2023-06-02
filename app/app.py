@@ -26,7 +26,18 @@ def after_request(response):
 	response.headers["Pragma"] = "no-cache"
 	return response
 
-@app.route('/',methods=['GET'])
+
+@app.route('/')
+def serve_lander():
+	return render_template('lander.html')
+
+
+@app.route('/dashboard')
+@login_required
+def redirect_dash():
+	return redirect('/platforms')
+
+@app.route('/platforms',methods=['GET'])
 @login_required
 def index():
 	g.page = 'platforms'
@@ -61,7 +72,7 @@ def index():
 				if platform_id in app.config['PLATFORMS']:del app.config['PLATFORMS'][platform_id]
 				if session.get('PLATFORM') and platform_id == session.get('PLATFORM')['id']: 
 					del session['PLATFORM']
-			return redirect('/')
+			return redirect('/dashboard')
 	else:
 		session['PLATFORM'] = app.config['PLATFORMS'].get(platform_id)
 		current_url = session.get('CURRENT_URL')
@@ -97,15 +108,7 @@ def admins():
 	action = request.args.get('action')
 	db = conn()
 	cursor = db.cursor()
-	if  action and action == 'make-super':
-		admin_id = request.args.get('id')
-		admin_status = request.args.get('status')
-		admin = session.get('ADMIN')
-		if admin['role'] == 'super-admin' and admin_status == 'active':
-			cursor.execute('''UPDATE admins SET role =? WHERE id =?''',('super-admin',admin_id))
-			db.commit()
-	
-	elif  action and action == 'admin-settings':
+	if  action and action == 'admin-settings':
 		admin = session.get('ADMIN')
 		admin_id = admin['id']
 		
@@ -124,25 +127,6 @@ def admins():
 		admin_tasks = cursor.fetchone()[0]
 		return render_template('admins.html', action = action,admin=admin,
 			admin_images=admin_images,admin_accounts=admin_accounts,admin_tasks=admin_tasks)
-	
-	elif  action and action == 'block':
-		admin_id = request.args.get('id')
-		admin_status = request.args.get('status')
-
-		admin = session.get('ADMIN')
-		if admin['role'] == 'super-admin' and admin_status == 'active':
-			cursor.execute('''UPDATE admins SET status =?, role=? WHERE id =?''',('blocked','admin',admin_id,))
-			db.commit()
-
-	elif  action and action == 'unblock':
-		admin_id = request.args.get('id')
-		admin_status = request.args.get('status')
-
-		admin = session.get('ADMIN')
-		if admin['role'] == 'super-admin' and admin_status == 'block':
-			cursor.execute('''UPDATE admins SET status =? WHERE id =?''',('active',admin_id))
-			db.commit()
-
 	page = int(request.args.get('page', 1))
 	limit = int(request.args.get('limit', 4))
 
@@ -165,19 +149,22 @@ def admins():
 	}for admin in admins]
 
 	for admin in admins:app.config['ADMINS'].update({admin['id']:admin})
+	admin_id = session.get('ADMIN')['id']
+	session['ADMIN'] = app.config['ADMINS'][admin_id]
 	return render_template('admins.html',admins=admins,page=page, limit=limit,total_page=total_page)
 
 @app.route('/admins/<action>', methods=['POST'])
 @login_required
 def admin(action):
 	try:
+		db = conn()
+		cursor = db.cursor()
+
 		if action =='edit-admin':
 			full_name = request.form.get('admin-fullname')
 			email = request.form.get('admin-email')
 			emails = [e['email'] for e in list(app.config['ADMINS'].values())]
 			admin_id = session.get('ADMIN')['id']
-			db = conn()
-			cursor = db.cursor()
 
 			if email not in emails:
 				cursor.execute('''UPDATE admins 
@@ -190,6 +177,41 @@ def admin(action):
 				''',(full_name,admin_id))
 				db.commit()
 			return jsonify({'msg':'admin updated successfully'}),200
+		
+		elif action == 'make-super':
+			op_admin_id = request.get_json()['data'][0]['admin_id']
+			op_admin = app.config['ADMINS'][op_admin_id]
+			op_admin_status = op_admin['status']
+
+			admin = session.get('ADMIN')
+			if admin['role'] == 'super-admin' and op_admin_status == 'active' and admin['id'] != op_admin_id:
+				cursor.execute('''UPDATE admins SET role =? WHERE id =?''',('super-admin',op_admin_id))
+				db.commit()
+				return jsonify({'msg':'user updated to super admin'}),200
+			return jsonify({'msg':'not authorized'}),403
+
+		elif action == 'block':
+			op_admin_id = request.get_json()['data'][0]['admin_id']
+			op_admin = app.config['ADMINS'][op_admin_id]
+			op_admin_status = op_admin['status']
+			admin = session.get('ADMIN')
+			if admin['role'] == 'super-admin' and op_admin_status == 'active' and admin['id'] != op_admin_id:
+				cursor.execute('''UPDATE admins SET status =?, role=? WHERE id =?''',('blocked','admin',op_admin_id,))
+				db.commit()
+				return jsonify({'msg':'user blocked'}),200
+			return jsonify({'msg':'not authorized'}),403
+
+		elif action == 'unblock':
+			op_admin_id = request.get_json()['data'][0]['admin_id']
+			op_admin = app.config['ADMINS'][op_admin_id]
+			op_admin_status = op_admin['status']
+			admin = session.get('ADMIN')
+			if admin['role'] == 'super-admin' and op_admin_status == 'blocked' and admin['id'] != op_admin_id:
+				cursor.execute('''UPDATE admins SET status =? WHERE id =?''',('active',op_admin_id))
+				db.commit()
+				return jsonify({'msg':'user unblocked'}),200
+			return jsonify({'msg':'not authorized'}),403
+
 	except Exception as error:
 		print(error)
 		return jsonify({'msg':'error updating admin'}),400
@@ -472,6 +494,8 @@ def account_page():
 			if id in accounts.keys():
 				is_account = True
 				account = accounts[id]
+				matches = account['user_data']['data']['me']['stack']
+				matches = json.dumps(matches, separators=(',', ':'),ensure_ascii=False)
 				i = 0
 				if 'photos' in account['user_data']['data']['me'].keys():
 					for image in  account['user_data']['data']['me']['photos']:
@@ -484,9 +508,9 @@ def account_page():
 				return render_template('account-page.html',account=account,images=images,action=action)
 			elif action == 'edit-account':
 				return render_template('account-page.html',account=account,images=images,action=action)
-			return render_template('account-page.html',account=account,images=images)
-		else:return redirect('/')
-	return redirect('/')
+			return render_template('account-page.html',account=account,images=images,matches=matches)
+		else:return redirect('/dashboard')
+	return redirect('/dashboard')
 
 @app.route('/account-page/<action>',methods=['POST'])
 @login_required
@@ -505,7 +529,6 @@ def account_action(action):
 			return jsonify({'msg': 'location updated successfully'}), 200
 	except:
 		return jsonify({'msg': 'Error'}), 404
-
 	
 @app.route('/create-accounts',methods=['POST'])
 @login_required
@@ -631,17 +654,42 @@ def swipe_page_p():
 	cursor.execute('''INSERT INTO tasks (id,type,status,progress) VALUES (?,?,?,?)
 	''', (swipe_task_id, 'Swiping Operation', swipe_task_status,0))
 	db.commit()
-
-	def slp(): sleep(50)
 	swipe_task = Thread(target=slp)
 	swipe_task.start()
 
-	# account_task.native_id
 
 	if swipe_task.is_alive():
 		return jsonify({'msg': 'Task started, please wait while it finishes'}), 200
 	else:
 		return jsonify({'msg': 'No tasks running'}), 200
+
+
+@app.route('/send-msg', methods=['GET'])
+@login_required
+@check_platform
+@check_model
+def send_msg():
+	g.page = 'send-msg'
+	global swipe_task, swipe_task_id
+	running = False
+	task_status = {}
+
+	if swipe_task:
+		if swipe_task.is_alive():
+			running = True
+		db = conn()
+		cursor = db.cursor()
+		cursor.execute('''SELECT * FROM tasks WHERE id =?''', (swipe_task_id,))
+		task = cursor.fetchone()
+
+		task_status = {
+			'type': task[1],
+			'start_time': task[2],
+			'status': task[3],
+			'progress': task[4]
+		}
+	return render_template('send-messages.html',running=running,task_status=task_status)
+	
 
 @app.route('/tasks',methods=['GET'])
 @login_required
@@ -772,7 +820,7 @@ def images(type):
 	g.page = 'images'
 	try:
 		page = int(request.args.get('page', 1))
-		limit = int(request.args.get('limit', 1))
+		limit = int(request.args.get('limit', 10))
 		model_id = session.get('MODEL')['id']
 		admin_id = session.get('ADMIN')['id']
 

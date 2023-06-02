@@ -6,7 +6,49 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         menuBtn.addEventListener('click',() => showHide('show-menu',[overlay,uCard,sideBar,closeMenuBtn]));
         closeMenuBtn.addEventListener('click',() => showHide('no-show',[overlay,uCard,sideBar,closeMenuBtn]));
     }catch(error){con.log(error)}
-    
+    try{
+        const table = doc.querySelector('table');
+        const td = table.querySelectorAll('td.actions');
+        td.forEach(e =>{
+            const aSpan = e.querySelector('.action-btns');
+            const actionBtn = aSpan.querySelectorAll('a');
+            actionBtn.forEach(a=>{
+                if (a.classList.contains('block-this-account?') || 
+                    a.classList.contains('unblock-this-account?') ||
+                    a.classList.contains('make-super?'))
+
+                a.addEventListener('click',(event) =>{
+                    event.preventDefault();
+                    const text = a.classList[a.classList.length - 1].replace(/-/g, ' ');
+                    let action;
+                    if (a.classList.contains('block-this-account?')){action = 'block'}
+                    else if (a.classList.contains('unblock-this-account?')){action='unblock'}
+                    else if (a.classList.contains('make-super?')){action='make-super'}
+                    createModal(modal,'prompt',[{'admin_id':e.id}],text,'admin',action)
+                    showHide('show',[overlay,modal]);
+                })
+            })
+
+
+
+            const toolKit = e.querySelector('i');
+            toolKit.addEventListener('click',()=>{
+                td.forEach(a =>{
+                    const aSpan = a.querySelector('.action-btns');
+                    showHide('no-show',[aSpan]);
+                })
+                const aSpan = e.querySelector('.action-btns');
+                if(aSpan.classList.contains('shown')){
+                    aSpan.classList.remove('shown');
+                    showHide('no-show',[aSpan]);
+                }else{
+                    showHide('show',[aSpan]);
+                    aSpan.classList.add('shown');
+                }
+            })
+        })
+
+    }catch(error){con.log(error)}
     try{
         const dBtn = doc.querySelectorAll('.delete');
         dBtn.forEach(e => {
@@ -24,22 +66,21 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             });
         });
     }catch (error){con.log(error)}
-
     closeBtn.forEach(e =>{
         e.addEventListener('click',() => showHide('no-show',[overlay,modal]));
     });
-
     try{
         const viewMatches = doc.querySelectorAll('.view-matches');
         viewMatches.forEach(e=>{
             e.addEventListener('click',(e) =>{
                 e.preventDefault();
-                createModal(modal,'mModal');
+                const matches = JSON.parse(_matches.replace('"{','{').replace('}"','}')).data;
+                con.log(matches)
+                createModal(modal,'mModal',matches);
                 showHide('show',[overlay,modal]);
             });
         });
     }catch (error){con.log(error)}
-
     try{
         const viewAll = doc.querySelector('.view-all');
         viewAll.addEventListener('click',(e) => {
@@ -48,7 +89,6 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             showHide('show',[overlay,modal]);
         });
     }catch(error){con.log(error)}
-
     try{
         const uploadImages = doc.querySelectorAll('.upload-image');
         uploadImages.forEach(e => {
@@ -59,7 +99,6 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             });
         });
     }catch (error){con.log(error)}
-
     try{
         const accOpForm = doc.querySelector('#account-op-form');
         accOpForm.addEventListener('submit',(e)=>{
@@ -111,7 +150,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 platformForm.reset();
                 setTimeout(() => {
                     showHide('no-show',[alertBox]);
-                    window.location.href = '/'
+                    window.location.href = '/dashboard'
                 }, 5000)
             })
             .catch(error => {
@@ -121,7 +160,6 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             });
         })
     }catch(error){con.log(error)}
-
     try{
         const modelForm = doc.querySelector('#model-form');
         modelForm.addEventListener('submit',(e)=>{
@@ -144,7 +182,6 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             });
         })
     }catch(error){con.log(error)}
-
     try{
         const adminForm = doc.querySelector('#admin-form');
         adminForm.addEventListener('submit',(e)=>{
@@ -184,7 +221,6 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             });
         })
     }catch(error){con.log(error)}
-    
     try{
         const signupForm = doc.querySelector('#signup-form');
         signupForm.addEventListener('submit',(e)=>{
@@ -208,7 +244,6 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             });
         })
     }catch(error){con.log(error)}
-   
     try{
         const loginForm = doc.querySelector('#login-form');
         loginForm.addEventListener('submit',(e)=>{
@@ -223,7 +258,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 showHide('show',[alertBox],'Login successful',{'bg':colorSuccess,'color':colorLessWhite});
                 setTimeout(() => {
                     showHide('no-show',[alertBox]);
-                    window.location.replace('/')
+                    window.location.replace('/dashboard')
             }, 5000);
             })
             .catch(error => {
@@ -235,14 +270,13 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             });
         })
     }catch(error){con.log(error)}
-
     try{
         const images = doc.querySelector('#images');
         const imageLi = images.querySelectorAll('li');
         imageLi.forEach(li => {
             li.addEventListener('click',()=>{
                 const imgSrc = li.querySelector('img').getAttribute('src');
-                const imgName = imgSrc.split('/');
+                const imgName = imgSrc.split('/dashboard');
                 const url = imgSrc;
                 const urlParts = url.split("/");
 
