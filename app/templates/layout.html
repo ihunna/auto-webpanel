@@ -15,7 +15,9 @@
             </div>
             <div class="user-image">
                 <p class="image">
-                    {{ g.admin.full_name.split()|length > 1 ? g.admin.full_name.split()[1][0] : '' }}
+                    {% if g.admin.full_name.split()|length > 1 %}
+                        {{ g.admin.full_name.split()[1][0] }}
+                    {% endif %}
                 </p>
             </div>
             <span class="close-menu-btn">
