@@ -298,12 +298,13 @@ def model(action):
 			socials = request.form.get('model-socials')
 			socials = socials.split(',')
 
-			model_socials = []
-			for social in socials:
-				social = social.split('/')
-				platform = social[0]
-				handle = social[1]
-				model_socials.append({"platform":platform,"handle":handle})
+			socials = request.form.get('model-socials')
+			socials = socials.split(',')	
+			model_socials = [
+				{
+					"platform":social.split('/')[0],
+					"handle":social.split('/')[1]
+				} for social in socials if social.strip()]
 
 			print(model_socials)
 
