@@ -100,7 +100,7 @@ def conn():
 
 		#create models table
 		cursor.execute('''CREATE TABLE IF NOT EXISTS models
-		(id TEXT PRIMARY KEY,user_id TEXT,full_name TEXT,username TEXT,swipe_percent,socials TEXT,added_at DATETIME DEFAULT CURRENT_TIMESTAMP)
+		(id TEXT PRIMARY KEY,user_id TEXT,full_name TEXT,username TEXT,swipe_percent TEXT,socials TEXT,added_at DATETIME DEFAULT CURRENT_TIMESTAMP)
 		''')
 
 		#create admins table
