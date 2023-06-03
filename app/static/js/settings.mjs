@@ -188,7 +188,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             e.preventDefault();
             const formData = new FormData(adminForm);
             
-            sendRequest('POST', '/admins/edit-admin', null, formData).then(response => {
+            sendRequest('POST',`/admins/${action}`, null, formData).then(response => {
                 adminForm.reset()
                 showHide('show',[alertBox],response,{'bg':colorSuccess,'color':colorLessWhite});
                 setTimeout(() => {
@@ -227,12 +227,12 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             e.preventDefault();
             const formData = new FormData(signupForm);
             
-            sendRequest('POST', '/signup', null, formData).then(response => {
+            sendRequest('POST', signup_url, null, formData).then(response => {
                 const errors = doc.querySelector('.errors');
                 errors.innerHTML = '';
                 signupForm.reset();
                 con.log(response)
-                showHide('show',[alertBox],'Signup successful',{'bg':colorSuccess,'color':colorLessWhite});
+                showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 setTimeout(() => {
                     showHide('no-show',[alertBox]), 
                     window.location.href = '/login';},

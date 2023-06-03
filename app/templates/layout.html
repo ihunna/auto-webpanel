@@ -15,12 +15,14 @@
             </div>
             <div class="user-image">
                 <p class="image">
-                    {% set name_parts = g.admin.full_name.split() %}
-                    {% if name_parts|length > 1 %}
-                        {{ name_parts[0][0] }}{{ name_parts[1][0] }} 
-                    {% else %}
-                        {{ name_parts[0][0] }}
-                    {% endif %}
+                    {%if g.admin.full_name != None%}
+                        {% set name_parts = g.admin.full_name.split() %}
+                        {% if name_parts|length > 1 %}
+                            {{ name_parts[0][0] }}{{ name_parts[1][0] }} 
+                        {% else %}
+                            {{ name_parts[0][0] }}
+                        {% endif %}
+                    {%endif%}
                 </p>
             </div>
             <span class="close-menu-btn">

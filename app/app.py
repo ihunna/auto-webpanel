@@ -17,6 +17,8 @@ def before_request():
 	g.admin =  session.get('ADMIN')
 	g.model = session.get('MODEL')
 	g.platform = session.get('PLATFORM')
+	g.passkey = app.config['PASS_KEY']
+	g.secret_link = app.config['S_LINK']
 
 @app.after_request
 def after_request(response):
@@ -127,6 +129,11 @@ def admins():
 		admin_tasks = cursor.fetchone()[0]
 		return render_template('admins.html', action = action,admin=admin,
 			admin_images=admin_images,admin_accounts=admin_accounts,admin_tasks=admin_tasks)
+	
+	elif  action and action == 'edit-signup-configs':
+		admin = session.get('ADMIN')
+		return render_template('admins.html', action = action,admin=admin)
+	
 	page = int(request.args.get('page', 1))
 	limit = int(request.args.get('limit', 4))
 
@@ -160,7 +167,7 @@ def admin(action):
 		db = conn()
 		cursor = db.cursor()
 
-		if action =='edit-admin':
+		if action =='admin-settings':
 			full_name = request.form.get('admin-fullname')
 			email = request.form.get('admin-email')
 			emails = [e['email'] for e in list(app.config['ADMINS'].values())]
@@ -211,6 +218,20 @@ def admin(action):
 				db.commit()
 				return jsonify({'msg':'user unblocked'}),200
 			return jsonify({'msg':'not authorized'}),403
+		elif action == 'edit-signup-configs':
+			passkey = request.form.get('passkey')
+			s_link = request.form.get('secret_link')
+			admin = session.get('ADMIN')
+			if admin['role'] == 'super-admin':
+				app.config['ENV_VALUES']['ADMIN_SECRET'] = passkey
+				app.config['ENV_VALUES']['SIGNUP_LINK'] = s_link
+
+				for key, value in app.config['ENV_VALUES'].items():
+					set_key(env_path, key, value)
+
+				return jsonify({'msg':'configs updated successfully'}),200
+			else:return jsonify({'msg':'Unauthorized'}),403
+
 
 	except Exception as error:
 		print(error)
@@ -258,15 +279,15 @@ def models():
 				db = conn()
 				cursor = db.cursor()
 				cursor.execute('SELECT COUNT(*) FROM images WHERE model=? AND user_id=?',
-               	(model_id, admin_id))
+			   	(model_id, admin_id))
 				model_images = cursor.fetchone()[0]
 
 				cursor.execute('SELECT COUNT(*) FROM accounts WHERE model=? AND user_id=?',
-               	(model_id,admin_id))
+			   	(model_id,admin_id))
 				model_accounts = cursor.fetchone()[0]
 
 				cursor.execute('SELECT COUNT(*) FROM tasks WHERE model=? AND user_id=?',
-               	(model_id,admin_id))
+			   	(model_id,admin_id))
 				model_tasks = cursor.fetchone()[0]
 
 				return render_template('models.html',model=model,action=action,
@@ -377,57 +398,72 @@ def model(action):
 	except Exception as error:
 		print(error)
 		return jsonify({'msg':'error updating model'}),500
-  
-@app.route('/signup',methods=['GET','POST'])
+
+
+@app.route('/signup',methods=['POST','GET'])
 def signup():
+	if request.method == 'GET':return redirect(url_for('login'))
+	return jsonify({'msg':'Not authorized'}),403
+
+@app.route(f'/signup/<key>', methods=['GET'])
+def signup_page(key):
+	g.page = 'signup'
+	if key and key == app.config['S_LINK']:
+		if 'ADMIN' not in session:return render_template('signup.html')
+		else:return redirect(url_for('index'))
+	return abort(404)
+
+
+@app.route(f'/adminonlyallowedtosignup__________',methods=['POST'])
+def do_signup():
 	try:
-		if request.method == 'GET':
-			if 'ADMIN' not in session:return render_template('signup.html')
-			else:return redirect(url_for('index'))
-		elif request.method == 'POST':
-			db = conn()
-			cursor = db.cursor()
+		if request.method == 'GET':return redirect(url_for('login'))
+		db = conn()
+		cursor = db.cursor()
 
-			full_name = request.form.get('full-name')
-			email = request.form.get('email')
-			password = request.form.get('password')
-			uid = str(uuid.uuid4())
-			role = 'admin'
-			status = 'active'
+		full_name = request.form.get('full-name')
+		email = request.form.get('email')
+		password = request.form.get('password')
+		passkey = request.form.get('passkey')
 
-			if not full_name or not email or not password:
-				return jsonify({'msg':'some entries are empty, fill all fields'}),400
-			
-			elif not validate_email(email):return jsonify({'msg':'not a valid email'}),400
-			
-			elif len(str(password)) < 8:return jsonify({'msg':'password must be 8 or more chars'}),400
-			elif not validate_password(password):
-				return jsonify({'msg':'password must contain 8 or more chars of laters and digits'}),400
-			password = generate_password_hash(password)
+		uid = str(uuid.uuid4())
+		role = 'admin'
+		status = 'active'
+		if not validate_passkey(passkey):return jsonify({'msg':"you're not allowed"}),403
+		
+		elif not full_name or not email or not password:
+			return jsonify({'msg':'some entries are empty, fill all fields'}),400
+		
+		elif not validate_email(email):return jsonify({'msg':'not a valid email'}),400
+		
+		elif len(str(password)) < 8:return jsonify({'msg':'password must be 8 or more chars'}),400
+		elif not validate_password(password):
+			return jsonify({'msg':'password must contain 8 or more chars of laters and digits'}),400
+		password = generate_password_hash(password)
 
-			cursor.execute('''SELECT email FROM admins WHERE email =?''',(email,))
-			_email = cursor.fetchone()
+		cursor.execute('''SELECT email FROM admins WHERE email =?''',(email,))
+		_email = cursor.fetchone()
 
-			if _email:return jsonify({'msg':'email already exists'}),400
+		if _email:return jsonify({'msg':'email already exists'}),400
 
-			cursor.execute('''INSERT INTO admins (id,full_name,email,password,role,status)
-			VALUES (?,?,?,?,?,?)''',(uid,full_name,email,password,role,status))
-			db.commit()
+		cursor.execute('''INSERT INTO admins (id,full_name,email,password,role,status)
+		VALUES (?,?,?,?,?,?)''',(uid,full_name,email,password,role,status))
+		db.commit()
 
-			cursor.execute('''SELECT * FROM admins WHERE id =?''',(uid,))
-			result = cursor.fetchone()
-			admin = {
-				'id':result[0],
-				'full_name':result[1],
-				'email':result[2],
-				'password':result[3],
-				'role':result[4],
-				'status':result[5],
-				'created_at':result[6]
-			}
-			app.config['ADMINS'].update({admin['id']:admin})
+		cursor.execute('''SELECT * FROM admins WHERE id =?''',(uid,))
+		result = cursor.fetchone()
+		admin = {
+			'id':result[0],
+			'full_name':result[1],
+			'email':result[2],
+			'password':result[3],
+			'role':result[4],
+			'status':result[5],
+			'created_at':result[6]
+		}
+		app.config['ADMINS'].update({admin['id']:admin})
 
-			return jsonify({'msg':admin}),200
+		return jsonify({'msg':admin}),200
 	except Exception as error:
 		print(error)
 		return abort(500)
@@ -738,41 +774,41 @@ def show_tasks():
 @login_required
 @check_platform
 def get_configuration():
-    g.page = 'account-configs'
-    file_contents = {}
-    for file_name, file_path in file_paths:
-        try:
-            with open(file_path, 'r') as file:
-                file_contents[file_name] = file.read()
-        except FileNotFoundError:
-            return f"File not found: {file_path}"
-    
-    return render_template('accounts-config.html', file_contents=file_contents)
+	g.page = 'account-configs'
+	file_contents = {}
+	for file_name, file_path in file_paths:
+		try:
+			with open(file_path, 'r') as file:
+				file_contents[file_name] = file.read()
+		except FileNotFoundError:
+			return f"File not found: {file_path}"
+	
+	return render_template('accounts-config.html', file_contents=file_contents)
 
 @app.route('/account-configs',methods=['POST'])
 @login_required
 @check_platform
 def update_file_content():
-    data = request.get_json()
-    title = data['title']
-    new_content = data['content']
+	data = request.get_json()
+	title = data['title']
+	new_content = data['content']
 
-    def get_file_path_based_on_title(title):
-        path=None
-        for key, p in file_paths:
-            if key == title:
-                path=p
-                break
-        return path
-    
-    path = get_file_path_based_on_title(title)
-    if not path: return jsonify({'error': 'File not found.'}), 404
+	def get_file_path_based_on_title(title):
+		path=None
+		for key, p in file_paths:
+			if key == title:
+				path=p
+				break
+		return path
+	
+	path = get_file_path_based_on_title(title)
+	if not path: return jsonify({'error': 'File not found.'}), 404
 
-    else:
-        with open(path, 'w') as file:
-            file.write(new_content)
+	else:
+		with open(path, 'w') as file:
+			file.write(new_content)
 
-        return jsonify({'message': 'File content updated successfully.'}), 200
+		return jsonify({'message': 'File content updated successfully.'}), 200
 
 @app.route('/upload-images/<type>',methods=['POST'])
 @login_required
@@ -851,13 +887,13 @@ def images(type):
 		cursor = db.cursor()
 
 		cursor.execute('SELECT COUNT(*) FROM images WHERE model=? AND type=? AND user_id=?',
-               (model_id, type, admin_id))
+			   (model_id, type, admin_id))
 		total_page = cursor.fetchone()[0]
 
 		offset = (page - 1) * limit if page <= total_page else 0
 
 		cursor.execute('SELECT data FROM images WHERE model=? AND type=? AND user_id=? LIMIT ? OFFSET ?',
-               (model_id, type, admin_id, limit, offset))
+			   (model_id, type, admin_id, limit, offset))
 		images = cursor.fetchall()
 		session['IMAGES'] = [imgs[0] for imgs in images]
 		return render_template('images.html', images=session.get('IMAGES'), page=page, 

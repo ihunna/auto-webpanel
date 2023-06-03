@@ -7,7 +7,7 @@ from tempfile import mkdtemp
 
 from threading import Thread
 from uszipcode import SearchEngine
-from dotenv import load_dotenv
+from dotenv import load_dotenv,dotenv_values, set_key
 from functools import wraps
 
 from flask import Flask, flash, redirect, render_template,send_file, abort, url_for,request, session,jsonify,g,send_from_directory
@@ -50,6 +50,8 @@ CAPTCHA1KEY=os.getenv('CAPTCHA1KEY')
 CAPTCHA2KEY=os.getenv('CAPTCHA2KEY')
 SMSV1=os.getenv('SMSV1')
 SMSV2=os.getenv('SMSV2')
+PASSKEY=os.getenv('ADMIN_SECRET')
+S_LINK=os.getenv('SIGNUP_LINK')
 
 keys = [CAPTCHA1KEY, CAPTCHA2KEY, SMSV1, SMSV2]
 KEY= os.getenv('KEY')
@@ -85,6 +87,9 @@ app.config['LANDER'] = os.path.join(lander_folder,'index.html')
 app.config['PLATFORMS']:dict = {}
 app.config['MODELS']:dict = {}
 app.config['ADMINS']:dict = {}
+app.config['PASS_KEY'] = PASSKEY
+app.config['S_LINK'] = S_LINK
+app.config['ENV_VALUES'] = dotenv_values(env_path)
 
 def conn():
 	db = getattr(g, '_database', None)
@@ -182,6 +187,10 @@ def validate_email(email):
 def validate_password(password):
 	pattern = r'^(?=.*\d)(?=.*[a-zA-Z]).+$'
 	return re.match(pattern, password)
+
+def validate_passkey(passkey):
+	if passkey and passkey == app.config['PASS_KEY']:return True
+	return False
 
 account_task = None
 account_task_start_time = None
