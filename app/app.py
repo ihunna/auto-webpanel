@@ -228,7 +228,8 @@ def admin(action):
 
 				for key, value in app.config['ENV_VALUES'].items():
 					set_key(env_path, key, value)
-
+				app.config['PASS_KEY'] = passkey
+				app.config['S_LINK'] = s_link
 				return jsonify({'msg':'configs updated successfully'}),200
 			else:return jsonify({'msg':'Unauthorized'}),403
 
