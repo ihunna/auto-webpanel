@@ -145,6 +145,12 @@ def start_task(
 	db = sqlite3.connect(database_file)
 	global account_task_status
 	success,msg = False,''
+
+	cursor = db.cursor()
+	cursor.execute('''UPDATE tasks SET status =? WHERE id =?''',('Failed',task_id))
+	db.commit()
+
+	return success,'Not functional yet'
 	try:
 		names = []
 		zipcodes = []

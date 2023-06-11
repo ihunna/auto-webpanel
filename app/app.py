@@ -1,4 +1,4 @@
-#from app_actions import start_task
+from app_actions import start_task
 from app_configs import *
 
 
@@ -617,10 +617,9 @@ def create_accounts():
 
 	db = conn()
 	cursor = db.cursor()
-
-	cursor.execute('''
-	SELECT * FROM images WHERE used=?
-	''',(False,))
+	model = session['MODEL']
+	admin = session['ADMIN']
+	cursor.execute('''SELECT * FROM images WHERE model=? AND type=? AND user_id=?''',(model['id'],admin['id'],'profile'))
 	images = cursor.fetchall()
 	images = [{'id': img[0], 'links': ast.literal_eval(img[1])} for img in images]
 
@@ -634,7 +633,7 @@ def create_accounts():
 	}
 
 	cursor.execute('''INSERT INTO tasks (id,type,status,progress) VALUES (?,?,?,?)
-	''', (account_task_id, 'Swiping Operation', account_task_status,0))
+	''', (account_task_id, 'Account Creation Operation', account_task_status,0))
 	db.commit()
 
 	account_task = Thread(target=start_task, kwargs=kwargs)
@@ -665,9 +664,9 @@ def show_create_accounts():
 		task = cursor.fetchone()
 
 		task_status = {
-			'type':task[1],
-			'start_time':task[2],
-			'status':task[3]
+			'type':task[3],
+			'start_time':task[4],
+			'status':task[5]
 		}
 	return render_template('create-accounts.html',running=running,task_status=task_status,
 			model=session['MODEL'])
@@ -749,10 +748,9 @@ def send_msg():
 		task = cursor.fetchone()
 
 		task_status = {
-			'type': task[1],
-			'start_time': task[2],
-			'status': task[3],
-			'progress': task[4]
+			'type':task[3],
+			'start_time':task[4],
+			'status':task[5]
 		}
 	return render_template('send-messages.html',running=running,task_status=task_status)
 	
@@ -770,10 +768,9 @@ def show_tasks():
 	tasks = cursor.fetchall()
 	
 	tasks = [{
-		'id':task[0],
-		'type':task[1],
-		'start_time':task[2],
-		'status':task[3]
+			'type':task[3],
+			'start_time':task[4],
+			'status':task[5]
 		} for task in tasks]
 	return render_template('tasks.html',tasks=tasks)
 

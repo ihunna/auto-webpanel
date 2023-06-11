@@ -39,10 +39,6 @@
                                 <strong>Started at : </strong>
                                 <span>{{task.start_time}}</span>
                             </div>
-                            <div>
-                                <strong>Progress : </strong>
-                                <span>{{task_status.progress}}%</span>
-                            </div>
                             {% if task.status == "Running"%}
                                 <span class="op-spinner bg-warning">
                                     <i class="fa fa-spinner fa-spin"></i>
