@@ -14,9 +14,15 @@
                         <a href="/dashboard" class="eleveted-a delete click-on-an-account-to-delete">
                             platforms
                         </a>
-                        <a href="/admins" class="eleveted-a">
-                            admins
-                        </a>
+                        {%if g.admin.role != 'admin'%}
+                            <a href="/admins" class="eleveted-a">
+                                admins
+                            </a>
+                        {%else%}
+                            <a href="/models" class="eleveted-a">
+                                models
+                            </a>
+                        {%endif%}
                     </div>
             </div>
             <div class="main-container">
@@ -89,54 +95,52 @@
                         </thead>
                         <tbody>
                             {%for admin in admins%}
-                                {% if admin.role == 'admin' or admin == g.admin%}
-                                    <tr>
-                                        <td>{{admin.full_name}}</td>
-                                        <td>{{admin.email}}</td>
-                                        <td >
-                                            <span class="admin-badge 
-                                            {% if admin.role == 'super-admin' %}super-admin
-                                            {%else%}admin
-                                            {% endif %}">
-                                                {{admin.role}}
-                                            </span>
-                                        </td>
-                                        <td>{{admin.status}}</td>
-                                        <td class="actions" id="{{admin.id}}">
-                                            <i class="fas fa-ellipsis-v"></i>
-                                            <span class="action-btns">
-                                                {%if g.admin.id != admin.id%}
-                                                    <a href="" class="eleveted-a danger {%if admin.status == 'active'%}block{%else%}unblock{%endif%}-this-account?">
-                                                        {%if admin.status == 'active'%}
-                                                            block 
-                                                        {%else%} 
-                                                            unblock 
-                                                        {%endif%}
-                                                    </a>
-                                                    {%if admin.role =='admin' and admin.status == 'active'%}
-                                                        <a href="" class="eleveted-a make-super?">make super</a>
+                                <tr>
+                                    <td>{{admin.full_name}}</td>
+                                    <td>{{admin.email}}</td>
+                                    <td >
+                                        <span class="admin-badge 
+                                        {% if admin.role == 'super-admin' %}super-admin
+                                        {%else%}admin
+                                        {% endif %}">
+                                            {{admin.role}}
+                                        </span>
+                                    </td>
+                                    <td>{{admin.status}}</td>
+                                    <td class="actions" id="{{admin.id}}">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                        <span class="action-btns {%if admin.role != 'admin'%}disabled{%endif%}">
+                                            {%if g.admin.id != admin.id%}
+                                                <a href="" class="eleveted-a danger {%if admin.status == 'active'%}block{%else%}unblock{%endif%}-this-account?">
+                                                    {%if admin.status == 'active'%}
+                                                        block 
+                                                    {%else%} 
+                                                        unblock 
                                                     {%endif%}
-                                                {%else%}
-                                                <a href="/admins?admin={{admin.id}}&action=admin-settings&page={{page}}" class="eleveted-a">edit</a>
-                                                <a href="/admins?admin={{admin.id}}&action=edit-signup-configs&page={{page}}" class="eleveted-a">edit signup config</a>
+                                                </a>
+                                                {%if admin.role =='admin' and admin.status == 'active'%}
+                                                    <a href="" class="eleveted-a make-super?">make super</a>
                                                 {%endif%}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                {%endif%}
+                                            {%else%}
+                                            <a href="/admins?admin={{admin.id}}&action=admin-settings&page={{page}}" class="eleveted-a">edit</a>
+                                            <a href="/admins?admin={{admin.id}}&action=edit-signup-configs&page={{page}}" class="eleveted-a">signup configs</a>
+                                            {%endif%}
+                                        </span>
+                                    </td>
+                                </tr>
                             {%endfor%}
                         </tbody>
                     </table>
                 </div>
                 <div class="table-bottom">
                     <div class="table-sum">
-                        {{page}} / {{ (total_page + limit - 1) // limit }}
+                        {{sum}} / {{ total}}
                     </div>
                     <div class="table-nav">
-                        <a href="/admins?page={% if page > 1%}{{ page-1}} {%else%}1 {%endif%}" class="prev">
+                        <a href="/admins?page={% if page > 1%}{{ page-1}} {%else%}1 {%endif%}&limit={{limit}}" class="prev">
                             <i class="fa fa-angle-left"></i>
                         </a>
-                        <a href="/admins?page={% if page < (total_page + limit - 1) // limit%}{{ page+1}} {%else%}1 {%endif%}" class="next">
+                        <a href="/admins?page={% if page < (total + limit - 1) // limit%}{{ page+1}} {%else%}1 {%endif%}&limit={{limit}}" class="next">
                             <i class="fa fa-angle-right"></i>
                         </a>
                     </div>

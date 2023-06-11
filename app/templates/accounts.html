@@ -6,7 +6,7 @@
     {%block main%}
         <div class="main-box">
             <div class="header">
-                <h1>Account details</h1>
+                <h1>Accounts</h1>
                 <div class="action-links scroll">
                     <a href="/create-accounts" class="eleveted-a">
                         add more
@@ -49,13 +49,13 @@
                 </div>
                 <div class="table-bottom">
                     <div class="table-sum">
-                        {{sum}} / {{total}}
+                        {{sum}} / {{ total}}
                     </div>
                     <div class="table-nav">
-                        <a class="prev">
+                        <a href="/accounts?page={% if page > 1%}{{ page-1}} {%else%}1 {%endif%}" class="prev">
                             <i class="fa fa-angle-left"></i>
                         </a>
-                        <a class="next">
+                        <a href="/accounts?page={% if page < (total + limit - 1) // limit%}{{ page+1}} {%else%}1 {%endif%}" class="next">
                             <i class="fa fa-angle-right"></i>
                         </a>
                     </div>

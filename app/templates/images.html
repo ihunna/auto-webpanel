@@ -47,14 +47,14 @@
                     <div class="bottom-grid-nav for-upload  no-show">
                         <div class="grid-sum">
                             <span>
-                                {{page}} / {{ (total_page + limit - 1) // limit }}
+                                {{sum}} / {{total}}
                             </span>
                         </div>
                         <div class="navs">
-                            <a href="/images/{{type}}?page={% if page > 1%}{{page-1}}{%else%}1{%endif%}" class="prev eleveted-a">Less</a>
-                            <a href="/images/{{type}}?page={% if page < (total_page + limit - 1) // limit%}{{ page+1}}{%else%}1{%endif%}"
+                            <a href="/images/{{type}}?page={% if page > 1%}{{page-1}}{%else%}1{%endif%}&limit={{limit}}" class="prev eleveted-a">Less</a>
+                            <a href="/images/{{type}}?page={% if page < (total + limit - 1) // limit%}{{ page+1}}{%else%}1{%endif%}&limit={{limit}}"
                              class="next  eleveted-a">More</a>
-                            <a href="/images/{{type}}?page={{ (total_page + limit - 1) // limit }}" class="end  eleveted-a">Last</a>
+                            <a href="/images/{{type}}?page={{ (total + limit - 1) // limit }}&limit={{limit}}" class="end  eleveted-a">Last</a>
                         </div>
                         <div class="upload-image">
                             <a href="" class="eleveted-a">

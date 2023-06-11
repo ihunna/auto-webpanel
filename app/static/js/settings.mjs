@@ -38,7 +38,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                     showHide('no-show',[aSpan]);
                 })
                 const aSpan = e.querySelector('.action-btns');
-                if(aSpan.classList.contains('shown')){
+                if(aSpan.classList.contains('shown') || aSpan.classList.contains('disabled')){
                     aSpan.classList.remove('shown');
                     showHide('no-show',[aSpan]);
                 }else{
@@ -279,9 +279,9 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         imageLi.forEach(li => {
             li.addEventListener('click',()=>{
                 const imgSrc = li.querySelector('img').getAttribute('src');
-                const imgName = imgSrc.split('/dashboard');
+                const imgName = imgSrc.split('/');
                 const url = imgSrc;
-                const urlParts = url.split("/");
+                const urlParts = url.split('/');
 
                 const profileIndex = 5;
                 const myprofile = urlParts[profileIndex];

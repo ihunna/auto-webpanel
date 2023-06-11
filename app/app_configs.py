@@ -85,7 +85,6 @@ app.config['DATABASE'] = database_file
 app.config['IMAGE_FOLDER'] = image_folder
 app.config['LANDER'] = os.path.join(lander_folder,'index.html')
 app.config['PLATFORMS']:dict = {}
-app.config['MODELS']:dict = {}
 app.config['ADMINS']:dict = {}
 app.config['PASS_KEY'] = PASSKEY
 app.config['S_LINK'] = S_LINK
@@ -177,6 +176,17 @@ def check_model(func):
 				return redirect(url_for('models'))
 			elif request.method in ['POST','DELETE','PUT','PATCH']:
 				return jsonify({'msg':'no model chosen'}),403
+		return func(*args, **kwargs)
+	return wrapper
+
+def check_super(func):
+	@wraps(func)
+	def wrapper(*args, **kwargs):
+		if session['ADMIN']['role'] == 'admin':
+			if request.method == 'GET':
+				return redirect(f'/admins?admin={session["ADMIN"]["id"]}&action=admin-settings')
+			elif request.method in ['POST','DELETE','PUT','PATCH']:
+				return jsonify({'msg':'You are not authorized for this action'}),403
 		return func(*args, **kwargs)
 	return wrapper
 

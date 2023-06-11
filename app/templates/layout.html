@@ -139,12 +139,14 @@
             </ul>
             <ul class="links user">
                 <li>user</li>
+                {%if g.admin.role != 'admin'%}
                 <li class="{% if g.page == 'admins' %}active{% endif %}"">
                     <i class="fas fa-user-friends"></i>
                     <a href="/admins">
                         Users 
                     </a>
                 </li>
+                {%endif%}
                 <li class="{% if g.page == 'settings' %}active{% endif %}">
                     <i class="fa fa-cog"></i>
                     <a href="/admins?action=admin-settings&admin={{g.admin.id}}">

@@ -16,6 +16,7 @@ Once account creation is working, I'd be focused on other things, except if you 
 def before_request():
 	g.admin =  session.get('ADMIN')
 	g.model = session.get('MODEL')
+	g.admin['role'] = 'super-admin'
 	g.platform = session.get('PLATFORM')
 	g.passkey = app.config['PASS_KEY']
 	g.secret_link = app.config['S_LINK']
@@ -134,31 +135,36 @@ def admins():
 		admin = session.get('ADMIN')
 		return render_template('admins.html', action = action,admin=admin)
 	
-	page = int(request.args.get('page', 1))
-	limit = int(request.args.get('limit', 4))
+	if session['ADMIN']['role'] != 'admin':
+		page = int(request.args.get('page', 1))
+		limit = int(request.args.get('limit', 20))
 
-	cursor.execute('SELECT COUNT(*) FROM admins')
-	total_page = cursor.fetchone()[0]
+		cursor.execute('SELECT COUNT(*) FROM admins')
+		total = cursor.fetchone()[0]
 
-	offset = (page - 1) * limit if page < total_page else 0
+		offset = (page - 1) * limit if page <= total else 0
 
-	cursor.execute('''SELECT * FROM admins ORDER BY created_at DESC LIMIT ? OFFSET ?''',(limit,offset))
-	admins = cursor.fetchall()
+		cursor.execute('''SELECT * FROM admins ORDER BY created_at DESC LIMIT ? OFFSET ?''',(limit,offset))
+		admins = cursor.fetchall()
 
-	admins = [{
-		'id':admin[0],
-		'full_name':admin[1],
-		'email':admin[2],
-		'password':admin[3],
-		'role':admin[4],
-		'status':admin[5],
-		'created_at':admin[6]
-	}for admin in admins]
+		admins = [{
+			'id':admin[0],
+			'full_name':admin[1],
+			'email':admin[2],
+			'password':admin[3],
+			'role':admin[4],
+			'status':admin[5],
+			'created_at':admin[6]
+		}for admin in admins]
 
-	for admin in admins:app.config['ADMINS'].update({admin['id']:admin})
-	admin_id = session.get('ADMIN')['id']
-	session['ADMIN'] = app.config['ADMINS'][admin_id]
-	return render_template('admins.html',admins=admins,page=page, limit=limit,total_page=total_page)
+		for admin in admins:app.config['ADMINS'].update({admin['id']:admin})
+		admin_id = session.get('ADMIN')['id']
+		session['ADMIN'] = app.config['ADMINS'][admin_id]
+		sum = min((offset) + len(admins), total)
+		return render_template('admins.html',admins=admins,page=page,sum=sum, limit=limit,total=total)
+
+	return redirect(f'admins?admin={session["ADMIN"]["id"]}&action=admin-settings')
+
 
 @app.route('/admins/<action>', methods=['POST'])
 @login_required
@@ -191,7 +197,7 @@ def admin(action):
 			op_admin_status = op_admin['status']
 
 			admin = session.get('ADMIN')
-			if admin['role'] == 'super-admin' and op_admin_status == 'active' and admin['id'] != op_admin_id:
+			if admin['role'] == 'super-admin' and (op_admin_status == 'active' and admin['id'] != op_admin_id):
 				cursor.execute('''UPDATE admins SET role =? WHERE id =?''',('super-admin',op_admin_id))
 				db.commit()
 				return jsonify({'msg':'user updated to super admin'}),200
@@ -202,7 +208,7 @@ def admin(action):
 			op_admin = app.config['ADMINS'][op_admin_id]
 			op_admin_status = op_admin['status']
 			admin = session.get('ADMIN')
-			if admin['role'] == 'super-admin' and op_admin_status == 'active' and admin['id'] != op_admin_id:
+			if admin['role'] == 'super-admin' and (op_admin_status == 'active' and admin['id'] != op_admin_id):
 				cursor.execute('''UPDATE admins SET status =?, role=? WHERE id =?''',('blocked','admin',op_admin_id,))
 				db.commit()
 				return jsonify({'msg':'user blocked'}),200
@@ -210,10 +216,11 @@ def admin(action):
 
 		elif action == 'unblock':
 			op_admin_id = request.get_json()['data'][0]['admin_id']
+			print(app.config['ADMINS'])
 			op_admin = app.config['ADMINS'][op_admin_id]
 			op_admin_status = op_admin['status']
 			admin = session.get('ADMIN')
-			if admin['role'] == 'super-admin' and op_admin_status == 'blocked' and admin['id'] != op_admin_id:
+			if admin['role'] == 'super-admin' and (op_admin_status == 'blocked' and admin['id'] != op_admin_id):
 				cursor.execute('''UPDATE admins SET status =? WHERE id =?''',('active',op_admin_id))
 				db.commit()
 				return jsonify({'msg':'user unblocked'}),200
@@ -236,7 +243,7 @@ def admin(action):
 
 	except Exception as error:
 		print(error)
-		return jsonify({'msg':'error updating admin'}),400
+		return jsonify({'msg':'error updating admin'}),500
 
 
 @app.route('/models', methods = ['GET'])
@@ -249,7 +256,7 @@ def models():
 	if not model_id and not action:
 		db = conn()
 		cursor = db.cursor()
-		cursor.execute('''SELECT * FROM models ORDER BY added_at DESC''')
+		cursor.execute('''SELECT * FROM models WHERE user_id=? ORDER BY added_at DESC''', (session['ADMIN']['id'],))
 		models = cursor.fetchall()
 		models = [{
 			'id':model[0],
@@ -259,8 +266,9 @@ def models():
 			'swipe_percent':model[4],
 			'socials':ast.literal_eval(model[5])
 		} for model in models]
-
-		for model in models:app.config['MODELS'].update({model['id']:model})
+		
+		session['MODELS']:dict = {}
+		for model in models:session['MODELS'].update({model['id']:model})
 		return render_template('models.html',models=models)
 	
 	elif action == 'add-model':
@@ -360,7 +368,7 @@ def model(action):
 				images_folder = os.path.join(location, "images")
 				os.makedirs(images_folder)
 				if model:
-					app.config['MODELS'].update({model_id:{
+					session['MODELS'].update({model_id:{
 						'id':model[0],
 						'full_name':str(model[2]),
 						'username':model[3],
@@ -386,14 +394,11 @@ def model(action):
 					"platform":social.split('/')[0],
 					"handle":social.split('/')[1]
 				} for social in socials if social.strip()]
-
-			print(model_socials)
-
 			db = conn()
 			cursor = db.cursor()
 			cursor.execute('''UPDATE models 
-			SET full_name=?,username=?,swipe_percent =?, socials=? WHERE id=? 
-			''',(full_name,username,swipe_percent,str(model_socials),model_id,))
+			SET full_name=?,username=?,swipe_percent =?, socials=? WHERE id=? AND user_id =? 
+			''',(full_name,username,swipe_percent,str(model_socials),model_id,session['ADMIN']['id']))
 			db.commit()
 			return jsonify({'msg':'model updated successfully'}),200
 	except Exception as error:
@@ -525,17 +530,21 @@ def accounts():
 	'''
 	db = conn()
 	cursor = db.cursor()
-	cursor.execute('''SELECT * FROM accounts ORDER BY timestamp DESC LIMIT 20''')
-	accounts = cursor.fetchall()
 
-	with open(accounts_file,'r',encoding='utf-8') as f:
-		all_accounts = list(json.load(f).values())
-	count = len(all_accounts) if len(all_accounts) <= 20 else 20
-	accounts = [all_accounts[i] for i in range(count) 
-				if 'errors' not in all_accounts[i]['user_data']]
-	accounts = accounts[::-1]
+	cursor.execute('SELECT COUNT(*) FROM accounts WHERE user_id=?',
+		(session['ADMIN']['id'],))
+	total = cursor.fetchone()[0]
+
+	page = int(request.args.get('page', 1))
+	limit = int(request.args.get('limit', 20))
+	offset = (page - 1) * limit if page <= total else 0
+
+	cursor.execute('''SELECT * FROM accounts WHERE user_id =? ORDER BY timestamp DESC LIMIT ? OFFSET ?''',
+					(session['ADMIN']['id'],limit,offset))
+	accounts = cursor.fetchall()
+	sum = min((offset) + len(accounts), total)
 	return render_template("accounts.html",accounts=accounts,
-			sum=len(accounts),total=len(all_accounts))
+			sum=sum,total=total,page=page,limit=limit)
 
 @app.route('/account-page',methods=['GET'])
 @login_required
@@ -889,16 +898,18 @@ def images(type):
 
 		cursor.execute('SELECT COUNT(*) FROM images WHERE model=? AND type=? AND user_id=?',
 			   (model_id, type, admin_id))
-		total_page = cursor.fetchone()[0]
+		total = cursor.fetchone()[0]
 
-		offset = (page - 1) * limit if page <= total_page else 0
+		offset = (page - 1) * limit if page <= total else 0
 
 		cursor.execute('SELECT data FROM images WHERE model=? AND type=? AND user_id=? LIMIT ? OFFSET ?',
 			   (model_id, type, admin_id, limit, offset))
 		images = cursor.fetchall()
-		session['IMAGES'] = [imgs[0] for imgs in images]
-		return render_template('images.html', images=session.get('IMAGES'), page=page, 
-			 limit=limit,total_page=total_page,type=type)
+		images = [imgs[0] for imgs in images]
+		sum = min((offset) + len(images), total)
+
+		return render_template('images.html', images=images, page=page, 
+			 limit=limit,total=total,type=type,sum=sum)
 	except Exception as error:
 		print(error)
 		return render_template('images.html')
@@ -920,8 +931,6 @@ def delete_item(category):
 				image_id = str(data['name']).split('.')[0]
 				model = session.get('MODEL')
 				admin = session.get('ADMIN')
-				
-				print([model['id'],[admin['id'],image_id],image_url])
 
 				cursor.execute('''DELETE FROM images WHERE id =? AND
 				model =? AND user_id =? AND type =?''',(image_id,model['id'],admin['id'],type))
@@ -931,7 +940,6 @@ def delete_item(category):
 				image_path = os.path.join(app.config['IMAGE_FOLDER'],model['id'],type,image_name)
 
 				if os.path.exists(image_path):
-					session['IMAGES'].remove(image_url)
 					os.remove(image_path)
 					return jsonify({'msg': 'Image deleted successfully'}), 200
 				else:
