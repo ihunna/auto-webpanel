@@ -39,7 +39,7 @@ zip_file = os.path.join(data_folder, 'zipcodes.txt')
 file_paths = [
         ('Names', names_file),
         ('Proxies', proxies_file),
-        ('Accounts', email_password__file),
+        ('Email and Password', email_password__file),
         ('User Agents', user_agents_file),
         ('Biographies', biographies_file),
 		('zip_codes',zip_file)

@@ -16,7 +16,6 @@ Once account creation is working, I'd be focused on other things, except if you 
 def before_request():
 	g.admin =  session.get('ADMIN')
 	g.model = session.get('MODEL')
-	g.admin['role'] = 'super-admin'
 	g.platform = session.get('PLATFORM')
 	g.passkey = app.config['PASS_KEY']
 	g.secret_link = app.config['S_LINK']
@@ -115,8 +114,6 @@ def admins():
 		admin = session.get('ADMIN')
 		admin_id = admin['id']
 		
-		db = conn()
-		cursor = db.cursor()
 		cursor.execute('SELECT COUNT(*) FROM images WHERE user_id=?',
 		(admin_id,))
 		admin_images = cursor.fetchone()[0]
@@ -267,7 +264,6 @@ def models():
 			'socials':ast.literal_eval(model[5])
 		} for model in models]
 		
-		session['MODELS']:dict = {}
 		for model in models:session['MODELS'].update({model['id']:model})
 		return render_template('models.html',models=models)
 	
@@ -275,10 +271,10 @@ def models():
 			g.page = 'add-model'
 			return render_template('models.html',action=action)
 	else:
-		model_ids = [u['id'] for u in list(app.config['MODELS'].values())]
+		model_ids = [u['id'] for u in list(session['MODELS'].values())]
 		if model_id in model_ids:
 			if action == 'set-model':
-				session['MODEL'] = app.config['MODELS'][model_id]
+				session['MODEL'] = session['MODELS'][model_id]
 				current_url = session.get('CURRENT_URL')
 				url = str(current_url) if current_url is not None else '/models'
 				return redirect(url)
@@ -341,7 +337,7 @@ def model(action):
 			user_id = session.get('ADMIN')['id']
 			model_id = str(uuid.uuid4())
 
-			usernames = [u['username'] for u in list(app.config['MODELS'].values())]
+			usernames = [u['username'] for u in list(session.get('MODELS').values())]
 			if username not in usernames:
 				location = os.path.join(app_folder,'images',model_id)
 				if os.path.exists(location):
@@ -505,6 +501,7 @@ def login():
 				hashed_password = admin['password']
 				if check_password_hash(hashed_password, password):
 					session['ADMIN'] = admin
+					session['MODELS']:dict = {}
 					return jsonify({'msg':'login successful'}),200
 				else:return jsonify({'msg':'wrong password'}),403
 			else:return jsonify({'msg':'user does not exist'}),403

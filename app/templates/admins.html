@@ -109,7 +109,7 @@
                                     <td>{{admin.status}}</td>
                                     <td class="actions" id="{{admin.id}}">
                                         <i class="fas fa-ellipsis-v"></i>
-                                        <span class="action-btns {%if admin.role != 'admin'%}disabled{%endif%}">
+                                        <span class="action-btns {%if admin.role != 'admin' and admin.id != g.admin.id%}disabled{%endif%}">
                                             {%if g.admin.id != admin.id%}
                                                 <a href="" class="eleveted-a danger {%if admin.status == 'active'%}block{%else%}unblock{%endif%}-this-account?">
                                                     {%if admin.status == 'active'%}
