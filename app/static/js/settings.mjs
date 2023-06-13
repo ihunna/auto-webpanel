@@ -242,7 +242,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 errors.innerHTML = '';
                 signupForm.reset();
                 con.log(response)
-                showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
+                showHide('show',[alertBox],response,{'bg':colorSuccess,'color':colorLessWhite});
                 setTimeout(() => {
                     showHide('no-show',[alertBox]), 
                     window.location.href = '/login';},
