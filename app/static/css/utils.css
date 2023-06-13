@@ -592,13 +592,13 @@ li >
     display: flex;
     height: 100%;
     width: 100%;
-    background: url('../images/onboarding-background.jpg');
+    background: #ffffff;
     background-size: 100%;
     background-repeat: no-repeat;
     background-position: center;
 }
 
-.onboarding::after{
+/* .onboarding::after{
     position: absolute;
     content: '';
     top: 0;
@@ -606,16 +606,17 @@ li >
     right: 0;
     bottom: 0;
     background: rgba(100.5, 114.5, 127.5, 0.5);
-}
+} */
 
 .onboarding > .onboarding-holder{
     display: flex;
     flex-direction: column;
-    width: 30%;
-    height: 95%;
+    width: 40%;
+    height: auto;
+    border: 3px solid var(--soft-white);
+    border-radius: 10px;
     margin: auto;
     background: #ffffff;
-    border-radius: 10px;
     padding: 20px;
     z-index: 2;
 }
@@ -640,7 +641,7 @@ li >
 .onboarding > .onboarding-holder > .errors{
     color: var(--danger);
     font-size: 14px;
-    margin: auto;
+    margin: 10px auto;
 }
 
 .onboarding > .onboarding-holder > .form-bottom-links{
