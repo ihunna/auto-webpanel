@@ -36,11 +36,13 @@ def serve_lander():
 
 @app.route('/dashboard')
 @login_required
+@blocked
 def redirect_dash():
 	return redirect('/platforms')
 
 @app.route('/platforms',methods=['GET'])
 @login_required
+@blocked
 def index():
 	g.page = 'platforms'
 	platform_id = request.args.get('platform')
@@ -83,6 +85,7 @@ def index():
 
 @app.route('/add-platform', methods=['POST'])
 @login_required
+@blocked
 def add_platform():
 	try:
 		platform_name = request.form.get('platform-name')
@@ -105,6 +108,7 @@ def add_platform():
 
 @app.route('/admins',methods=['GET'])
 @login_required
+@blocked
 def admins():
 	g.page = 'admins'
 	action = request.args.get('action')
@@ -165,6 +169,7 @@ def admins():
 
 @app.route('/admins/<action>', methods=['POST'])
 @login_required
+@blocked
 def admin(action):
 	try:
 		db = conn()
@@ -245,7 +250,7 @@ def admin(action):
 
 @app.route('/models', methods = ['GET'])
 @login_required
-@check_platform
+@blocked
 def models():
 	g.page = 'models'
 	model_id = request.args.get('model')
@@ -315,6 +320,8 @@ def models():
 		return redirect('/models')
 		
 @app.route('/models/<action>', methods=['POST']) #modified
+@login_required
+@blocked
 def model(action):
 	try:
 		if action == 'add-model':
@@ -499,11 +506,13 @@ def login():
 					'created_at':result[6]
 				}
 				hashed_password = admin['password']
-				if check_password_hash(hashed_password, password):
-					session['ADMIN'] = admin
-					session['MODELS']:dict = {}
-					return jsonify({'msg':'login successful'}),200
-				else:return jsonify({'msg':'wrong password'}),403
+				if admin['status'] == 'active':
+					if check_password_hash(hashed_password, password):
+						session['ADMIN'] = admin
+						session['MODELS']:dict = {}
+						return jsonify({'msg':'login successful'}),200
+					else:return jsonify({'msg':'wrong password'}),403
+				else:return jsonify({'msg':'account blocked'}),403
 			else:return jsonify({'msg':'user does not exist'}),403
 			
 
@@ -511,8 +520,23 @@ def login():
 		print(error)
 		abort(500)
 
+@app.route('/logout',methods=['GET','POST'])
+@login_required
+def logout():
+	try:
+		if request.method == 'GET':
+			session.clear()
+			return redirect(url_for('login'))
+		elif request.method == 'POST':
+			session.clear()
+			return jsonify({'msg':'You are successfully logged out'}), 200
+	except Exception as error:
+		print(error)
+		abort(500)
+
 @app.route('/accounts',methods=['GET'])
 @login_required
+@blocked
 @check_platform
 @check_model
 def accounts():
@@ -545,6 +569,7 @@ def accounts():
 
 @app.route('/account-page',methods=['GET'])
 @login_required
+@blocked
 @check_platform
 @check_model
 def account_page():
@@ -580,6 +605,7 @@ def account_page():
 
 @app.route('/account-page/<action>',methods=['POST'])
 @login_required
+@blocked
 @check_platform
 @check_model
 def account_action(action):
@@ -598,6 +624,7 @@ def account_action(action):
 	
 @app.route('/create-accounts',methods=['POST'])
 @login_required
+@blocked
 @check_platform
 @check_model
 def create_accounts():
@@ -648,6 +675,7 @@ def create_accounts():
 
 @app.route('/create-accounts',methods=['GET'])
 @login_required
+@blocked
 @check_platform
 @check_model
 def show_create_accounts():
@@ -674,6 +702,7 @@ def show_create_accounts():
 ##SWIPE PAGE
 @app.route('/swipe', methods=['GET'])
 @login_required
+@blocked
 @check_platform
 @check_model
 def swipe_page():
@@ -700,6 +729,7 @@ def swipe_page():
 	
 @app.route('/swipe', methods=['POST'])
 @login_required
+@blocked
 @check_platform
 @check_model
 def swipe_page_p():
@@ -731,6 +761,7 @@ def swipe_page_p():
 
 @app.route('/send-msg', methods=['GET'])
 @login_required
+@blocked
 @check_platform
 @check_model
 def send_msg():
@@ -757,6 +788,7 @@ def send_msg():
 
 @app.route('/tasks',methods=['GET'])
 @login_required
+@blocked
 @check_platform
 @check_model
 def show_tasks():
@@ -776,6 +808,7 @@ def show_tasks():
 
 @app.route('/account-configs',methods=['GET'])
 @login_required
+@blocked
 @check_platform
 def get_configuration():
 	g.page = 'account-configs'
@@ -791,6 +824,7 @@ def get_configuration():
 
 @app.route('/account-configs',methods=['POST'])
 @login_required
+@blocked
 @check_platform
 def update_file_content():
 	data = request.get_json()
@@ -816,6 +850,7 @@ def update_file_content():
 
 @app.route('/upload-images/<type>',methods=['POST'])
 @login_required
+@blocked
 @check_platform
 @check_model
 def upload_image(type):
@@ -865,6 +900,7 @@ def serve_files(type,folder,subfolder,types,file):
 
 @app.route('/images', methods=['GET'])
 @login_required
+@blocked
 @check_platform
 @check_model
 def redirect_images():
@@ -877,6 +913,7 @@ def redirect_images():
 
 @app.route('/images/<type>', methods=['GET'])
 @login_required
+@blocked
 @check_platform
 @check_model
 def images(type):
@@ -910,6 +947,7 @@ def images(type):
 
 @app.route('/delete/<category>', methods=['POST'])
 @login_required
+@blocked
 @check_platform
 @check_model
 def delete_item(category):

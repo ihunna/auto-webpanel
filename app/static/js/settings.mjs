@@ -24,7 +24,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                     if (a.classList.contains('block-this-account?')){action = 'block'}
                     else if (a.classList.contains('unblock-this-account?')){action='unblock'}
                     else if (a.classList.contains('make-super?')){action='make-super'}
-                    createModal(modal,'prompt',[{'admin_id':e.id}],text,'admin',action)
+                    createModal(modal,'prompt',[{'admin_id':e.id}],text,'admin',action,'admins')
                     showHide('show',[overlay,modal]);
                 })
             })
@@ -50,6 +50,16 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
 
     }catch(error){con.log(error)}
     try{
+        const logoutBtn = doc.querySelectorAll('.logout-btn')
+        logoutBtn.forEach(a => {
+            a.addEventListener('click',(e) => {
+                e.preventDefault();
+                createModal(modal,'prompt',[],'Do you really want to logout?','logout','','logout')
+                showHide('show',[overlay,modal]);
+            })
+        })
+    }catch(error){con.log(error)}
+    try{
         const dBtn = doc.querySelectorAll('.delete');
         dBtn.forEach(e => {
             e.addEventListener('click',(event) => {
@@ -60,7 +70,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                     showHide('show',[alertBox],text,{'bg':colorSec,'color':colorLessDark});
                     setTimeout(() => showHide('no-show',[alertBox]),5000)
                 }else{
-                    createModal(modal,'prompt',[],text)
+                    createModal(modal,'prompt',[],text,'','','delete')
                     showHide('show',[overlay,modal]);
                 }
             });
@@ -289,7 +299,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                     {'url':imgSrc,
                     'name':imgName[imgName.length - 1],
                     'type':myprofile,
-                    }],'','image');
+                    }]);
                 showHide('show',[overlay,modal]);
             })
         })

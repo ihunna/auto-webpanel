@@ -31,7 +31,7 @@ const showHide = (action='show',e=Array,text=String,styles=Array) =>{
     }
 }
 
-const createModal = (element=Element,type=String,items=Array,text=String,cat=String,action=String) => {
+const createModal = (element=Element,type=String,items=Array,text=String,cat=String,action=String,route=String) => {
     element.innerHTML = ``;
     const m = doc.createElement('div'); 
     m.classList.remove('for-m-item-display');
@@ -63,8 +63,11 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
         
         yesLink.addEventListener('click',(e)=>{
           e.preventDefault();
-          let url = cat==='admin'?`/admins/${action}`:`/delete/${cat}`
-          text = cat !=='admin'?`Deleting ${cat}`:`Updating admin`
+          action = action === ''?action:`/${action}`
+          let url = route === 'delete'? `/delete/${cat}`:`/${route}${action}`
+          text = cat !=='admin'?`Deleting ${cat}`:`Updating ${cat}`
+          text = cat === 'logout'?'logging out user':text
+          con.log(url)
           showHide('no-show',[overlay,modal]);
           showHide('show',[alertBox],text,{'bg':colorSuccess,'color':colorLessWhite});
 
@@ -206,68 +209,68 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
             m.appendChild(imgDiv);
         });
         const actionsElement = doc.createElement('div');
-            actionsElement.classList.add('s-item-actions');
+        actionsElement.classList.add('s-item-actions');
 
-            const actionLink = doc.createElement('a');
-            actionLink.href = '';
-            actionLink.classList.add('eleveted-a');
+        const actionLink = doc.createElement('a');
+        actionLink.href = '';
+        actionLink.classList.add('eleveted-a');
 
-            if (type === 'sModalImg'){
-              actionLink.textContent = 'delete';
-              actionLink.classList.remove('upload');
-              actionLink.classList.add('delete');
-              text = 'Do you want to delete this image?';
+        if (type === 'sModalImg'){
+          actionLink.textContent = 'delete';
+          actionLink.classList.remove('upload');
+          actionLink.classList.add('delete');
+          text = 'Do you want to delete this image?';
 
-              actionLink.addEventListener('click',(e) => {
-                e.preventDefault();
-                createModal(modal,'prompt',items,text,cat)
-                showHide('show',[overlay,modal]);
-              });
+          actionLink.addEventListener('click',(e) => {
+            e.preventDefault();
+            createModal(modal,'prompt',items,text,'image','','delete')
+            showHide('show',[overlay,modal]);
+          });
 
+        }else{
+          actionLink.textContent = 'upload';
+          actionLink.classList.remove('delete');
+          actionLink.classList.add('upload');
+
+            actionLink.addEventListener('click',(e) => {
+            e.preventDefault();
+            if (items.length < 1){
+              text = 'No image to upload!';
+              showHide('show',[alertBox],text,{'bg':colorSec,'color':colorLessDark});
             }else{
-              actionLink.textContent = 'upload';
-              actionLink.classList.remove('delete');
-              actionLink.classList.add('upload');
+              text = 'Image(s) uploading ...';
+              showHide('no-show',[overlay,modal]);
+              showHide('show',[alertBox],text,{'bg':colorSuccess,'color':colorLessWhite});
+              const url = window.location.href;
+              const urlParts = url.split("/");
 
-               actionLink.addEventListener('click',(e) => {
-                e.preventDefault();
-                if (items.length < 1){
-                  text = 'No image to upload!';
-                  showHide('show',[alertBox],text,{'bg':colorSec,'color':colorLessDark});
-                }else{
-                  text = 'Image(s) uploading ...';
-                  showHide('no-show',[overlay,modal]);
-                  showHide('show',[alertBox],text,{'bg':colorSuccess,'color':colorLessWhite});
-                  const url = window.location.href;
-                  const urlParts = url.split("/");
+              const profileIndex = 4;
+              const myprofile = urlParts[profileIndex];
 
-                  const profileIndex = 4;
-                  const myprofile = urlParts[profileIndex];
-
-                  sendRequest('POST',`/upload-images/${myprofile}`,{'data':items})
-                  .then(response => {
-                    showHide('no-show',[alertBox]);
-                    con.log(response)
-                    showHide('show',[alertBox],'image upload successful',{'bg':colorSuccess,'color':colorLessWhite});
-                    setTimeout(() => {
-                      showHide('no-show',[alertBox])
-                      window.location.replace('/images/'+myprofile)
-                    },
-                    7000);
-                  })
-                  .catch(error => {
-                    showHide('no-show',[alertBox]);
-                    showHide('show',[alertBox],'image upload unsuccessful',{'bg':colorDanger,'color':colorLessWhite});
-                    setTimeout(() => showHide('no-show',[alertBox]), 5000);
-                    con.error(error);
-                  });
-                }
+              sendRequest('POST',`/upload-images/${myprofile}`,{'data':items})
+              .then(response => {
+                showHide('no-show',[alertBox]);
+                con.log(response)
+                showHide('show',[alertBox],'image upload successful',{'bg':colorSuccess,'color':colorLessWhite});
+                setTimeout(() => {
+                  showHide('no-show',[alertBox])
+                  window.location.replace('/images/'+myprofile)
+                },
+                7000);
+              })
+              .catch(error => {
+                showHide('no-show',[alertBox]);
+                showHide('show',[alertBox],'image upload unsuccessful',{'bg':colorDanger,'color':colorLessWhite});
+                setTimeout(() => showHide('no-show',[alertBox]), 5000);
+                con.error(error);
               });
-              
             }
+          });
+          
+        }
 
-            actionsElement.appendChild(actionLink);
-            m.appendChild(actionsElement);
+        actionsElement.appendChild(actionLink);
+        m.appendChild(actionsElement);
     }
 
     else if (type === 'uploadImages'){

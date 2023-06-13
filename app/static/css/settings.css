@@ -27,6 +27,7 @@ body {
     width: 100vw;
     height: 100vh;
     font-family: 'Roboto', sans-serif;
+    cursor: default;
   }
 
 .bg-warning{
@@ -264,6 +265,30 @@ section{
     top: 60%;
     right: 10%;
     font-size: 10px;
+}
+
+.navbar > .user-card > .details > .user-card-action{
+    position: absolute;
+    top: 50px;
+    left: 5;
+    display: none;
+    grid-template-columns: repeat(1, 1fr);
+    background: #ffffff;
+    color: var(--soft-text);
+    padding: 10px;
+    z-index: 111;
+}
+
+.navbar > .user-card > .details > .user-card-action > .eleveted-a{
+    width: 100%;
+    margin-top: 10px;
+    padding: 2.5px 10px;
+    background: #000000;
+    color: var(--soft-white);
+}
+
+.navbar > .user-card > .details:hover .user-card-action{
+    display: grid;
 }
 
 .navbar > .user-card > .user-image{

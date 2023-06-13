@@ -12,6 +12,16 @@
                 <span>
                     <i class="fa fa-caret-down"></i>
                 </span>
+                <div class="user-card-action">
+                    <div class="">
+                        <h6>{{g.admin.full_name}}</h6>
+                        {{g.admin.email}}
+                    </div>
+                    <a href="/logout?admin={{g.admin.id}}" class="eleveted-a logout-btn">
+                        <i class="fas fa-sign-out"></i>
+                        Logout
+                    </a>
+                </div>
             </div>
             <div class="user-image">
                 <p class="image">
@@ -153,6 +163,14 @@
                         Settings
                     </a>
                 </li>
+                {% if g.admin %}
+                <li class="">
+                    <i class="fas fa-sign-out"></i>
+                    <a href="#" class="logout-btn">
+                        Logout
+                    </a>
+                </li>
+                {%endif%}
             </ul>
         </div>
         {%block main%}{% endblock%}

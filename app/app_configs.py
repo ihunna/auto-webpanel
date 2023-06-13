@@ -155,6 +155,17 @@ def login_required(func):
 		return func(*args, **kwargs)
 	return decorated_function
 
+def blocked(func):
+	@wraps(func)
+	def decorated_function(*args, **kwargs):
+		if session['ADMIN']['status'] != 'active':
+			if request.method == 'GET':
+				return redirect(url_for('login'))
+			elif request.method in ['POST', 'DELETE', 'PUT', 'PATCH']:
+				return jsonify({'msg': 'Account blocked'}), 403
+		return func(*args, **kwargs)
+	return decorated_function
+
 def check_platform(func):
 	@wraps(func)
 	def wrapper(*args, **kwargs):
