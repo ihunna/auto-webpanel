@@ -84,7 +84,6 @@ Session(app)
 app.config['DATABASE'] = database_file
 app.config['IMAGE_FOLDER'] = image_folder
 app.config['LANDER'] = os.path.join(lander_folder,'index.html')
-app.config['PLATFORMS']:dict = {}
 app.config['ADMINS']:dict = {}
 app.config['PASS_KEY'] = PASSKEY
 app.config['S_LINK'] = S_LINK

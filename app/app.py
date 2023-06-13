@@ -47,10 +47,11 @@ def index():
 	g.page = 'platforms'
 	platform_id = request.args.get('platform')
 	action = request.args.get('action')
+	admin = session['ADMIN']
 	if not platform_id and not action:
 		db = conn()
 		cursor = db.cursor()
-		cursor.execute('''SELECT * FROM platforms ORDER BY added_at DESC''')
+		cursor.execute('''SELECT * FROM platforms WHERE user_id =? ORDER BY added_at DESC''',(admin['id'],))
 		platforms = cursor.fetchall()
 
 		platforms = [{
@@ -60,25 +61,26 @@ def index():
 			'added_at':platform[4]
 		} for platform in platforms]
 
-		for platform in platforms:app.config['PLATFORMS'].update({platform['id']:platform})
+		for platform in platforms:session['PLATFORMS'].update({platform['id']:platform})
 		return render_template("index.html",platforms=platforms)
 	
 	elif action == 'add-platform':
+		g.page = 'add-platform'
 		return render_template("index.html",action=action)
 	
 	elif action == 'delete-platform':
-			platform_ids = [p['id'] for p in list(app.config['PLATFORMS'].values())]
+			platform_ids = [p['id'] for p in list(session['PLATFORMS'].values())]
 			if platform_id in platform_ids:
 				db = conn()
 				cursor = db.cursor()
-				cursor.execute('''DELETE FROM platforms WHERE id =?''',(platform_id,))
+				cursor.execute('''DELETE FROM platforms WHERE id =? and user_id =?''',(platform_id,admin['id']))
 				db.commit()
-				if platform_id in app.config['PLATFORMS']:del app.config['PLATFORMS'][platform_id]
+				if platform_id in session['PLATFORMS']:del session['PLATFORMS'][platform_id]
 				if session.get('PLATFORM') and platform_id == session.get('PLATFORM')['id']: 
 					del session['PLATFORM']
 			return redirect('/dashboard')
 	else:
-		session['PLATFORM'] = app.config['PLATFORMS'].get(platform_id)
+		session['PLATFORM'] = session['PLATFORMS'].get(platform_id)
 		current_url = session.get('CURRENT_URL')
 		url = str(current_url) if current_url is not None else '/accounts'
 		return redirect(url)
@@ -91,7 +93,7 @@ def add_platform():
 		platform_name = request.form.get('platform-name')
 		user_id = session.get('ADMIN')['id']
 		admin_name = session.get('ADMIN')['full_name']
-		platform_names = [p['name'] for p in list(app.config['PLATFORMS'].values())]
+		platform_names = [p['name'] for p in list(session['PLATFORMS'].values())]
 		if str(platform_name).upper() not in platform_names:
 			db = conn()
 			cursor = db.cursor()
@@ -306,14 +308,14 @@ def models():
 			elif action == 'delete-model':
 				db = conn()
 				cursor = db.cursor()
-				cursor.execute('''DELETE FROM models WHERE id =?''',(model_id,))
+				cursor.execute('''DELETE FROM models WHERE id =? and user_id =?''',(model_id,session['ADMIN']['id']))
 				db.commit()
 
 				for folder in os.listdir(image_folder):
 					if folder == model_id:
 						shutil.rmtree(f'{image_folder}\\{model_id}')
 			
-				del app.config['MODELS'][model_id]
+				del session['MODELS'][model_id]
 				if session.get('MODEL') and model_id == session.get('MODEL')['id']: 
 					del session['MODEL']
 				return redirect('/models')
@@ -509,6 +511,8 @@ def login():
 				if admin['status'] == 'active':
 					if check_password_hash(hashed_password, password):
 						session['ADMIN'] = admin
+						session['PLATFORMS']:dict = {}
+						session['SCHEDULES']:dict = {}
 						session['MODELS']:dict = {}
 						return jsonify({'msg':'login successful'}),200
 					else:return jsonify({'msg':'wrong password'}),403
@@ -533,6 +537,17 @@ def logout():
 	except Exception as error:
 		print(error)
 		abort(500)
+
+
+@app.route('/scheduler',methods=['GET'])
+@login_required
+@blocked
+@check_platform
+@check_model
+def scheduler():
+	g.page = 'scheduler'
+	return render_template('scheduler.html',schedules=session.get('SCHEDULES'))
+
 
 @app.route('/accounts',methods=['GET'])
 @login_required

@@ -122,6 +122,12 @@
                        Tasks
                     </a>
                 </li>
+                <li class="{% if g.page == 'scheduler' %}active{% endif %}">
+                    <a href="/scheduler">
+                        <i class="fas fa-clock"></i>
+                      Schedule tasks
+                    </a>
+                </li>
             </ul>
             <ul class="links models">
                 <li>models</li>
@@ -141,9 +147,15 @@
             <ul class="links platforms">
                 <li>platforms</li>
                 <li class="{% if g.page == 'platforms' %}active{% endif %}">
-                    <a href="/dashboard">
+                    <a href="/platforms">
                         <i class="fa-brands fa-app-store"></i>
                         Platforms
+                    </a>
+                </li>
+                <li class="{% if g.page == 'add-platforms' %}active{% endif %}">
+                    <a href="/platforms?action=add-platform">
+                        <i class="fas fa-plus-circle"></i>
+                        Add platforms
                     </a>
                 </li>
             </ul>
