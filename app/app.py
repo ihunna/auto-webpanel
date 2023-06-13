@@ -472,7 +472,7 @@ def do_signup():
 		}
 		app.config['ADMINS'].update({admin['id']:admin})
 
-		return jsonify({'msg':'Signup successfull'}),200
+		return jsonify({'msg':'Signup successful'}),200
 	except Exception as error:
 		print(error)
 		return abort(500)
