@@ -30,9 +30,9 @@
                     <a href="" class="eleveted-a">
                         swipes
                     </a>
-                    <a href="" class="eleveted-a">
-                        sort by
-                    </a>
+                    <a href="/schedules" class="eleveted-a">
+                        schedules
+                     </a>
                 </div>
             </div>
 
@@ -93,6 +93,18 @@
                                  <label for="op-count">No. of swipes per account</label>
                                  <input type="number" id="op-count" name="op-count" required>
                              </div>
+                             {% if schedules%}
+                                <div>
+                                    <label for="op-group">Schedule group</label>
+                                    <select id="op-group" name="op-group">
+                                        <option value="" disabled>select schedule group</option>
+                                        {%for s in schedules%}
+                                            <option value="{{s.id}}">{{s.name}}</option>
+                                        {%endfor%}
+                                    </select>
+                                    <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a schedule group defines your operation strategy</h5>
+                                </div>
+                            {%endif%}
                              <div>
                                 <label for="op-count">Swipe percentage</label>
                                 <input type="number" id="op-count" name="swp-percentage" required>

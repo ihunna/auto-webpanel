@@ -1,0 +1,122 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Task groups
+{% endblock %}
+    {%block main%}
+        <div class="main-box">
+            <div class="header">
+                    <h1>Schedules</h1>
+                    <div class="action-links scroll">
+                        <a href="/accounts" class="eleveted-a">
+                            accounts
+                        </a>
+                        <a href="/dashboard" class="eleveted-a delete click-on-an-account-to-delete">
+                            platforms
+                        </a>
+                        {%if not action %}
+                        <a href="/schedules?action=add-schedule" class="eleveted-a">
+                            add schedule
+                        </a>
+                        {%else%}
+                        <a href="/schedules" class="eleveted-a">
+                           schedules
+                        </a>
+                        {%endif%}
+                    </div>
+            </div>
+            <div class="main-container">
+                {%if schedules%}
+                    <div class="holder scroll task-holder op-holder">
+                        {% for s in schedules%}
+                        <div class="op-card">
+                                <div>
+                                    <h2>
+                                        {{s.name}}
+                                    </h2>
+                                </div>
+                                <div>
+                                    <strong>Type : </strong>
+                                    <span>{{s.type}}</span>
+                                </div>
+                                <div>
+                                    <strong>Swipe percentage : </strong>
+                                    <span>{{s.swipe_percent}}</span>
+                                </div>
+                                <div>
+                                    <strong>Swipe starts at : </strong>
+                                    <span>{{s.swipe_start_at}}</span>
+                                </div>
+                                <span class="op-card-actions">
+                                    <a href="/schedules?s={{s.id}}&action=edit-schedule" class="bg-warning">Edit</a>
+                                    <a href="/schedules?s={{s.id}}&action=delete-schedule" class="bg-danger">Delete</a>
+                                </span>
+                        </div>
+                        {%endfor%}
+                    </div>
+                {%elif action == 'edit-schedule'%}
+                    <div class="holder scroll form-holder">
+                        <h2>
+                            {{s.name}}
+                        </h2>
+                        <form action="" class="op-form edit-schedule" id="schedule-form">
+                            <div>
+                                <label for="s-name">Name</label>
+                                <input type="text" id="s-name" name="s-name" value="{{s.name}}">
+                            </div>
+                            <div>
+                                <label for="s-type">Type</label>
+                                <input type="text" id="s-type" name="s-type" value="{{s.type}}">
+                            </div>
+                            <div>
+                                <label for="s-swipe-percent">Swipe percentage &nbsp;<span>format: swipe left/swipe right</label>
+                                <input type="text" id="s-swipe-percent" name="s-swipe-percent" value="{{s.swipe_percent}}">
+                            </div>
+                            <div>
+                                <label for="s-swipe-at">Start swipe at &nbsp;<span>format: 40 min</label>
+                                <input type="text" id="s-swipe-at" name="s-swipe-at" value="{{s.swipe-at}}">
+                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> at what time from an account creation do you want the swiping to start?</h5>
+                            </div>
+                            <input type="hidden" class="not-edit" id="s-id" name="s-id" value="{{s.id}}">
+                            <div>
+                                <label for="s-added_at">Added date</label>
+                                <input type="text" id="s-added_at" name="s-added_at" value="{{s.added_at}}" disabled>
+                            </div>
+                            <input type="submit" value="Edit"> 
+                        </form>
+                    </div>
+                {%elif action == 'add-schedule'%}
+                <div class="holder scroll form-holder">
+                    <h2>
+                        Add a schedule group
+                    </h2>
+                    <form action="" class="op-form " id="schedule-form">
+                        <div>
+                            <label for="s-name">Name</label>
+                            <input type="text" id="s-name" name="s-name" required>
+                        </div>
+                        <div>
+                            <label for="s-type">Type</label>
+                            <input type="text" id="s-type" name="s-type" required>
+                        </div>
+                        <div>
+                            <label for="s-swipe-percent">Swipe percentage &nbsp;<span>format: swipe left/swipe right</label>
+                            <input type="text" id="s-swipe-percent" name="s-swipe-percent" value="40/60" required>
+                        </div>
+                        <div>
+                            <label for="s-swipe-at">Start swipe at &nbsp;<span>format: 40 min</label>
+                            <input type="text" id="s-swipe-at" name="s-swipe-at" value="40 min" required>
+                            <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> at what time from an account creation do you want the swiping to start?</h5>
+                        </div>
+                        <input type="submit" value="Edit"> 
+                    </form>
+                </div>
+                {%endif%}
+            </div>
+        </div>
+        {%if action%}
+            <script>
+                const action = "{{action}}"
+            </script>
+        {%endif%}
+    {% endblock%}

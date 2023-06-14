@@ -193,6 +193,28 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         })
     }catch(error){con.log(error)}
     try{
+        const scheduleForm = doc.querySelector('#schedule-form');
+        scheduleForm.addEventListener('submit',(e)=>{
+            e.preventDefault();
+            const formData = new FormData(scheduleForm);
+            
+            const url = scheduleForm.classList.contains('edit-schedule')? '/schedules/edit-schedule':'schedules/add-model'
+            sendRequest('POST', url, null, formData).then(response => {
+                scheduleForm.reset()
+                showHide('show',[alertBox],response,{'bg':colorSuccess,'color':colorLessWhite});
+                setTimeout(() => {
+                    showHide('no-show',[alertBox]);
+                    window.location.href='/schedules'
+                }, 5000)
+            })
+            .catch(error => {
+                showHide('show',[alertBox],error,{'bg':colorDanger,'color':colorLessWhite});
+                setTimeout(() => showHide('no-show',[alertBox]), 5000)
+                con.error(error);
+            });
+        })
+    }catch(error){con.log(error)}
+    try{
         const adminForm = doc.querySelector('#admin-form');
         adminForm.addEventListener('submit',(e)=>{
             e.preventDefault();

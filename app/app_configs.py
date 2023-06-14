@@ -120,11 +120,13 @@ def conn():
 					data TEXT,
 					email TEXT,
 					model TEXT,
+					platform TEXT,
 					notifications TEXT,
 					swipes INTEGER,
 					messages INTEGER,
 					likes INTEGER,
-					timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)
+					start_swipe_at DATETIME,
+					created_at DATETIME DEFAULT CURRENT_TIMESTAMP)
 					''')
 		#create tasks table
 		cursor.execute(''' CREATE TABLE IF NOT EXISTS tasks
@@ -133,6 +135,11 @@ def conn():
 		#create images table
 		cursor.execute('''CREATE TABLE IF NOT EXISTS images
 		(id TEXT PRIMARY KEY, data TEXT,type TEXT,model TEXT,user_id TEXT, status TEXT)
+		''')
+
+		#create schedule table
+		cursor.execute('''CREATE TABLE IF NOT EXISTS schedules
+		(id TEXT PRIMARY KEY,user_id TEXT,name TEXT,type TEXT,swipe_percent TEXT,swipe_start_at TEXT,added_at DATETIME DEFAULT CURRENT_TIMESTAMP)
 		''')
 	
 	return db

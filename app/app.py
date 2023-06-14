@@ -341,8 +341,6 @@ def model(action):
 					"handle":social.split('/')[1]
 				} for social in socials if social.strip()]
 
-			print(model_socials)
-
 			user_id = session.get('ADMIN')['id']
 			model_id = str(uuid.uuid4())
 
@@ -539,14 +537,70 @@ def logout():
 		abort(500)
 
 
-@app.route('/scheduler',methods=['GET'])
+@app.route('/schedules',methods=['GET'])
 @login_required
 @blocked
-@check_platform
-@check_model
-def scheduler():
-	g.page = 'scheduler'
-	return render_template('scheduler.html',schedules=session.get('SCHEDULES'))
+def schedules():
+	g.page = 'schedules'
+	action = request.args.get('action')
+	s_id = request.args.get('s')
+
+	if not action and not s_id:
+		db = conn()
+		cursor = db.cursor()
+		cursor.execute('''SELECT * FROM schedules WHERE user_id=? ORDER BY added_at DESC''', (session['ADMIN']['id'],))
+		schedules = cursor.fetchall()
+		schedules = [{
+			'id':s[0],
+			'name':str(s[2]),
+			'type':s[3],
+			'swipe_percent':s[4],
+			'swipe_start_at':s[5],
+			'added_at':s[6]
+		} for s in schedules]
+		
+		for s in schedules:session['SCHEDULES'].update({s['id']:s})
+		if len(schedules) > 0:return render_template('schedules.html',schedules=schedules)
+		return render_template('schedules.html',action='add-schedule')
+	
+	if action == 'add-schedule':
+		return render_template('schedules.html',action=action)
+	
+	elif action == 'delete-schedule':
+		db = conn()
+		cursor = db.cursor()
+		cursor.execute('''DELETE FROM schedules WHERE id =? and user_id =?''',(s_id,session['ADMIN']['id']))
+		db.commit()
+
+		del session['SCHEDULES'][s_id]
+		return redirect('/schedules')
+
+@app.route('/schedules/<action>',methods=['POST'])
+@login_required
+@blocked
+def scheduler(action):
+	try:
+		if action == 'add-model':
+			name = request.form.get('s-name')
+			type = request.form.get('s-type')
+			swipe_percent = request.form.get('s-swipe-percent')
+			swipe_start_at = request.form.get('s-swipe-at')
+
+			user_id = session.get('ADMIN')['id']
+			s_id = str(uuid.uuid4())
+
+			db = conn()
+			cursor = db.cursor()
+
+			cursor.execute('''INSERT INTO schedules
+			(id,user_id,name,type,swipe_percent,swipe_start_at) VALUES (?,?,?,?,?,?)
+			''',(s_id,user_id,name,type.lower(),swipe_percent,swipe_start_at))
+			db.commit()
+			return jsonify({'msg':'schedule added successfully'}),200
+
+	except Exception as error:
+		print(error)
+		return abort(500)
 
 
 @app.route('/accounts',methods=['GET'])
@@ -575,7 +629,7 @@ def accounts():
 	limit = int(request.args.get('limit', 20))
 	offset = (page - 1) * limit if page <= total else 0
 
-	cursor.execute('''SELECT * FROM accounts WHERE user_id =? ORDER BY timestamp DESC LIMIT ? OFFSET ?''',
+	cursor.execute('''SELECT * FROM accounts WHERE user_id =? ORDER BY created_at DESC LIMIT ? OFFSET ?''',
 					(session['ADMIN']['id'],limit,offset))
 	accounts = cursor.fetchall()
 	sum = min((offset) + len(accounts), total)
@@ -711,7 +765,9 @@ def show_create_accounts():
 			'start_time':task[4],
 			'status':task[5]
 		}
-	return render_template('create-accounts.html',running=running,task_status=task_status,
+
+	schedules = [s for s in list(session['SCHEDULES'].values()) if s['type'] == 'account']
+	return render_template('create-accounts.html',schedules=schedules,running=running,task_status=task_status,
 			model=session['MODEL'])
 
 ##SWIPE PAGE
@@ -740,7 +796,8 @@ def swipe_page():
 			'status': task[3],
 			'progress': task[4]
 		}
-	return render_template('swipe-page.html',running=running,task_status=task_status)
+	schedules = [s for s in list(session['SCHEDULES'].values()) if s['type'] == 'swiping']
+	return render_template('swipe-page.html',schedules=schedules,running=running,task_status=task_status)
 	
 @app.route('/swipe', methods=['POST'])
 @login_required
