@@ -147,7 +147,7 @@
                             <div>
                                 <label for="s-type">Type</label>
                                 {%if action_type%}
-                                    <input type="text" id="s-type" name="s-type" value="{{action_type|capitalize}}" required disabled>
+                                    <input type="text" id="s-type" name="s-type" value="{{action_type|capitalize}}" required readonly>
                                 {%else%}
                                     <select id="s-type" name="s-type"  required>
                                         <option value="" disabled>select schedule type</option>
