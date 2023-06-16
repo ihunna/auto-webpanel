@@ -2,6 +2,9 @@
 import { showHide, createModal, sendRequest} from "./utils.mjs";
 
 (() =>{
+    closeBtn.forEach(e =>{
+        e.addEventListener('click',() => showHide('no-show',[overlay,modal]));
+    });
     try{
         menuBtn.addEventListener('click',() => showHide('show-menu',[overlay,uCard,sideBar,closeMenuBtn]));
         closeMenuBtn.addEventListener('click',() => showHide('no-show',[overlay,uCard,sideBar,closeMenuBtn]));
@@ -76,9 +79,6 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             });
         });
     }catch (error){con.log(error)}
-    closeBtn.forEach(e =>{
-        e.addEventListener('click',() => showHide('no-show',[overlay,modal]));
-    });
     try{
         const viewMatches = doc.querySelectorAll('.view-matches');
         viewMatches.forEach(e=>{
@@ -117,7 +117,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
     
             sendRequest('POST', '/create-accounts', null, formData)
             .then(response => {
-                showHide('show',[alertBox],response,{'bg':colorSuccess,'color':colorLessWhite});
+                showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 accOpForm.reset();
                 setTimeout(() => showHide('no-show',[alertBox]), 5000)
             })
@@ -156,7 +156,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             
             sendRequest('POST', '/add-platform', null, formData)
             .then(response => {
-                showHide('show',[alertBox],response,{'bg':colorSuccess,'color':colorLessWhite});
+                showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 platformForm.reset();
                 setTimeout(() => {
                     showHide('no-show',[alertBox]);
@@ -179,7 +179,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             const url = modelForm.classList.contains('edit-model')? '/models/edit-model':'models/add-model'
             sendRequest('POST', url, null, formData).then(response => {
                 modelForm.reset()
-                showHide('show',[alertBox],response,{'bg':colorSuccess,'color':colorLessWhite});
+                showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 setTimeout(() => {
                     showHide('no-show',[alertBox]);
                     window.location.href='/models'
@@ -197,15 +197,23 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         scheduleForm.addEventListener('submit',(e)=>{
             e.preventDefault();
             const formData = new FormData(scheduleForm);
-            
-            const url = scheduleForm.classList.contains('edit-schedule')? '/schedules/edit-schedule':'schedules/add-model'
+            let url
+            if  (scheduleForm.classList.contains('edit-schedule')){url = '/schedules/edit-schedule'}
+            else if (scheduleForm.classList.contains('finish-schedule')){url = '/schedules/finish-schedule'}
+            else {url = '/schedules/add-schedule'}
+
             sendRequest('POST', url, null, formData).then(response => {
                 scheduleForm.reset()
-                showHide('show',[alertBox],response,{'bg':colorSuccess,'color':colorLessWhite});
+                showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
+                if (response.action && response.action === 'finish-schedule'){
+                    url = '/schedules/finish-schedule'
+                    window.location.href=`/schedules?action=next&s=${response.schedule}&type=${response.action_type}`
+                }else{
                 setTimeout(() => {
-                    showHide('no-show',[alertBox]);
-                    window.location.href='/schedules'
-                }, 5000)
+                    showHide('no-show',[alertBox],response.msg);
+                    window.location.href=`/schedules`
+                }, 3000)
+            }
             })
             .catch(error => {
                 showHide('show',[alertBox],error,{'bg':colorDanger,'color':colorLessWhite});
@@ -222,7 +230,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             
             sendRequest('POST',`/admins/${action}`, null, formData).then(response => {
                 adminForm.reset()
-                showHide('show',[alertBox],response,{'bg':colorSuccess,'color':colorLessWhite});
+                showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 setTimeout(() => {
                     showHide('no-show',[alertBox]);
                     window.location.href='/admins'
@@ -243,7 +251,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             
             const url = '/account-page/edit-account'
             sendRequest('POST', url, null, formData).then(response => {
-                showHide('show',[alertBox],response,{'bg':colorSuccess,'color':colorLessWhite});
+                showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 setTimeout(() => showHide('no-show',[alertBox]), 5000)
             })
             .catch(error => {
@@ -264,7 +272,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 errors.innerHTML = '';
                 signupForm.reset();
                 con.log(response)
-                showHide('show',[alertBox],response,{'bg':colorSuccess,'color':colorLessWhite});
+                showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 setTimeout(() => {
                     showHide('no-show',[alertBox]), 
                     window.location.href = '/login';},
@@ -290,7 +298,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 errors.innerHTML = '';
                 loginForm.reset();
                 con.log(response)
-                showHide('show',[alertBox],'Login successful',{'bg':colorSuccess,'color':colorLessWhite});
+                showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 setTimeout(() => {
                     showHide('no-show',[alertBox]);
                     window.location.replace('/dashboard')

@@ -102,6 +102,10 @@ td.actions{
     width: 90%;
 }
 
+.double-field > .inputs{
+    grid-template-columns: repeat(1,1fr);
+}
+
 .form-holder > form{
     width: 90%;
 }
@@ -585,6 +589,10 @@ td.actions{
 }
 
 @media screen  and (max-width:374.99px){
+    .holder{
+        width: 100%;
+        height: 100%;
+    }
     .model-tag{
         display: none;
     }
@@ -620,7 +628,7 @@ td.actions{
     }
 
     .form-holder > form{
-        width: 98%;
+        width: 100%;
         padding: 8px;
     }
 
@@ -629,8 +637,15 @@ td.actions{
     .main-container > .image-holder > .images > li{
         height: 100px;
     }
+    .double-field > .inputs{
+        width: 100%;
+    }
+
+    .double-field.op-dates > .inputs > div > input{
+        font-size: 12px;
+    }
     .form-holder > form > div{
-        max-width: 80%;
+        max-width: 90%;
     }
 
 }

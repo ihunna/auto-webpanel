@@ -78,6 +78,36 @@
     </section>
     <section class="main">
         <div class="sidebar">
+            <ul class="links platforms">
+                <li>platforms</li>
+                <li class="{% if g.page == 'platforms' %}active{% endif %}">
+                    <a href="/platforms">
+                        <i class="fa-brands fa-app-store"></i>
+                        Platforms
+                    </a>
+                </li>
+                <li class="{% if g.page == 'add-platforms' %}active{% endif %}">
+                    <a href="/platforms?action=add-platform">
+                        <i class="fas fa-plus-circle"></i>
+                        Add platforms
+                    </a>
+                </li>
+            </ul>
+            <ul class="links models">
+                <li>models</li>
+                <li class="{% if g.page == 'models' %}active{% endif %}">
+                    <a href="/models">
+                        <i class="fas fa-user-friends"></i>
+                        Models
+                    </a>
+                </li>
+                <li class="{% if g.page == 'add-model' %}active{% endif %}">
+                    <a href="/models?action=add-model">
+                        <i class="fa fa-user-plus"></i>
+                        Add model
+                    </a>
+                </li>
+            </ul>
             <ul class="links services">
                 <li>actions</li>
                 <li  class="{% if g.page == 'accounts' %}active{% endif %}">
@@ -126,36 +156,6 @@
                     <a href="/schedules">
                         <i class="fas fa-clock"></i>
                       Schedule tasks
-                    </a>
-                </li>
-            </ul>
-            <ul class="links models">
-                <li>models</li>
-                <li class="{% if g.page == 'models' %}active{% endif %}">
-                    <a href="/models">
-                        <i class="fas fa-user-friends"></i>
-                        Models
-                    </a>
-                </li>
-                <li class="{% if g.page == 'add-model' %}active{% endif %}">
-                    <a href="/models?action=add-model">
-                        <i class="fa fa-user-plus"></i>
-                        Add model
-                    </a>
-                </li>
-            </ul>
-            <ul class="links platforms">
-                <li>platforms</li>
-                <li class="{% if g.page == 'platforms' %}active{% endif %}">
-                    <a href="/platforms">
-                        <i class="fa-brands fa-app-store"></i>
-                        Platforms
-                    </a>
-                </li>
-                <li class="{% if g.page == 'add-platforms' %}active{% endif %}">
-                    <a href="/platforms?action=add-platform">
-                        <i class="fas fa-plus-circle"></i>
-                        Add platforms
                     </a>
                 </li>
             </ul>

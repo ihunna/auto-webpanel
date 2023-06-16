@@ -139,7 +139,20 @@ def conn():
 
 		#create schedule table
 		cursor.execute('''CREATE TABLE IF NOT EXISTS schedules
-		(id TEXT PRIMARY KEY,user_id TEXT,name TEXT,type TEXT,swipe_percent TEXT,swipe_start_at TEXT,added_at DATETIME DEFAULT CURRENT_TIMESTAMP)
+		(id TEXT PRIMARY KEY,
+		user_id TEXT,
+		model TEXT, 
+		platform TEXT,
+		name TEXT,
+		type TEXT,
+		swipe_percent TEXT,
+		swipe_start_at DATETIME,
+		swipe_end_at DATETIME,
+		swipe_session_count TEXT,
+		swipe_delay TEXT,
+		swipe_duration TEXT,
+		day_specs TEXT,
+		added_at DATETIME DEFAULT CURRENT_TIMESTAMP)
 		''')
 	
 	return db

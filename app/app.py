@@ -540,9 +540,12 @@ def logout():
 @app.route('/schedules',methods=['GET'])
 @login_required
 @blocked
+@check_platform
+@check_model
 def schedules():
 	g.page = 'schedules'
 	action = request.args.get('action')
+	action_type = request.args.get('type')
 	s_id = request.args.get('s')
 
 	if not action and not s_id:
@@ -552,20 +555,27 @@ def schedules():
 		schedules = cursor.fetchall()
 		schedules = [{
 			'id':s[0],
-			'name':str(s[2]),
-			'type':s[3],
-			'swipe_percent':s[4],
-			'swipe_start_at':s[5],
-			'added_at':s[6]
+			'model':session['MODELS'][s[2]]['full_name'],
+			'platform':session['PLATFORMS'][s[3]]['name'],
+			'name':str(s[4]),
+			'type':s[5],
+			'swipe_percent':s[6],
+			'swipe_start_at':s[7],
+			'swipe_end_at':s[8],
+			'swipe_session_count':s[9],
+			'swipe_delay':s[10],
+			'swipe_duration':s[11],
+			'day_specs':s[12],
+			'added_at':s[13]
 		} for s in schedules]
-		
+		print(schedules)
 		for s in schedules:session['SCHEDULES'].update({s['id']:s})
 		if len(schedules) > 0:return render_template('schedules.html',schedules=schedules)
 		return render_template('schedules.html',action='add-schedule')
 	
-	if action == 'add-schedule':
-		return render_template('schedules.html',action=action)
-	
+	elif action == 'edit-schedule' and s_id:
+		return render_template('schedules.html',action='edit-schedule',schedule=session['SCHEDULES'][s_id])
+
 	elif action == 'delete-schedule':
 		db = conn()
 		cursor = db.cursor()
@@ -574,17 +584,48 @@ def schedules():
 
 		del session['SCHEDULES'][s_id]
 		return redirect('/schedules')
+	elif action == 'next':
+		if action_type == 'edit':
+			db = conn()
+			cursor = db.cursor()
+			cursor.execute('''SELECT day_specs FROM schedules WHERE id =? AND user_id =?''',
+		  	(s_id,session['ADMIN']['id']))
+			day_specs = cursor.fetchone()[0]
 
-@app.route('/schedules/<action>',methods=['POST'])
+			print(day_specs)
+			day_specs = json.loads(day_specs) if day_specs is not None  else []
+			print(day_specs)
+			return render_template('schedules.html',action=action,s_id=s_id,action_type=action_type,day_specs=day_specs)
+		return render_template('schedules.html',action=action,s_id=s_id)
+	
+	return render_template('schedules.html',action=action)
+
+@app.route('/schedules/<action>', methods=['POST'])
 @login_required
 @blocked
+@check_platform
+@check_model
 def scheduler(action):
 	try:
-		if action == 'add-model':
+		if action == 'add-schedule':
 			name = request.form.get('s-name')
 			type = request.form.get('s-type')
 			swipe_percent = request.form.get('s-swipe-percent')
-			swipe_start_at = request.form.get('s-swipe-at')
+			s_session_count_start = request.form.get('s-session-count-start')
+			s_session_count_end = request.form.get('s-session-count-end')
+			s_delay_start = request.form.get('s-swipe-delay-start')
+			s_delay_end = request.form.get('s-swipe-delay-end')
+			s_duration_start = request.form.get('s-duration-start')
+			s_duration_end = request.form.get('s-duration-end')
+			s_start = request.form.get('s-start')
+			s_end = request.form.get('s-end')
+
+			s_session_count = f'{s_session_count_start}-{s_session_count_end}'
+			s_delay = f'{s_delay_start}-{s_delay_end}'
+			s_duration = f'{s_duration_start}-{s_duration_end}'
+
+			model = session['MODEL']
+			platform = session['PLATFORM']
 
 			user_id = session.get('ADMIN')['id']
 			s_id = str(uuid.uuid4())
@@ -593,11 +634,55 @@ def scheduler(action):
 			cursor = db.cursor()
 
 			cursor.execute('''INSERT INTO schedules
-			(id,user_id,name,type,swipe_percent,swipe_start_at) VALUES (?,?,?,?,?,?)
-			''',(s_id,user_id,name,type.lower(),swipe_percent,swipe_start_at))
+							  (id, user_id, model, platform, name, type, swipe_percent,
+							   swipe_start_at, swipe_end_at, swipe_session_count, swipe_delay,
+							   swipe_duration)
+							  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+						   (s_id, user_id, model['id'], platform['id'], name, type.lower(),
+							swipe_percent, s_start, s_end, s_session_count, s_delay, s_duration))
 			db.commit()
-			return jsonify({'msg':'schedule added successfully'}),200
+			return jsonify({'msg': 'schedule added, add date specs', 'schedule': s_id, 'action': 'finish-schedule','action_type':'add'}), 200
+		
+		elif action == 'edit-schedule':
+			name = request.form.get('s-name')
+			swipe_percent = request.form.get('s-swipe-percent')
+			s_session_count = request.form.get('s-session-count')
+			s_delay = request.form.get('s-swipe-delay')
+			s_duration = request.form.get('s-duration')
+			s_start = request.form.get('s-start')
+			s_end = request.form.get('s-end')
+			s_id = request.form.get('s-id')
 
+			model = session['MODEL']
+			platform = session['PLATFORM']
+
+			user_id = session.get('ADMIN')['id']
+
+			db = conn()
+			cursor = db.cursor()
+
+			cursor.execute('''UPDATE schedules SET name=?, swipe_percent=?,
+							   swipe_start_at=?, swipe_end_at=?, 
+							   swipe_session_count=?, swipe_delay=?,
+							   swipe_duration=? WHERE id=? AND user_id=?''',
+						   (name,swipe_percent, s_start, s_end, s_session_count, s_delay, s_duration,s_id,user_id))
+			db.commit()
+			return jsonify({'msg': 'schedule edit successful, add date specs', 'schedule': s_id, 'action': 'finish-schedule','action_type':'edit'}), 200
+		
+		elif action == 'finish-schedule':
+			s_id = request.form.get('s-id')
+			days = request.form.getlist('s-day')
+			percents = request.form.getlist('s-swipe-percent')
+			day_specs = json.dumps([{"day": day,"swipe_percent":percent} for day, percent in zip(days, percents)])
+			action_type = request.form.get('action-type')
+
+			db = conn()
+			cursor = db.cursor()
+			cursor.execute('''UPDATE schedules SET day_specs =? WHERE id =? AND user_id =?
+			''',(day_specs,s_id,session['ADMIN']['id']))
+			db.commit()
+			if action_type and action_type == 'edit':return jsonify({'msg': 'schedule updated successfully'}), 200
+			return jsonify({'msg': 'schedule added successfully'}), 200
 	except Exception as error:
 		print(error)
 		return abort(500)
@@ -685,7 +770,6 @@ def account_action(action):
 			data = request.json['data']
 			longitude = data['long']
 			latitude = data['lat']
-			print(longitude, latitude)
 
 			return jsonify({'msg': 'location updated successfully'}), 200
 	except:

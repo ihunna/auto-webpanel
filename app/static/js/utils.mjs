@@ -75,7 +75,7 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
           .then(response => {
             showHide('no-show',[alertBox]);
             con.log(response)
-            showHide('show',[alertBox],response,{'bg':colorSuccess,'color':colorLessWhite});
+            showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
             setTimeout(() => {
               showHide('no-show',[alertBox])
               window.location.reload();
@@ -251,7 +251,7 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
               .then(response => {
                 showHide('no-show',[alertBox]);
                 con.log(response)
-                showHide('show',[alertBox],'image upload successful',{'bg':colorSuccess,'color':colorLessWhite});
+                showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 setTimeout(() => {
                   showHide('no-show',[alertBox])
                   window.location.replace('/images/'+myprofile)
@@ -373,7 +373,7 @@ const sendRequest = (method, url, data = null, formData = null) => {
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           const response = JSON.parse(xhr.responseText);
-          const msg = response.msg;
+          const msg = response;
           resolve(msg);
         } else {
           const response = JSON.parse(xhr.responseText);
