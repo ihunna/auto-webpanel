@@ -598,7 +598,7 @@ def schedules():
 			return render_template('schedules.html',action=action,s_id=s_id,action_type=action_type,day_specs=day_specs)
 		return render_template('schedules.html',action=action,s_id=s_id)
 	
-	return render_template('schedules.html',action=action)
+	return render_template('schedules.html',action=action,action_type=action_type)
 
 @app.route('/schedules/<action>', methods=['POST'])
 @login_required

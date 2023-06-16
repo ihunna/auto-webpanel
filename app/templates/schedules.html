@@ -146,12 +146,16 @@
                             </div>
                             <div>
                                 <label for="s-type">Type</label>
-                                <select id="s-type" name="s-type" required>
-                                    <option value="" disabled>select schedule type</option>
-                                    {%for t in ['Account','Swiping']%}
-                                        <option value="{{t}}">{{t}}</option>
-                                    {%endfor%}
-                                </select>
+                                {%if action_type%}
+                                    <input type="text" id="s-type" name="s-type" value="{{action_type|capitalize}}" required disabled>
+                                {%else%}
+                                    <select id="s-type" name="s-type"  required>
+                                        <option value="" disabled>select schedule type</option>
+                                        {%for t in ['Account','Swiping']%}
+                                            <option value="{{t}}">{{t}}</option>
+                                        {%endfor%}
+                                    </select>
+                                {%endif%}
                                 <h5 class="input-highlight"> 
                                     <i class="fas fas fa-exclamation-circle"></i> 
                                     the type of operation you want to schedule for e.g account or swiping
