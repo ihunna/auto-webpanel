@@ -55,16 +55,16 @@
     margin-bottom: 20px !important;
 }
 
-.double-field > label{
+/* .double-field > label{
     margin: auto !important;
-}
+} */
 
 .double-field > .inputs{
     display: grid;
     grid-template-columns: repeat(2,1fr);
     gap: 20px;
-    margin: 5px auto;
-    width: 90%;
+    margin: 5px;
+    width: 100%;
 }
 
 .double-field > .inputs > div{
@@ -74,6 +74,37 @@
 
 .double-field > .inputs > div > label{
     font-size: 14px;
+}
+
+.double-field > .inputs > div > .s-actions{
+   border: 2px solid #000;
+   display: grid;
+   grid-template-columns: repeat(2,1fr);
+   gap: 0;
+   margin: 0 auto;
+   width: fit-content;
+   border-radius: 20px;
+   background: var(--soft-white);
+   color: #000;
+}
+
+.double-field > .inputs > div > .s-actions > a{
+    padding: 2.5px 10px;
+}
+
+.double-field > .inputs > div > .s-actions > a:first-child{
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
+}
+
+.double-field > .inputs > div > .s-actions > a:last-child{
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+}
+
+.double-field > .inputs > div > .s-actions > a.active{
+    background: #000;
+    color: var(--soft-white);
 }
 
 
@@ -788,9 +819,12 @@ li >
     padding: 10px;
 }
 
-/* td.admin-badge{
-    max-width: 20px;
-} */
+.model-tag{
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 .platform-tag,.model-tag,.admin-badge{
     padding: 5px 14px;

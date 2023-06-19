@@ -6,6 +6,24 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         e.addEventListener('click',() => showHide('no-show',[overlay,modal]));
     });
     try{
+        const toggleMap = doc.querySelector('#toggle-map');
+        const map = doc.querySelector('#op-map');
+        toggleMap.addEventListener('click',(e)=>{
+            e.preventDefault();
+            e.target.innerHTML = ``;
+            if (map.classList.contains('show')){
+                showHide('no-show',[map]);
+                e.target.innerHTML = `open map &nbsp;
+                <i class="fas fa-map-marked"></i>`;
+            }
+            else{
+                showHide('show',[map]);
+                e.target.innerHTML = `close map &nbsp;
+                <i class="fas fa-map-marked"></i>`;
+            }
+        })
+    }catch(error){con.log(error)}
+    try{
         menuBtn.addEventListener('click',() => showHide('show-menu',[overlay,uCard,sideBar,closeMenuBtn]));
         closeMenuBtn.addEventListener('click',() => showHide('no-show',[overlay,uCard,sideBar,closeMenuBtn]));
     }catch(error){con.log(error)}
@@ -190,6 +208,26 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 setTimeout(() => showHide('no-show',[alertBox]), 5000)
                 con.error(error);
             });
+        })
+    }catch(error){con.log(error)}
+    try{
+        const opModels = doc.querySelectorAll('.op-model')
+        opModels.forEach(opModel =>{
+            opModel.addEventListener('input',(e)=>{
+                sendRequest('POST','/models/set-model', {'data':e.target.value}).then(response => {
+                    showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
+                    setTimeout(() => {
+                        showHide('no-show',[alertBox]);
+                        doc.querySelector('.model-tag').textContent = `${response.model.full_name}`;
+                        doc.querySelector('#current-model').textContent = `(${response.model.full_name})`;
+                    }, 5000)
+                })
+                .catch(error => {
+                    showHide('show',[alertBox],error,{'bg':colorDanger,'color':colorLessWhite});
+                    setTimeout(() => showHide('no-show',[alertBox]), 5000)
+                    con.error(error);
+                });
+            })
         })
     }catch(error){con.log(error)}
     try{

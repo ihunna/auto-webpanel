@@ -33,10 +33,6 @@
                                     </h2>
                                 </div>
                                 <div>
-                                    <strong>Username : </strong>
-                                    <span>@{{model.username}}</span>
-                                </div>
-                                <div>
                                     <strong>Added at : </strong>
                                     <span>{{model.added_at}}</span>
                                 </div>
@@ -59,16 +55,9 @@
                                 <input type="text" id="model-fullname" name="model-fullname" value="{{model.full_name}}">
                             </div>
                             <div>
-                                <label for="model-uname">Username</label>
-                                <input type="text" id="model-uname" name="model-uname" value="{{model.username}}">
-                            </div>
-                            <div>
-                                <label for="model-swipe-percent">Swipe percentage &nbsp;<span>format: swipe left/swipe right</label>
-                                <input type="text" id="model-swipe-percent" name="model-swipe-percent" value="{{model.swipe_percent}}">
-                            </div>
-                            <div>
-                                <label for="model-socials">Socials &nbsp;<span>format: platform/handle,</label>
-                                    <textarea id="model-socials" name="model-socials" class="scroll">{% for social in model.socials %}{{ social.platform }}/{{ social.handle }}, {% endfor %}</textarea>
+                                <label for="model-socials">Socials</label>
+                                <input id="model-socials" name="model-socials" class="scroll" value="{{model.socials}}">
+                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the social media handles seperated by comma if multiple e.g IG : @maggies__,SC : @maggies001</h5>
                             </div>
                             <input type="hidden" class="not-edit" id="model-id" name="model-id" value="{{model.id}}">
                             <div>
@@ -101,16 +90,9 @@
                                 <input type="text" id="model-fullname" name="model-fullname" required>
                             </div>
                             <div>
-                                <label for="model-uname">Username</label>
-                                <input type="text" id="model-uname" name="model-uname" required>
-                            </div>
-                            <div>
-                                <label for="model-swipe-percent">Swipe percentage &nbsp;<span>format: swipe left/swipe right</label>
-                                <input type="text" id="model-swipe-percent" name="model-swipe-percent" placeholder="40/60" required>
-                            </div>
-                            <div>
-                                <label for="model-socials">Socials &nbsp;<span>format: platform/handle,</span></label>
-                                <textarea id="model-socials" name="model-socials" value={{model_socials}}></textarea>
+                                <label for="model-socials">Socials</label>
+                                <input id="model-socials" name="model-socials" value={{model_socials}}>
+                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the social media handles seperated by comma if multiple e.g IG : @maggies__, SC : @maggies001</h5>
                             </div>
                             <input type="submit" value="submit"> 
                         </form>

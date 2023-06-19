@@ -265,10 +265,8 @@ def models():
 		models = [{
 			'id':model[0],
 			'full_name':str(model[2]),
-			'username':model[3],
 			'added_at':model[6],
-			'swipe_percent':model[4],
-			'socials':ast.literal_eval(model[5])
+			'socials':model[5]
 		} for model in models]
 		
 		for model in models:session['MODELS'].update({model['id']:model})
@@ -286,7 +284,7 @@ def models():
 				url = str(current_url) if current_url is not None else '/models'
 				return redirect(url)
 			elif action == 'edit-model':
-				model=app.config['MODELS'][model_id]
+				model=session['MODELS'][model_id]
 				admin_id = session.get('ADMIN')['id']
 				db = conn()
 				cursor = db.cursor()
@@ -330,59 +328,49 @@ def model(action):
 			full_name = request.form.get('model-fullname')
 			username = request.form.get('model-uname')
 			swipe_percent = request.form.get('model-swipe-percent')
-			socials = request.form.get('model-socials')
-			socials = socials.split(',')
-
-			socials = request.form.get('model-socials')
-			socials = socials.split(',')	
-			model_socials = [
-				{
-					"platform":social.split('/')[0],
-					"handle":social.split('/')[1]
-				} for social in socials if social.strip()]
+			model_socials = request.form.get('model-socials')	
+			# model_socials = [
+			# 	{
+			# 		"platform":social.split('/')[0],
+			# 		"handle":social.split('/')[1]
+			# 	} for social in socials if social.strip()]
 
 			user_id = session.get('ADMIN')['id']
 			model_id = str(uuid.uuid4())
+			location = os.path.join(app_folder,'images',model_id)
+			if os.path.exists(location):
+				return jsonify({'msg': 'Folder already exists'}), 400
+			
+			db = conn()
+			cursor = db.cursor()
 
-			usernames = [u['username'] for u in list(session.get('MODELS').values())]
-			if username not in usernames:
-				location = os.path.join(app_folder,'images',model_id)
-				if os.path.exists(location):
-					return jsonify({'msg': 'Folder already exists'}), 400
-				
-				db = conn()
-				cursor = db.cursor()
+			cursor.execute('''INSERT INTO models
+			(id,user_id,full_name,socials) VALUES (?,?,?,?)
+			''',(model_id,user_id,full_name,str(model_socials)))
+			db.commit()
 
-				cursor.execute('''INSERT INTO models
-				(id,user_id,full_name,username,swipe_percent,socials) VALUES (?,?,?,?,?,?)
-				''',(model_id,user_id,full_name,username,swipe_percent,str(model_socials)))
-				db.commit()
+			cursor.execute('''SELECT * FROM models WHERE id =?''',(model_id,))
+			model = cursor.fetchone()
 
-				cursor.execute('''SELECT * FROM models WHERE id =?''',(model_id,))
-				model = cursor.fetchone()
+			# Create the main folder
+			os.makedirs(location)
 
-				# Create the main folder
-				os.makedirs(location)
+			# Create the 'profile' and 'images' subfolders
+			profile_folder = os.path.join(location, "profile")
+			os.makedirs(profile_folder)
 
-				# Create the 'profile' and 'images' subfolders
-				profile_folder = os.path.join(location, "profile")
-				os.makedirs(profile_folder)
+			images_folder = os.path.join(location, "images")
+			os.makedirs(images_folder)
+			if model:
+				session['MODELS'].update({model_id:{
+					'id':model[0],
+					'full_name':str(model[2]),
+					'added_at':model[6],
+					'socials':model[5]
+				}})
+			else:return jsonify({'msg':'error adding model'}),400
 
-				images_folder = os.path.join(location, "images")
-				os.makedirs(images_folder)
-				if model:
-					session['MODELS'].update({model_id:{
-						'id':model[0],
-						'full_name':str(model[2]),
-						'username':model[3],
-						'added_at':model[6],
-						'swipe_percent':model[4],
-						'socials':ast.literal_eval(model[5])
-					}})
-				else:return jsonify({'msg':'error adding model'}),200
-
-				return jsonify({'msg':'model added successfully'}),200
-			return jsonify({'msg':'model already exists'}),400
+			return jsonify({'msg':'model added successfully'}),200
 		
 		elif action == 'edit-model':
 			full_name = request.form.get('model-fullname')
@@ -390,20 +378,29 @@ def model(action):
 			swipe_percent = request.form.get('model-swipe-percent')
 			model_id = request.form.get('model-id')
 
-			socials = request.form.get('model-socials')
-			socials = socials.split(',')	
-			model_socials = [
-				{
-					"platform":social.split('/')[0],
-					"handle":social.split('/')[1]
-				} for social in socials if social.strip()]
+			model_socials = request.form.get('model-socials')
+			# socials = socials.split(',')	
+			# model_socials = [
+			# 	{
+			# 		"platform":social.split('/')[0],
+			# 		"handle":social.split('/')[1]
+			# 	} for social in socials if social.strip()]
 			db = conn()
 			cursor = db.cursor()
 			cursor.execute('''UPDATE models 
-			SET full_name=?,username=?,swipe_percent =?, socials=? WHERE id=? AND user_id =? 
-			''',(full_name,username,swipe_percent,str(model_socials),model_id,session['ADMIN']['id']))
+			SET full_name=?,socials=? WHERE id=? AND user_id =? 
+			''',(full_name,model_socials,model_id,session['ADMIN']['id']))
 			db.commit()
 			return jsonify({'msg':'model updated successfully'}),200
+		
+		elif action == 'set-model':
+			model_id = request.get_json()['data']
+			model_ids = [u['id'] for u in list(session['MODELS'].values())]
+			if model_id in model_ids:
+				if action == 'set-model':
+					session['MODEL'] = session['MODELS'][model_id]
+					g.model = session['MODEL']
+					return jsonify({'msg':'model set successfully','model':session['MODEL']}),200
 	except Exception as error:
 		print(error)
 		return jsonify({'msg':'error updating model'}),500
@@ -548,6 +545,9 @@ def schedules():
 	action_type = request.args.get('type')
 	s_id = request.args.get('s')
 
+	account_schedules = [s for s in list(session.get('SCHEDULES').values()) if s['type'] == 'account']
+	swipe_schedules = [s for s in list(session.get('SCHEDULES').values()) if s['type'] == 'swipe' or s['type'] == 'swiping']
+
 	if not action and not s_id:
 		db = conn()
 		cursor = db.cursor()
@@ -560,21 +560,30 @@ def schedules():
 			'name':str(s[4]),
 			'type':s[5],
 			'swipe_percent':s[6],
-			'swipe_start_at':s[7],
-			'swipe_end_at':s[8],
-			'swipe_session_count':s[9],
-			'swipe_delay':s[10],
-			'swipe_duration':s[11],
-			'day_specs':s[12],
-			'added_at':s[13]
+			'op_start_at':s[7],
+			'op_end_at':s[8],
+			'op_max_workers':s[9],
+			'swipe_session_count':s[10],
+			'op_count':s[11],
+			'op_timer':json.loads(s[12]) if s[12] is not None else {'count':'0','time':'0'},
+			'op_location':s[13],
+			'swipe_delay':s[14],
+			'op_swipe_group':s[15],
+			'swipe_duration':s[16],
+			'day_specs':s[17],
+			'added_at':s[19]
 		} for s in schedules]
 		print(schedules)
 		for s in schedules:session['SCHEDULES'].update({s['id']:s})
 		if len(schedules) > 0:return render_template('schedules.html',schedules=schedules)
-		return render_template('schedules.html',action='add-schedule')
+		return render_template('schedules.html',action='add-schedule',
+			 action_type='account',models=list(session['MODELS'].values()),
+			 swipe_schedules=swipe_schedules,schedules=account_schedules)
 	
 	elif action == 'edit-schedule' and s_id:
-		return render_template('schedules.html',action='edit-schedule',schedule=session['SCHEDULES'][s_id])
+		return render_template('schedules.html',action='edit-schedule',
+			 schedule=session['SCHEDULES'][s_id],swipe_schedules=swipe_schedules,
+			 models=list(session['MODELS'].values()),action_type=action_type)
 
 	elif action == 'delete-schedule':
 		db = conn()
@@ -592,13 +601,12 @@ def schedules():
 		  	(s_id,session['ADMIN']['id']))
 			day_specs = cursor.fetchone()[0]
 
-			print(day_specs)
 			day_specs = json.loads(day_specs) if day_specs is not None  else []
-			print(day_specs)
 			return render_template('schedules.html',action=action,s_id=s_id,action_type=action_type,day_specs=day_specs)
 		return render_template('schedules.html',action=action,s_id=s_id)
 	
-	return render_template('schedules.html',action=action,action_type=action_type)
+	return render_template('schedules.html',action=action,action_type=action_type,
+			models=list(session['MODELS'].values()),swipe_schedules=swipe_schedules)
 
 @app.route('/schedules/<action>', methods=['POST'])
 @login_required
@@ -624,6 +632,16 @@ def scheduler(action):
 			s_delay = f'{s_delay_start}-{s_delay_end}'
 			s_duration = f'{s_duration_start}-{s_duration_end}'
 
+			op_count = request.form.get('op-count')
+			max_workers = request.form.get('max-workers')
+
+			op_sleep_timer_count = request.form.get('s-tf-acc-count')
+			op_sleep_timer_time = request.form.get('s-tf-acc-time')
+			timer = {'count':op_sleep_timer_count,'time':op_sleep_timer_time} if op_sleep_timer_count else {'count':0,'time':0}
+
+			op_location = request.form.get('op-location')
+			op_swipe_group = request.form.get('op-swipe-group')
+
 			model = session['MODEL']
 			platform = session['PLATFORM']
 
@@ -633,17 +651,29 @@ def scheduler(action):
 			db = conn()
 			cursor = db.cursor()
 
-			cursor.execute('''INSERT INTO schedules
-							  (id, user_id, model, platform, name, type, swipe_percent,
-							   swipe_start_at, swipe_end_at, swipe_session_count, swipe_delay,
-							   swipe_duration)
-							  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-						   (s_id, user_id, model['id'], platform['id'], name, type.lower(),
-							swipe_percent, s_start, s_end, s_session_count, s_delay, s_duration))
-			db.commit()
-			return jsonify({'msg': 'schedule added, add date specs', 'schedule': s_id, 'action': 'finish-schedule','action_type':'add'}), 200
+			if type.lower() in ['swiping','swipe']:
+				cursor.execute('''INSERT INTO schedules
+								(id, user_id, model, platform, name, type, swipe_percent,
+								op_start_at, op_end_at, swipe_session_count, swipe_delay,
+								swipe_duration)
+								VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+							(s_id, user_id, model['id'], platform['id'], name, type.lower(),
+								swipe_percent, s_start, s_end, s_session_count, s_delay, s_duration))
+				db.commit()
+				return jsonify({'msg': 'schedule added, add date specs', 'schedule': s_id, 'action': 'finish-schedule','action_type':'add'}), 200
+			
+			elif type.lower() == 'account':
+				cursor.execute('''INSERT INTO schedules
+								(id, user_id, model, platform, name, type,op_count,op_timer,
+								op_swipe_group,op_location,op_max_workers,op_start_at, op_end_at)
+								VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)''',
+							(s_id, user_id, model['id'], platform['id'], name, type.lower(),
+							op_count,json.dumps(timer),op_swipe_group,op_location,max_workers,s_start, s_end))
+				db.commit()
+			return jsonify({'msg': 'schedule added successfully'}), 200
 		
 		elif action == 'edit-schedule':
+			type = request.form.get('s-type')
 			name = request.form.get('s-name')
 			swipe_percent = request.form.get('s-swipe-percent')
 			s_session_count = request.form.get('s-session-count')
@@ -653,6 +683,16 @@ def scheduler(action):
 			s_end = request.form.get('s-end')
 			s_id = request.form.get('s-id')
 
+			op_count = request.form.get('op-count')
+			max_workers = request.form.get('max-workers')
+
+			op_sleep_timer_count = request.form.get('s-tf-acc-count')
+			op_sleep_timer_time = request.form.get('s-tf-acc-time')
+			timer = {'count':op_sleep_timer_count,'time':op_sleep_timer_time} if op_sleep_timer_count else {'count':0,'time':0}
+
+			op_location = request.form.get('op-location')
+			op_swipe_group = request.form.get('op-swipe-group')
+
 			model = session['MODEL']
 			platform = session['PLATFORM']
 
@@ -660,14 +700,23 @@ def scheduler(action):
 
 			db = conn()
 			cursor = db.cursor()
-
-			cursor.execute('''UPDATE schedules SET name=?, swipe_percent=?,
-							   swipe_start_at=?, swipe_end_at=?, 
-							   swipe_session_count=?, swipe_delay=?,
-							   swipe_duration=? WHERE id=? AND user_id=?''',
-						   (name,swipe_percent, s_start, s_end, s_session_count, s_delay, s_duration,s_id,user_id))
-			db.commit()
-			return jsonify({'msg': 'schedule edit successful, add date specs', 'schedule': s_id, 'action': 'finish-schedule','action_type':'edit'}), 200
+			if type.lower() in ['swiping','swipe']:
+				cursor.execute('''UPDATE schedules SET mode =?, name=?, swipe_percent=?,
+								swipe_start_at=?, swipe_end_at=?, 
+								swipe_session_count=?, swipe_delay=?,
+								swipe_duration=? WHERE id=? AND user_id=?''',
+							(model['id'],name,swipe_percent, s_start, s_end, s_session_count, s_delay, s_duration,s_id,user_id))
+				db.commit()
+				return jsonify({'msg': 'schedule updated successfully, add date specs', 'schedule': s_id, 'action': 'finish-schedule','action_type':'edit'}), 200
+			
+			elif type.lower() == 'account':
+				cursor.execute('''UPDATE schedules SET model=?, name=?,op_count=?,op_timer=?,
+								op_swipe_group=?,op_location=?,op_max_workers=?,op_start_at=?, op_end_at=?  
+								WHERE id=? AND user_id=?''',
+							(model['id'],name,op_count,json.dumps(timer),
+							op_swipe_group,op_location,max_workers,s_start, s_end,s_id, user_id))
+				db.commit()
+			return jsonify({'msg': 'schedule updated successfully'}), 200
 		
 		elif action == 'finish-schedule':
 			s_id = request.form.get('s-id')
@@ -850,9 +899,14 @@ def show_create_accounts():
 			'status':task[5]
 		}
 
-	schedules = [s for s in list(session['SCHEDULES'].values()) if s['type'] == 'account']
-	return render_template('create-accounts.html',schedules=schedules,running=running,task_status=task_status,
-			model=session['MODEL'])
+	account_schedules = [s for s in list(session['SCHEDULES'].values()) if s['type'] == 'account']
+	swipe_schedules = [s for s in list(session['SCHEDULES'].values()) if s['type'] == 'swipe' or s['type'] == 'swiping']
+	models = [s for s in list(session['MODELS'].values())]
+
+	return render_template('create-accounts.html',
+			schedules=account_schedules,swipe_schedules=swipe_schedules,
+			running=running,task_status=task_status,
+			model=session['MODEL'],models=models)
 
 ##SWIPE PAGE
 @app.route('/swipe', methods=['GET'])

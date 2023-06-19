@@ -15,7 +15,7 @@
                             platforms
                         </a>
                         {%if not action %}
-                        <a href="/schedules?action=add-schedule" class="eleveted-a">
+                        <a href="/schedules?action=add-schedule&type=account" class="eleveted-a">
                             add schedule
                         </a>
                         {%else%}
@@ -40,15 +40,15 @@
                                     <span>{{s.type}}</span>
                                 </div>
                                 <div>
-                                    <strong>Swipe percentage : </strong>
-                                    <span>{{s.swipe_percent}}</span>
+                                    <strong>Operation starts at : </strong>
+                                    <span>{{s.op_start_at}}</span>
                                 </div>
                                 <div>
-                                    <strong>Swipe starts at : </strong>
-                                    <span>{{s.swipe_start_at}}</span>
+                                    <strong>Operation ends at : </strong>
+                                    <span>{{s.op_end_at}}</span>
                                 </div>
                                 <span class="op-card-actions">
-                                    <a href="/schedules?s={{s.id}}&action=edit-schedule" class="bg-warning">Edit</a>
+                                    <a href="/schedules?s={{s.id}}&action=edit-schedule&type={{s.type}}" class="bg-warning">Edit</a>
                                     <a href="/schedules?s={{s.id}}&action=delete-schedule" class="bg-danger">Delete</a>
                                 </span>
                         </div>
@@ -64,57 +64,128 @@
                             <label for="s-name">Name</label>
                             <input type="text" id="s-name" name="s-name" value="{{schedule.name}}">
                         </div>
-                        <div>
-                            <label for="s-model">Model</label>
-                            <input type="text" id="s-model" name="s-model" value="{{schedule.model}}" disabled>
-                        </div>
-                        <div>
+                        {% if models%}
+                            <div>
+                                <label for="op-model">Change model</label>
+                                <select id="op-model" class="op-model" name="op-model">
+                                    <option value="" disabled>select a model</option>
+                                    {%for m in models%}
+                                        <option value="{{m.id}}" {%if m.id == schedule.model%} selected {%endif%}>{{m.full_name}}</option>
+                                    {%endfor%}
+                                </select>
+                                <h5 class="input-highlight"> 
+                                    <i class="fas fas fa-exclamation-circle"></i> 
+                                    for which model do you want to run this operation, if not selected the action is for the already set model <span id="current-model" style="color: #111;">({{g.model.full_name}}) </span>
+                                </h5>
+                            </div>
+                        {%endif%}
+                        <!-- <div>
                             <label for="s-platform">Platform</label>
                             <input type="text" id="s-platform" name="s-platform" value="{{schedule.platform}}" disabled>
-                        </div>
+                        </div> -->
                         <div>
                             <label for="s-type">Type</label>
-                            <select id="s-type" name="s-type" disabled>
-                                <option value="" disabled>select schedule type</option>
-                                {%for t in ['Account','Swiping']%}
-                                    <option value="{{t}}">{{t}}</option>
-                                {%endfor%}
-                            </select>
+                         <input type="text" name="s-type" id="s-type" value="{{schedule.type}}" readonly>
                         </div>
-                        <div>
-                            <label for="s-swipe-percent">Swipe percentage &nbsp;<span>format: swipe left/swipe right</label>
-                            <input type="text" id="s-swipe-percent" name="s-swipe-percent" value="{{schedule.swipe_percent}}" >
-                        </div>
-                        <div>
-                            <label for="s-session-count">Swipe session count</label>
-                            <input type="text" id="s-session-count" name="s-session-count" value="{{schedule.swipe_session_count}}">
-                            <h5 class="input-highlight"> 
-                                <i class="fas fas fa-exclamation-circle"></i> 
-                                the number of swiping sessions e.g 1-5
-                            </h5>
-                        </div>
-                        <div>
-                            <label for="s-swipe-delay">Swipe delay</label>
-                            <input type="text" id="s-swipe-delay" name="s-swipe-delay" value="{{schedule.swipe_delay}}" >
-                            <h5 class="input-highlight"> 
-                                <i class="fas fas fa-exclamation-circle"></i> 
-                                the amount of time between each swipe in seconds e.g 10-21
-                            </h5>
-                        </div>
-                        <div>
-                            <label for="s-duration">Swipe duration</label>
-                            <input type="text" id="s-duration" name="s-duration" value="{{schedule.swipe_duration}}" >
-                            <h5 class="input-highlight"> 
-                                <i class="fas fas fa-exclamation-circle"></i> 
-                                the number of minutes to swipe e.g 10-40
-                            </h5>
-                        </div>
+                        {%if action_type in ['swiping','swipe']%}
+                            <div>
+                                <label for="s-swipe-percent">Swipe percentage &nbsp;<span>format: swipe left/swipe right</label>
+                                <input type="text" id="s-swipe-percent" name="s-swipe-percent" value="{{schedule.swipe_percent}}" >
+                            </div>
+                            <div>
+                                <label for="s-session-count">Swipe session count</label>
+                                <input type="text" id="s-session-count" name="s-session-count" value="{{schedule.swipe_session_count}}">
+                                <h5 class="input-highlight"> 
+                                    <i class="fas fas fa-exclamation-circle"></i> 
+                                    the number of swiping sessions e.g 1-5
+                                </h5>
+                            </div>
+                            <div>
+                                <label for="s-swipe-delay">Swipe delay</label>
+                                <input type="text" id="s-swipe-delay" name="s-swipe-delay" value="{{schedule.swipe_delay}}" >
+                                <h5 class="input-highlight"> 
+                                    <i class="fas fas fa-exclamation-circle"></i> 
+                                    the amount of time between each swipe in seconds e.g 10-21
+                                </h5>
+                            </div>
+                            <div>
+                                <label for="s-duration">Swipe duration</label>
+                                <input type="text" id="s-duration" name="s-duration" value="{{schedule.swipe_duration}}" >
+                                <h5 class="input-highlight"> 
+                                    <i class="fas fas fa-exclamation-circle"></i> 
+                                    the number of minutes to swipe e.g 10-40
+                                </h5>
+                            </div>
+                        
+                        {%elif action_type == 'account'%}
+                            <div>
+                                <label for="op-count">No. of accounts</label>
+                                <input type="number" id="op-count" name="op-count" value="{{schedule.op_count}}">
+                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i>the number of accounts to create</h5>
+                            </div>
+                            <div>
+                                <label for="max-workers">No. of concurrent actions (optional)</label>
+                                <input type="number" id="max-workers" name="max-workers" value="{{schedule.op_max_workers}}">
+                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i>number of threads to run</h5>
+                            </div>
+                            <div class=" double-field">
+                                <label for="">No. of accounts in a timeframe</label>
+                                <div class="inputs">
+                                    <div>
+                                        <label for="s-tf-acc-count">accounts</label>
+                                        <input type="text" id="s-tf-acc-count" name="s-tf-acc-count" value="{{schedule.op_timer.count}}">
+                                        <h5 class="input-highlight"> 
+                                            <i class="fas fas fa-exclamation-circle"></i> 
+                                            the number of accounts to create in a given timeframe e.g '100'
+                                        </h5>
+                                    </div>
+                                    <div>
+                                        <label for="s-tf-acc-time">timeframe</label>
+                                        <input type="text" id="s-tf-acc-time" name="s-tf-acc-time" value="{{schedule.op_timer.time}}">
+                                        <h5 class="input-highlight"> 
+                                            <i class="fas fas fa-exclamation-circle"></i> 
+                                            the timeframe e.g '1 hour'
+                                        </h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="double-field"  style="position: relative;">
+                                <label for="">Select operation location</label>
+                                <div class="inputs">
+                                    <div>
+                                        <label for="op-location">proxy location</label>
+                                        <input type="text" id="op-location" name="op-location" value="{{schedule.op_location}}">
+                                        <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i>the latitude and longitude for the proxy settings</h5>
+                                        <div id="op-map" class="map no-show"></div>
+                                    </div>
+                                    <div class="map-btn">
+                                        <a href="" id="toggle-map">
+                                            open map &nbsp;
+                                            <i class="fas fa-map-marked"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {%if swipe_schedules%}
+                                <div>
+                                    <label for="op-swipe-group">Pick a swipe schedule group</label>
+                                    <select id="op-swipe-group" name="op-swipe-group">
+                                        <option value="" disabled>select schedule group</option>
+                                        {%for s in swipe_schedules%}
+                                            <option value="{{s.id}}" {%if schedule.op_swipe_group == s.id%}selected{%endif%}>{{s.name}}</option>
+                                        {%endfor%}
+                                    </select>
+                                    <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a swipe schedule group defines your swipe operation strategy</h5>
+                                </div>
+                            {%endif%}  
+                        {%endif%}
+
                         <div class="op-dates double-field">
                             <label for="">Operation dates configuration</label>
                             <div class="inputs">
                                 <div>
                                     <label for="s-start">starts</label>
-                                    <input type="datetime-local" id="s-start" name="s-start" step="1" value="{{schedule.swipe_start_at}}">
+                                    <input type="datetime-local" id="s-start" name="s-start" step="1" value="{{schedule.op_start_at}}">
                                     <h5 class="input-highlight"> 
                                         <i class="fas fas fa-exclamation-circle"></i> 
                                         at what date and time do you want the operation to start?
@@ -122,7 +193,7 @@
                                 </div>
                                 <div>
                                     <label for="s-end">ends</label>
-                                    <input type="datetime-local" id="s-end" name="s-end" step="1" value="{{schedule.swipe_end_at}}">
+                                    <input type="datetime-local" id="s-end" name="s-end" step="1" value="{{schedule.op_end_at}}">
                                     <h5 class="input-highlight"> 
                                         <i class="fas fas fa-exclamation-circle"></i> 
                                         at what date and time do you want the operation to end?
@@ -131,7 +202,7 @@
                             </div>
                         </div>
                         <input type="hidden" class="not-edit" id="s-id" name="s-id" value="{{schedule.id}}">
-                        <input type="submit" value="Next"> 
+                        <input type="submit" value="{%if action_type == 'account'%}Submit {%else%} Next {%endif%}"> 
                     </form>
                 </div>
                 {%elif action == 'add-schedule'%}
@@ -140,95 +211,195 @@
                             Add a schedule group
                         </h2>
                         <form action="" class="op-form " id="schedule-form">
+                            <div class="double-field">
+                                <label for="s-type">Schedule type</label>
+                                <div class="inputs">
+                                    <div>
+                                        {%if action_type%}
+                                        <input type="text" id="s-type" name="s-type" value="{{action_type|capitalize}}" required readonly>
+                                        {%else%}
+                                        <input type="text" id="s-type" name="s-type" value="" required readonly>
+                                            <!-- <select id="s-type" name="s-type"  required readonly>
+                                                <option value="" disabled>select schedule type</option>
+                                                {%for t in ['Account','Swiping']%}
+                                                    <option value="{{t}}">{{t}}</option>
+                                                {%endfor%}
+                                            </select> -->
+                                        {%endif%}
+                                        <h5 class="input-highlight"> 
+                                            <i class="fas fas fa-exclamation-circle"></i> 
+                                            the type of operation you want to schedule for e.g account or swiping
+                                        </h5>
+                                    </div>
+                                    <div>
+                                        <div class="s-actions">
+                                            <a href="/schedules?action=add-schedule&type=account" 
+                                            class="account {% if action_type == 'account'%} active {%endif%}">
+                                                account</a>
+                                            <a href="/schedules?action=add-schedule&type=swiping" 
+                                            class="swipe {%if action_type == 'swiping'%} active {%endif%}">swiping</a>
+                                        </div>
+                                        <h5 class="input-highlight" style="margin: 4px auto;"> 
+                                            <i class="fas fas fa-exclamation-circle"></i> 
+                                            switch schedule type
+                                        </h5>
+                                    </div>
+                                </div>
+                            </div>
                             <div>
                                 <label for="s-name">Name</label>
                                 <input type="text" id="s-name" name="s-name" required>
-                            </div>
-                            <div>
-                                <label for="s-type">Type</label>
-                                {%if action_type%}
-                                    <input type="text" id="s-type" name="s-type" value="{{action_type|capitalize}}" required readonly>
-                                {%else%}
-                                    <select id="s-type" name="s-type"  required>
-                                        <option value="" disabled>select schedule type</option>
-                                        {%for t in ['Account','Swiping']%}
-                                            <option value="{{t}}">{{t}}</option>
-                                        {%endfor%}
-                                    </select>
-                                {%endif%}
                                 <h5 class="input-highlight"> 
                                     <i class="fas fas fa-exclamation-circle"></i> 
-                                    the type of operation you want to schedule for e.g account or swiping
+                                    schedule name e.g 'Group A'
                                 </h5>
                             </div>
-                            <div>
-                                <label for="s-swipe-percent">Swipe percentage &nbsp;<span>format: swipe left/swipe right</label>
-                                <input type="text" id="s-swipe-percent" name="s-swipe-percent" value="40/60" required>
-                            </div>
-                            <br>
-                            <div class=" double-field">
-                                <label for="">Swiping session count</label>
-                                <div class="inputs">
-                                    <div>
-                                        <label for="s-session-count-start">from</label>
-                                        <input type="number" id="s-session-count-start" name="s-session-count-start" value="1" min="1" required>
-                                        <h5 class="input-highlight"> 
-                                            <i class="fas fas fa-exclamation-circle"></i> 
-                                            the number of swiping sessions e.g 1
-                                        </h5>
-                                    </div>
-                                    <div>
-                                        <label for="s-session-count-end">to</label>
-                                        <input type="number" id="s-session-count-end" name="s-session-count-end" value="5" min="2" required>
-                                        <h5 class="input-highlight"> 
-                                            <i class="fas fas fa-exclamation-circle"></i> 
-                                            the number of swiping sessions e.g 5
-                                        </h5>
+                            {% if models%}
+                                <div>
+                                    <label for="op-model">Pick a model</label>
+                                    <select id="op-model" class="op-model" name="op-model">
+                                        <option value="" disabled>select a model</option>
+                                        {%for m in models%}
+                                            <option value="{{m.id}}" {%if m == g.model%} selected {%endif%}>{{m.full_name}}</option>
+                                        {%endfor%}
+                                    </select>
+                                    <h5 class="input-highlight"> 
+                                        <i class="fas fas fa-exclamation-circle"></i> 
+                                        for which model do you want to run this operation, if not selected the action is for the already set model <span id="current-model" style="color: #111;">({{g.model.full_name}}) </span>
+                                    </h5>
+                                </div>
+                            {%endif%}
+                            {%if action_type == 'swiping'%}
+                                <div>
+                                    <label for="s-swipe-percent">Swipe percentage &nbsp;<span>format: swipe left/swipe right</label>
+                                    <input type="text" id="s-swipe-percent" name="s-swipe-percent" value="40/60" required>
+                                </div>
+                                <br>
+                                <div class=" double-field">
+                                    <label for="">Swiping session count</label>
+                                    <div class="inputs">
+                                        <div>
+                                            <label for="s-session-count-start">from</label>
+                                            <input type="number" id="s-session-count-start" name="s-session-count-start" value="1" min="1" required>
+                                            <h5 class="input-highlight"> 
+                                                <i class="fas fas fa-exclamation-circle"></i> 
+                                                the number of swiping sessions e.g 1
+                                            </h5>
+                                        </div>
+                                        <div>
+                                            <label for="s-session-count-end">to</label>
+                                            <input type="number" id="s-session-count-end" name="s-session-count-end" value="5" min="2" required>
+                                            <h5 class="input-highlight"> 
+                                                <i class="fas fas fa-exclamation-circle"></i> 
+                                                the number of swiping sessions e.g 5
+                                            </h5>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class=" double-field">
-                                <label for="">Delay per swipe</label>
-                                <div class="inputs">
-                                    <div>
-                                        <label for="s-swipe-delay-start">from</label>
-                                        <input type="number" id="s-swipe-delay-start" name="s-swipe-delay-start" value="10" min="10" required>
-                                        <h5 class="input-highlight"> 
-                                            <i class="fas fas fa-exclamation-circle"></i> 
-                                            the amount of time between each swipe in seconds e.g 10
-                                        </h5>
-                                    </div>
-                                    <div>
-                                        <label for="s-swipe-delay-end">to</label>
-                                        <input type="number" id="s-swipe-delay-end" name="s-swipe-delay-end" value="21" min="11" required>
-                                        <h5 class="input-highlight"> 
-                                            <i class="fas fas fa-exclamation-circle"></i> 
-                                            the amount of time between each swipe in seconds e.g 21
-                                        </h5>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class=" double-field">
-                                <label for="">Swiping limit</label>
-                                <div class="inputs">
-                                    <div>
-                                        <label for="s-duration-start">from</label>
-                                        <input type="number" id="s-duration-start" name="s-duration-start" value="10" min="10" required>
-                                        <h5 class="input-highlight"> 
-                                            <i class="fas fas fa-exclamation-circle"></i> 
-                                            the number of minutes to swipe e.g 10
-                                        </h5>
-                                    </div>
-                                    <div>
-                                        <label for="s-duration-end">to</label>
-                                        <input type="number" id="s-duration-end" name="s-duration-end" value="40" min="20" required>
-                                        <h5 class="input-highlight"> 
-                                            <i class="fas fas fa-exclamation-circle"></i> 
-                                            the number of minutes to swipe e.g 40
-                                        </h5>
+                                <div class=" double-field">
+                                    <label for="">Delay per swipe</label>
+                                    <div class="inputs">
+                                        <div>
+                                            <label for="s-swipe-delay-start">from</label>
+                                            <input type="number" id="s-swipe-delay-start" name="s-swipe-delay-start" value="10" min="10" required>
+                                            <h5 class="input-highlight"> 
+                                                <i class="fas fas fa-exclamation-circle"></i> 
+                                                the amount of time between each swipe in seconds e.g 10
+                                            </h5>
+                                        </div>
+                                        <div>
+                                            <label for="s-swipe-delay-end">to</label>
+                                            <input type="number" id="s-swipe-delay-end" name="s-swipe-delay-end" value="21" min="11" required>
+                                            <h5 class="input-highlight"> 
+                                                <i class="fas fas fa-exclamation-circle"></i> 
+                                                the amount of time between each swipe in seconds e.g 21
+                                            </h5>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                                <div class=" double-field">
+                                    <label for="">Swiping limit</label>
+                                    <div class="inputs">
+                                        <div>
+                                            <label for="s-duration-start">from</label>
+                                            <input type="number" id="s-duration-start" name="s-duration-start" value="10" min="10" required>
+                                            <h5 class="input-highlight"> 
+                                                <i class="fas fas fa-exclamation-circle"></i> 
+                                                the number of minutes to swipe e.g 10
+                                            </h5>
+                                        </div>
+                                        <div>
+                                            <label for="s-duration-end">to</label>
+                                            <input type="number" id="s-duration-end" name="s-duration-end" value="40" min="20" required>
+                                            <h5 class="input-highlight"> 
+                                                <i class="fas fas fa-exclamation-circle"></i> 
+                                                the number of minutes to swipe e.g 40
+                                            </h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            {%elif action_type == 'account'%}
+                                <div>
+                                    <label for="op-count">No. of accounts</label>
+                                    <input type="number" id="op-count" name="op-count" required>
+                                    <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i>the number of accounts to create</h5>
+                                </div>
+                                <div>
+                                    <label for="max-workers">No. of concurrent actions (optional)</label>
+                                    <input type="number" id="max-workers" name="max-workers">
+                                    <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i>number of threads to run</h5>
+                                </div>
+                                <div class=" double-field">
+                                    <label for="">No. of accounts in a timeframe</label>
+                                    <div class="inputs">
+                                        <div>
+                                            <label for="s-tf-acc-count">accounts</label>
+                                            <input type="text" id="s-tf-acc-count" name="s-tf-acc-count" value="100" required>
+                                            <h5 class="input-highlight"> 
+                                                <i class="fas fas fa-exclamation-circle"></i> 
+                                                the number of accounts to create in a given timeframe e.g '100'
+                                            </h5>
+                                        </div>
+                                        <div>
+                                            <label for="s-tf-acc-time">timeframe</label>
+                                            <input type="text" id="s-tf-acc-time" name="s-tf-acc-time" value="1 hour" required>
+                                            <h5 class="input-highlight"> 
+                                                <i class="fas fas fa-exclamation-circle"></i> 
+                                                the timeframe e.g '1 hour'
+                                            </h5>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="double-field"  style="position: relative;">
+                                    <label for="">Select operation location</label>
+                                    <div class="inputs">
+                                        <div>
+                                            <label for="op-location">proxy location</label>
+                                            <input type="text" id="op-location" name="op-location">
+                                            <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i>the latitude and longitude for the proxy settings</h5>
+                                            <div id="op-map" class="map no-show"></div>
+                                        </div>
+                                        <div class="map-btn">
+                                            <a href="" id="toggle-map">
+                                                open map &nbsp;
+                                                <i class="fas fa-map-marked"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {%if swipe_schedules%}
+                                    <div>
+                                        <label for="op-swipe-group">Pick a swipe schedule group</label>
+                                        <select id="op-swipe-group" name="op-swipe-group">
+                                            <option value="" disabled>select schedule group</option>
+                                            {%for s in swipe_schedules%}
+                                                <option value="{{s.id}}">{{s.name}}</option>
+                                            {%endfor%}
+                                        </select>
+                                        <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a swipe schedule group defines your swipe operation strategy</h5>
+                                    </div>
+                                {%endif%}
+                            {%endif%}
                             <div class="op-dates double-field">
                                 <label for="">Operation dates configuration</label>
                                 <div class="inputs">
@@ -250,7 +421,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <input type="submit" value="Next"> 
+                            <input type="submit" value="{%if action_type == 'account'%}Submit {%else%} Next {%endif%}"> 
                         </form>
                     </div>
                 {%elif action == 'next'%}
@@ -406,7 +577,7 @@
             let nextDate =  new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
 
             eD.min =  nextDate.toISOString().slice(0, 16);
-            eD.value = (action === 'add-schedule' || !schedule) ?  nextDate.toISOString().slice(0, 16):schedule.swipe_end_at;
+            eD.value = (action === 'add-schedule' || !schedule) ?  nextDate.toISOString().slice(0, 16):schedule.op_end_at;
           
             sD.addEventListener('change', (e) => {
               startDate = new Date(e.target.value);

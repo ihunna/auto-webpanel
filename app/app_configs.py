@@ -146,12 +146,18 @@ def conn():
 		name TEXT,
 		type TEXT,
 		swipe_percent TEXT,
-		swipe_start_at DATETIME,
-		swipe_end_at DATETIME,
+		op_start_at DATETIME,
+		op_end_at DATETIME,
+		op_max_workers TEXT,
 		swipe_session_count TEXT,
+		op_count TEXT,
+		op_timer TEXT,
+		op_location TEXT,
 		swipe_delay TEXT,
+		op_swipe_group TEXT,
 		swipe_duration TEXT,
 		day_specs TEXT,
+		status TEXT,
 		added_at DATETIME DEFAULT CURRENT_TIMESTAMP)
 		''')
 	

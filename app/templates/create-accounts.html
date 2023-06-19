@@ -80,33 +80,79 @@
                             <div>
                                 <label for="op-count">No. of accounts</label>
                                 <input type="number" id="op-count" name="op-count" required>
+                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i>the number of accounts to create</h5>
                             </div>
-                            {% if schedules%}
+                             {% if models%}
                                 <div>
-                                    <label for="op-group">Schedule group</label>
+                                    <label for="op-model">Pick a model</label>
+                                    <select id="op-model" class="op-model" name="op-model">
+                                        <option value="" disabled>select a model</option>
+                                        {%for m in models%}
+                                            <option value="{{m.id}}" {%if m == g.model%} selected {%endif%}>{{m.full_name}}</option>
+                                        {%endfor%}
+                                    </select>
+                                    <h5 class="input-highlight"> 
+                                        <i class="fas fas fa-exclamation-circle"></i> 
+                                        for which model do you want to run this operation, if not selected the action is for the already set model <span id="current-model" style="color: #111;">({{g.model.full_name}}) </span>
+                                    </h5>
+                                </div>
+                            {%endif%}
+                            <!-- {% if schedules%}
+                                <div>
+                                    <label for="op-group">Pick a swipe schedule group</label>
                                     <select id="op-group" name="op-group">
                                         <option value="" disabled>select schedule group</option>
                                         {%for s in schedules%}
                                             <option value="{{s.id}}">{{s.name}}</option>
                                         {%endfor%}
                                     </select>
-                                    <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a schedule group defines your operation strategy</h5>
+                                    <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a schedule group defines your swipe operation strategy</h5>
                                 </div>
+                            {%endif%} -->
+                            {%if swipe_schedules%}
+                            <div>
+                                <label for="op-swipe-group">Pick a swipe schedule group</label>
+                                <select id="op-swipe-group" name="op-swipe-group">
+                                    <option value="" disabled>select schedule group</option>
+                                    {%for s in swipe_schedules%}
+                                        <option value="{{s.id}}">{{s.name}}</option>
+                                    {%endfor%}
+                                </select>
+                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a swipe schedule group defines your swipe operation strategy</h5>
+                            </div>
                             {%endif%}
-
+                            <div class="double-field"  style="position: relative;">
+                                <label for="">Select operation location</label>
+                                <div class="inputs">
+                                    <div>
+                                        <label for="op-location">Proxy location</label>
+                                        <input type="text" id="op-location" name="op-location">
+                                        <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i>the latitude and longitude for the proxy settings</h5>
+                                        <div id="op-map" class="map no-show"></div>
+                                    </div>
+                                    <div class="map-btn">
+                                        <a href="" id="toggle-map">
+                                            open map &nbsp;
+                                            <i class="fas fa-map-marked"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                             <!-- <div>
                                 <label for="img-count">No. of images to upload</label>
                                 <input type="number" id="img-count" name="img-count" required>
                             </div> -->
                             <div>
                                 <label for="bio">Enter bio (enter multiple sep. by double comma ",,")</label>
-                                <textarea type="text" id="bio" name="bio" required></textarea>
+                                <textarea type="text" id="bio" name="bio"></textarea>
+                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i>the biography for the account(s), not required</h5>
                             </div>
                             <div>
                                 <label for="max-workers">No. of concurrent actions (optional)</label>
                                 <input type="number" id="max-workers" name="max-workers">
+                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i>number of threads to run</h5>
                             </div>
-                            <input type="submit" value="submit">
+                            <input type="submit" value="Submit">
                         </form>
                     </div>
                 {%endif%}

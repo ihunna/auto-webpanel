@@ -53,7 +53,7 @@
                 </li>
                 <li class="model-tag">
                     {% if g.model %}
-                        {{g.model.username}}
+                        {{g.model.full_name}}
                     {%else%}
                         set model
                     {%endif%}
@@ -191,4 +191,91 @@
     </div>
     <div class="modal-holder">
     </div>
+
+    {%if g.page == 'schedules'%}
+    <style>
+        .map{
+               position: absolute;
+               bottom: 80%;
+               left: -100px;
+               width: 300px;
+               height: 200px;
+               border: 10px solid var(--soft-white);
+       }
+
+       .map.show{
+           display: block;
+       }
+
+       .map.no-show{
+           display: none;
+       }
+
+       .double-field > .inputs > .map-btn > #toggle-map{
+           margin: 20px auto;
+           padding: 5px 16px;
+           background: var(--soft-white);
+           color: #333;
+           border-radius: 20px;
+
+       }
+
+       @media screen  and (max-width:768.99px){
+           .map{
+               left: 0;
+               /* bottom: 0;
+               top: 90%; */
+               width: 100%;
+           }
+
+           .double-field > .inputs > .map-btn > #toggle-map{
+               margin: 5px auto;
+           }
+       }
+   </style>
+    <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBFhK9-HFdkegWcsmq6ue770uDIlRX5CdI&callback=initMap&v=weekly"
+    defer>
+    </script>
+    <script>
+        window.onload = function() {
+            // This code will be executed when the window has finished loading
+            initMap();
+        };
+        function initMap() {
+            const myLatlng = { lat: 39.8283, lng: -98.5795 };
+            const map = new google.maps.Map(document.getElementById("op-map"), {
+                zoom: 4,
+                center: myLatlng,
+            });
+            // Create the initial InfoWindow.
+            let infoWindow = new google.maps.InfoWindow({
+                content: "Click the map to get Lat/Lng!",
+                position: myLatlng,
+            });
+
+            infoWindow.open(map);
+            // Configure the click listener.
+            map.addListener("click", (mapsMouseEvent) => {
+                // Close the current InfoWindow.
+                infoWindow.close();
+                // Create a new InfoWindow.
+                const latLng = mapsMouseEvent.latLng;
+                const latitude = latLng.lat();
+                const longitude = latLng.lng();
+                        
+                // Update the value of the input field
+                document.getElementById("op-location").value = `${latitude}, ${longitude}`;
+                infoWindow = new google.maps.InfoWindow({
+                position: mapsMouseEvent.latLng,
+                });
+                infoWindow.setContent(
+                JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2)
+                );
+                infoWindow.open(map);
+            });
+        }
+        window.initMap = initMap;
+    </script>
+    {%endif%}
 {% endblock%}
