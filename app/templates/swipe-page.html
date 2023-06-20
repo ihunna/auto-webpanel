@@ -27,7 +27,7 @@
                     <a href="" class="eleveted-a">
                         swipes
                     </a>
-                    <a href="/schedules?action=add-schedule&type=swiping" class="eleveted-a">
+                    <a href="/schedules?action=add-schedule&type=swiping&next=swipe" class="eleveted-a">
                         add schedule
                     </a>
                     <a href="/schedules" class="eleveted-a">
@@ -83,6 +83,38 @@
                          {%endif%}
                      </div>
                  </div>
+                 {%endif%}
+                 {%if schedules%}
+                    <div class="holder scroll task-holder op-holder">
+                        {% for s in schedules%}
+                        <div class="op-card">
+                                <div>
+                                    <h2>
+                                        {{s.name}}
+                                    </h2>
+                                </div>
+                                <div>
+                                    <strong>Type : </strong>
+                                    <span>{{s.type}}</span>
+                                </div>
+                                <div>
+                                    <strong>Operation starts at : </strong>
+                                    <span>{{s.op_start_at}}</span>
+                                </div>
+                                <div>
+                                    <strong>Operation ends at : </strong>
+                                    <span>{{s.op_end_at}}</span>
+                                </div>
+                                <span class="op-card-actions">
+                                    {%if s.status == 'running'%}
+                                        <a href="" class="bg-neut">{{s.status}}</a>
+                                    {%endif%}
+                                    <a href="/schedules?s={{s.id}}&action=edit-schedule&type={{s.type}}&next=swipe" class="bg-warning">Edit</a>
+                                    <a href="/schedules?s={{s.id}}&action=delete-schedule&next=swipe" class="bg-danger">Delete</a>
+                                </span>
+                        </div>
+                        {%endfor%}
+                    </div>
                  {%else%}
                      <div class="holder scroll form-holder">
                          <h2>

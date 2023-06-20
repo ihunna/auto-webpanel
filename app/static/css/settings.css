@@ -47,6 +47,11 @@ body {
     color: var(--soft-white);
 }
 
+.bg-neut{
+    background: var(--soft-white);
+    color: #000000;
+}
+
 #menu-btn{
     display: none;
 }

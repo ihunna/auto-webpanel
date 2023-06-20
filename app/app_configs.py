@@ -152,6 +152,7 @@ def conn():
 		swipe_session_count TEXT,
 		op_count TEXT,
 		op_timer TEXT,
+		op_proxies TEXT,
 		op_location TEXT,
 		swipe_delay TEXT,
 		op_swipe_group TEXT,

@@ -544,6 +544,7 @@ def schedules():
 	action = request.args.get('action')
 	action_type = request.args.get('type')
 	s_id = request.args.get('s')
+	next = request.args.get('next')
 
 	account_schedules = [s for s in list(session.get('SCHEDULES').values()) if s['type'] == 'account']
 	swipe_schedules = [s for s in list(session.get('SCHEDULES').values()) if s['type'] == 'swipe' or s['type'] == 'swiping']
@@ -566,24 +567,25 @@ def schedules():
 			'swipe_session_count':s[10],
 			'op_count':s[11],
 			'op_timer':json.loads(s[12]) if s[12] is not None else {'count':'0','time':'0'},
-			'op_location':s[13],
-			'swipe_delay':s[14],
-			'op_swipe_group':s[15],
-			'swipe_duration':s[16],
-			'day_specs':s[17],
-			'added_at':s[19]
+			'op_proxies':s[13],
+			'op_location':s[14],
+			'swipe_delay':s[15],
+			'op_swipe_group':s[16],
+			'swipe_duration':s[17],
+			'day_specs':s[18],
+			'status':s[19],
+			'added_at':s[20]
 		} for s in schedules]
-		print(schedules)
 		for s in schedules:session['SCHEDULES'].update({s['id']:s})
 		if len(schedules) > 0:return render_template('schedules.html',schedules=schedules)
 		return render_template('schedules.html',action='add-schedule',
 			 action_type='account',models=list(session['MODELS'].values()),
-			 swipe_schedules=swipe_schedules,schedules=account_schedules)
+			 swipe_schedules=swipe_schedules,schedules=account_schedules,next=next)
 	
 	elif action == 'edit-schedule' and s_id:
 		return render_template('schedules.html',action='edit-schedule',
 			 schedule=session['SCHEDULES'][s_id],swipe_schedules=swipe_schedules,
-			 models=list(session['MODELS'].values()),action_type=action_type)
+			 models=list(session['MODELS'].values()),action_type=action_type,next=next)
 
 	elif action == 'delete-schedule':
 		db = conn()
@@ -592,7 +594,8 @@ def schedules():
 		db.commit()
 
 		del session['SCHEDULES'][s_id]
-		return redirect('/schedules')
+		url = f'/{next}' if next else request.path
+		return redirect(url)
 	elif action == 'next':
 		if action_type == 'edit':
 			db = conn()
@@ -602,11 +605,11 @@ def schedules():
 			day_specs = cursor.fetchone()[0]
 
 			day_specs = json.loads(day_specs) if day_specs is not None  else []
-			return render_template('schedules.html',action=action,s_id=s_id,action_type=action_type,day_specs=day_specs)
-		return render_template('schedules.html',action=action,s_id=s_id)
+			return render_template('schedules.html',action=action,s_id=s_id,action_type=action_type,day_specs=day_specs,next=next)
+		return render_template('schedules.html',action=action,s_id=s_id,next=next)
 	
 	return render_template('schedules.html',action=action,action_type=action_type,
-			models=list(session['MODELS'].values()),swipe_schedules=swipe_schedules)
+			models=list(session['MODELS'].values()),swipe_schedules=swipe_schedules,next=next)
 
 @app.route('/schedules/<action>', methods=['POST'])
 @login_required
@@ -639,8 +642,10 @@ def scheduler(action):
 			op_sleep_timer_time = request.form.get('s-tf-acc-time')
 			timer = {'count':op_sleep_timer_count,'time':op_sleep_timer_time} if op_sleep_timer_count else {'count':0,'time':0}
 
+			op_proxies = request.form.get('op-proxies')
 			op_location = request.form.get('op-location')
 			op_swipe_group = request.form.get('op-swipe-group')
+			next = request.form.get('next')
 
 			model = session['MODEL']
 			platform = session['PLATFORM']
@@ -660,17 +665,17 @@ def scheduler(action):
 							(s_id, user_id, model['id'], platform['id'], name, type.lower(),
 								swipe_percent, s_start, s_end, s_session_count, s_delay, s_duration))
 				db.commit()
-				return jsonify({'msg': 'schedule added, add date specs', 'schedule': s_id, 'action': 'finish-schedule','action_type':'add'}), 200
+				return jsonify({'msg': 'schedule added, add date specs', 'schedule': s_id, 'action': 'finish-schedule','action_type':'add','next':next}), 200
 			
 			elif type.lower() == 'account':
 				cursor.execute('''INSERT INTO schedules
 								(id, user_id, model, platform, name, type,op_count,op_timer,
-								op_swipe_group,op_location,op_max_workers,op_start_at, op_end_at)
-								VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)''',
+								op_swipe_group,op_proxies,op_location,op_max_workers,op_start_at, op_end_at)
+								VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)''',
 							(s_id, user_id, model['id'], platform['id'], name, type.lower(),
-							op_count,json.dumps(timer),op_swipe_group,op_location,max_workers,s_start, s_end))
+							op_count,json.dumps(timer),op_swipe_group,op_proxies,op_location,max_workers,s_start, s_end))
 				db.commit()
-			return jsonify({'msg': 'schedule added successfully'}), 200
+			return jsonify({'msg': 'schedule added successfully','next':next}), 200
 		
 		elif action == 'edit-schedule':
 			type = request.form.get('s-type')
@@ -690,8 +695,11 @@ def scheduler(action):
 			op_sleep_timer_time = request.form.get('s-tf-acc-time')
 			timer = {'count':op_sleep_timer_count,'time':op_sleep_timer_time} if op_sleep_timer_count else {'count':0,'time':0}
 
+			op_proxies = request.form.get('op-proxies')
 			op_location = request.form.get('op-location')
+
 			op_swipe_group = request.form.get('op-swipe-group')
+			next = request.form.get('next')
 
 			model = session['MODEL']
 			platform = session['PLATFORM']
@@ -707,16 +715,16 @@ def scheduler(action):
 								swipe_duration=? WHERE id=? AND user_id=?''',
 							(model['id'],name,swipe_percent, s_start, s_end, s_session_count, s_delay, s_duration,s_id,user_id))
 				db.commit()
-				return jsonify({'msg': 'schedule updated successfully, add date specs', 'schedule': s_id, 'action': 'finish-schedule','action_type':'edit'}), 200
+				return jsonify({'msg': 'schedule updated successfully, add date specs', 'schedule': s_id, 'action': 'finish-schedule','action_type':'edit','next':next}), 200
 			
 			elif type.lower() == 'account':
 				cursor.execute('''UPDATE schedules SET model=?, name=?,op_count=?,op_timer=?,
-								op_swipe_group=?,op_location=?,op_max_workers=?,op_start_at=?, op_end_at=?  
+								op_swipe_group=?,op_proxies =?,op_location=?,op_max_workers=?,op_start_at=?, op_end_at=?  
 								WHERE id=? AND user_id=?''',
 							(model['id'],name,op_count,json.dumps(timer),
-							op_swipe_group,op_location,max_workers,s_start, s_end,s_id, user_id))
+							op_swipe_group,op_proxies,op_location,max_workers,s_start, s_end,s_id, user_id))
 				db.commit()
-			return jsonify({'msg': 'schedule updated successfully'}), 200
+			return jsonify({'msg': 'schedule updated successfully'},next=next), 200
 		
 		elif action == 'finish-schedule':
 			s_id = request.form.get('s-id')
@@ -724,14 +732,15 @@ def scheduler(action):
 			percents = request.form.getlist('s-swipe-percent')
 			day_specs = json.dumps([{"day": day,"swipe_percent":percent} for day, percent in zip(days, percents)])
 			action_type = request.form.get('action-type')
+			next = request.form.get('next')
 
 			db = conn()
 			cursor = db.cursor()
 			cursor.execute('''UPDATE schedules SET day_specs =? WHERE id =? AND user_id =?
 			''',(day_specs,s_id,session['ADMIN']['id']))
 			db.commit()
-			if action_type and action_type == 'edit':return jsonify({'msg': 'schedule updated successfully'}), 200
-			return jsonify({'msg': 'schedule added successfully'}), 200
+			if action_type and action_type == 'edit':return jsonify({'msg': 'schedule updated successfully','next':next}), 200
+			return jsonify({'msg': 'schedule added successfully','next':next}), 200
 	except Exception as error:
 		print(error)
 		return abort(500)
@@ -920,11 +929,12 @@ def swipe_page():
 	running = False
 	task_status = {}
 
+	db = conn()
+	cursor = db.cursor()
+
 	if swipe_task:
 		if swipe_task.is_alive():
 			running = True
-		db = conn()
-		cursor = db.cursor()
 		cursor.execute('''SELECT * FROM tasks WHERE id =?''', (swipe_task_id,))
 		task = cursor.fetchone()
 
@@ -934,7 +944,33 @@ def swipe_page():
 			'status': task[3],
 			'progress': task[4]
 		}
-	schedules = [s for s in list(session['SCHEDULES'].values()) if s['type'] == 'swiping']
+		
+	cursor.execute('''SELECT * FROM schedules WHERE user_id=? AND type=? ORDER BY added_at DESC''', (session['ADMIN']['id'],'swiping'))
+	schedules = cursor.fetchall()
+	schedules = [{
+		'id':s[0],
+		'model':session['MODELS'][s[2]]['full_name'],
+		'platform':session['PLATFORMS'][s[3]]['name'],
+		'name':str(s[4]),
+		'type':s[5],
+		'swipe_percent':s[6],
+		'op_start_at':s[7],
+		'op_end_at':s[8],
+		'op_max_workers':s[9],
+		'swipe_session_count':s[10],
+		'op_count':s[11],
+		'op_timer':json.loads(s[12]) if s[12] is not None else {'count':'0','time':'0'},
+		'op_proxies':s[13],
+		'op_location':s[14],
+		'swipe_delay':s[15],
+		'op_swipe_group':s[16],
+		'swipe_duration':s[17],
+		'day_specs':s[18],
+		'status':s[19],
+		'added_at':s[20]
+	} for s in schedules]
+	for s in schedules:session['SCHEDULES'].update({s['id']:s})
+	if len(schedules) < 1:return redirect(url_for('schedules',action='add-schedule',type='swiping',next='swipe'))
 	return render_template('swipe-page.html',schedules=schedules,running=running,task_status=task_status)
 	
 @app.route('/swipe', methods=['POST'])

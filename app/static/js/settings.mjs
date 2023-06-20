@@ -245,11 +245,12 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 if (response.action && response.action === 'finish-schedule'){
                     url = '/schedules/finish-schedule'
-                    window.location.href=`/schedules?action=next&s=${response.schedule}&type=${response.action_type}`
+                    window.location.href=`/schedules?action=next&s=${response.schedule}&type=${response.action_type}&next=${response.next}`
                 }else{
                 setTimeout(() => {
+                    let next = response.next != null? `${response.next}`:`/schedules`
                     showHide('no-show',[alertBox],response.msg);
-                    window.location.href=`/schedules`
+                    window.location.href=next;
                 }, 3000)
             }
             })

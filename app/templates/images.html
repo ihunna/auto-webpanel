@@ -8,16 +8,16 @@
     {%block main%}
         <div class="main-box">
             <div class="header">
-                <h1>{{ g.model.username }} <span class="elt">> {{type}}</span></h1>
+                <h1>{{ g.model.full_name }} <span class="elt">> {{type}}</span></h1>
                 <div class="action-links scroll">
                     <a href="./images" id="" class="eleveted-a types">
-                        Images
+                        verification images
                     </a>
                     <a href="./profile" id="" class="eleveted-a types" >
-                        Profile
+                       profile images
                     </a>
                     <a href="/models" id="" class="eleveted-a types" >
-                        Change model
+                        change model
                     </a>
                 </div>
             </div>
@@ -67,7 +67,9 @@
         </div>
         <style>
             .types.active{
-                background-color: cyan;
+                background: var(--soft-white);
+                color: #000000;
+                box-shadow: none;
             }
             .elt{
                 font-size: smaller;
