@@ -52,6 +52,7 @@ SMSV1=os.getenv('SMSV1')
 SMSV2=os.getenv('SMSV2')
 PASSKEY=os.getenv('ADMIN_SECRET')
 S_LINK=os.getenv('SIGNUP_LINK')
+GDRIVEAPI = os.getenv('GDRIVEAPI')
 
 keys = [CAPTCHA1KEY, CAPTCHA2KEY, SMSV1, SMSV2]
 KEY= os.getenv('KEY')
@@ -87,6 +88,7 @@ app.config['LANDER'] = os.path.join(lander_folder,'index.html')
 app.config['ADMINS']:dict = {}
 app.config['PASS_KEY'] = PASSKEY
 app.config['S_LINK'] = S_LINK
+app.config['GDRIVEAPI'] = GDRIVEAPI
 app.config['ENV_VALUES'] = dotenv_values(env_path)
 
 def conn():
@@ -134,7 +136,7 @@ def conn():
 
 		#create images table
 		cursor.execute('''CREATE TABLE IF NOT EXISTS images
-		(id TEXT PRIMARY KEY, data TEXT,type TEXT,model TEXT,user_id TEXT, status TEXT)
+		(id TEXT PRIMARY KEY, data TEXT UNIQUE,type TEXT,category TEXT,model TEXT,user_id TEXT, status TEXT)
 		''')
 
 		#create schedule table

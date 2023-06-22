@@ -21,6 +21,20 @@
     right: -1000px;
 }
 
+.errors{
+    color: var(--danger);
+    font-size: 14px;
+}
+
+.errors.show{
+    display: block;
+}
+
+.errors.no-show{
+    display: none;
+}
+
+
 .v-icon > i{
     color: var(--warning);
     font-size: 16px;
@@ -105,6 +119,24 @@
 .double-field > .inputs > div > .s-actions > a.active{
     background: #000;
     color: var(--soft-white);
+}
+
+.gdrive-display{
+    border: 0.2px solid var(--soft-text);
+    background:var(--soft-white);
+    width: fit-content;
+    border-radius: 20px;
+    text-align: center;
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
+.gdrive-display.no-show{
+    display: none;
+}
+
+.gdrive-display.show{
+    display: block;
 }
 
 

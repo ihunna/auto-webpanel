@@ -22,16 +22,18 @@
                 </div>
             </div>
             <div class="main-container">
-                <div class="holder image-holder scroll">
-                    {%if images %}
+                {%if images %}
+                    <div class="holder image-holder scroll">
                         <ul class="images" id="images">
                             {%for img in images%}
                                 <li>
-                                    <img src="{{img}}" alt="">
+                                    <img src="{{img.img}}" alt="" id="{{img.id}}_{{img.cat}}">
                                 </li>
                             {%endfor%}
                         </ul>
-                    {%else%}
+                    </div>
+                {%elif not action and not images%}
+                    <div class="holder image-holder scroll">
                         <div class="no-image">
                             <div class="file-upload upload-image">
                                 <input type="file" name="file" disabled>
@@ -40,9 +42,50 @@
                                 Choose a file
                                 </label>
                             </div>
+                            <p>OR</p>
+                            <a href="/images/{{type}}?action=add-drive" class="add-drive">
+                                Add from GoogleDrive
+                            </a>
                         </div>
-                    {%endif%}
-                </div>
+                    </div>
+                {%endif%}
+                {%if action and action == 'add-drive'%}
+                    <div class="holder scroll form-holder">
+                        <h2>
+                            Add images from GoogleDrive
+                        </h2>
+                        <form action="" class="op-form" id="gdrive-form">
+                            <div class="errors">
+                            </div>
+                            <div>
+                                <label for="gdrive-link">GoogleDrive link</label>
+                                <input type="text" id="gdrive-link" name="gdrive-link" required>
+                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> enter the link to a GoogleDrive folder. Folder must be made public</h5>
+                            </div>
+                            <input type="hidden" value="" id="data" name="data">
+                            <input type="hidden" value="{{drive_key}}" id="drive_key" name="drive_key">
+                            <input type="hidden" value="{{type}}" id="image-type"    name="image-type">
+
+                            <input type="button" id="gdrive-btn" value="Get images"> 
+                            <div class="gdrive-display no-show" id="gdrive-display">
+                            </div>
+                            <input type="submit" id="gdrive-btn-upload" value="Upload" class="no-show">
+                            <style>
+                                #gdrive-btn{
+                                    background: var(--soft-white);
+                                    color: #000000;
+                                }
+
+                                #gdrive-btn-upload.no-show{
+                                    display: none;
+                                }
+                                #gdrive-btn-upload.show{
+                                    display: block;
+                                }
+                            </style>
+                        </form>
+                    </div>
+                {%endif%}
                 {%if images|length > 0%}
                     <div class="bottom-grid-nav for-upload  no-show">
                         <div class="grid-sum">
@@ -103,4 +146,10 @@
             profileLink.classList.add('active');
             }
             </script>
+
+            {%if action and action =='add-drive'%}
+                <script>
+                    let driveKey = `{{drive_key}}`;
+                </script>
+            {%endif%}
     {%endblock%}

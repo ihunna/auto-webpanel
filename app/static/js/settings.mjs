@@ -127,6 +127,92 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             });
         });
     }catch (error){con.log(error)}
+    try {
+        const image_type = doc.querySelector('#image-type');
+        const getGdriveImages = () => {
+          const gdriveBtn = document.getElementById('gdrive-btn');
+          const gdriveBtnUpload = document.getElementById('gdrive-btn-upload');
+          const driveKey = document.getElementById('drive_key').value;
+          const gdriveLink = document.getElementById('gdrive-link').value;
+          const gdriveInfo = document.getElementById('gdrive-display');
+      
+          if (gdriveLink === '') {
+            console.log('empty link value');
+            document.querySelector('.errors').innerHTML = `Drive link cannot be empty!`;
+          } else {
+            const urlParts = gdriveLink.split('/');
+            const folderId = urlParts[urlParts.length - 1];
+            const apiUrl = `https://www.googleapis.com/drive/v3/files?q='${encodeURIComponent(folderId)}'+in+parents&key=${driveKey}`;
+            // showHide('show', [alertBox], 'getting images', { 'bg': colorSuccess, 'color': colorLessWhite });
+      
+            fetch(apiUrl)
+              .then(response => {
+                if (!response.ok) {
+                  throw response.json();
+                }
+                return response.json();
+              })
+              .then(response => {
+                const imageLinks = response.files.map(file => `https://drive.google.com/uc?export=view&id=${file.id}`);
+                doc.querySelector('#data').value = imageLinks;
+                showHide('show', [gdriveInfo], `${imageLinks.length} images to upload`);
+                showHide('show', [gdriveBtnUpload]);
+                // gdriveBtn.id = '';
+                // gdriveBtn.type = 'submit';
+                // gdriveBtn.value = 'Upload';
+                console.log(imageLinks);
+                // showHide('show', [alertBox], 'Operation successful', { 'bg': colorSuccess, 'color': colorLessWhite });
+                // const removeListenerPromise = new Promise((resolve) => {
+                //   setTimeout(() => {
+                //     gdriveBtn.removeEventListener('click', getGdriveImages);
+                //     resolve();
+                //   }, 0);
+                // });
+      
+                // return removeListenerPromise;
+              })
+              .catch(error => {
+                if (error instanceof Promise) {
+                  error.then(errorMessage => {
+                    document.querySelector('.errors').innerHTML = `${errorMessage.error.status}`;
+                    showHide('show', [alertBox], errorMessage.error.status, { 'bg': colorDanger, 'color': colorLessWhite });
+                    console.error('Error:', errorMessage.error.message);
+                  });
+                } else {
+                  console.error('Error:', error);
+                }
+              })
+              .then(() => {
+                setTimeout(() => showHide('no-show', [alertBox]), 5000);
+              });
+          }
+        };
+      
+        const gdriveBtn = document.getElementById('gdrive-btn');
+        gdriveBtn.addEventListener('click', getGdriveImages);
+      } catch (error) {con.log(error);}      
+    try{
+        const gDriveForm = doc.querySelector('#gdrive-form');
+        gDriveForm.addEventListener('submit',(e)=>{
+            e.preventDefault();
+            const formData = new FormData(gDriveForm);
+            const image_type = gDriveForm.querySelector('#image-type')
+            sendRequest('POST', `/upload-images/${image_type.value}/gdrive`, null, formData)
+            .then(response => {
+                showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
+                gDriveForm.reset();
+                setTimeout(() => {
+                    showHide('no-show', [alertBox]);
+                    window.location.href = `/images/${image_type.value}`;
+                }, 5000);
+            })
+            .catch(error => {
+                showHide('show',[alertBox],error,{'bg':colorDanger,'color':colorLessWhite});
+                con.error(error)
+                setTimeout(() => showHide('no-show',[alertBox]), 5000);
+            })
+        })
+    }catch(error){con.log(error)}
     try{
         const accOpForm = doc.querySelector('#account-op-form');
         accOpForm.addEventListener('submit',(e)=>{
@@ -359,15 +445,17 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             li.addEventListener('click',()=>{
                 const imgSrc = li.querySelector('img').getAttribute('src');
                 const imgName = imgSrc.split('/');
-                const url = imgSrc;
-                const urlParts = url.split('/');
+                const imageId = li.querySelector('img').id;
 
-                const profileIndex = 5;
-                const myprofile = urlParts[profileIndex];
+                const url = window.location.href;
+                const parts = url.split('/');
+                let imageType = parts[parts.length - 1];
+                imageType = imageType.split('?')[0];
                 createModal(modal,'sModalImg',[
                     {'url':imgSrc,
                     'name':imgName[imgName.length - 1],
                     'type':myprofile,
+                    'id':imageId
                     }]);
                 showHide('show',[overlay,modal]);
             })

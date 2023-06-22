@@ -1094,39 +1094,64 @@ def update_file_content():
 
 		return jsonify({'message': 'File content updated successfully.'}), 200
 
-@app.route('/upload-images/<type>',methods=['POST'])
+@app.route('/upload-images/<type>/<category>',methods=['POST'])
 @login_required
 @blocked
 @check_platform
 @check_model
-def upload_image(type):
+def upload_image(type,category):
 	try:
-		image_list = request.get_json()['data']
-		image_urls = []
+		msg = ''
+		images = []
+		db = conn()
+		cursor = db.cursor()
 		model = session.get('MODEL')
 		admin = session.get('ADMIN')
+		if category == 'upload':
+			image_list = request.get_json()['data']
+			for image in image_list:
+				image_data = image['url'].split(',')[1]
+				image_id = str(uuid.uuid4())
+				image_name =  image_id + '.jpeg'
+				save_path = os.path.join(app.config['IMAGE_FOLDER'],model['id'],type,image_name)
 
-		for image in image_list:
-			image_data = image['url'].split(',')[1]
-			image_id = str(uuid.uuid4())
-			image_name =  image_id + '.jpeg'
-			save_path = os.path.join(app.config['IMAGE_FOLDER'],model['id'],type,image_name)
+				with open(save_path, 'wb') as file:
+					file.write(base64.b64decode(image_data))
+				_data = f'/files/image/images/{model["id"]}/{type}/{image_name}'
+				try:
+					cursor.execute('''INSERT INTO images (id,data,status,model,user_id,type,category) VALUES (?,?,?,?,?,?,?)''',
+					(image_id,_data,'new',model['id'],admin['id'],type,category))
+					db.commit()
+					cursor.execute('''SELECT data FROM images WHERE id = ? AND user_id = ?''',
+						(image_id, admin['id']))
+					images.append(cursor.fetchone())
 
-			with open(save_path, 'wb') as file:
-				file.write(base64.b64decode(image_data))
-			_data = f'/files/image/images/{model["id"]}/{type}/{image_name}'
+				except sqlite3.IntegrityError as error:
+					print("Error: UNIQUE constraint failed. Image already exists.")
 
-			db = conn()
-			cursor = db.cursor()
-			cursor.execute('''INSERT INTO images (id,data,status,model,user_id,type) VALUES (?,?,?,?,?,?)''',
-			(image_id,_data,'new',model['id'],admin['id'],type))
-			db.commit()
+		
+		elif category == 'gdrive':
+			image_list = request.form.get('data')
+			image_list = image_list.split(',')
+			
+			type = request.form.get('image-type')
+			print(type)
 
-			cursor.execute('''SELECT data FROM images WHERE id = ? AND model = ? AND user_id = ?''',
-				(image_id, model['id'], admin['id']))
-			images = cursor.fetchall()
-
-		return jsonify({'msg':images}), 200
+			for image in image_list:
+				image_id = str(uuid.uuid4())
+				try:
+					cursor.execute('''INSERT INTO images (id,data,status,model,user_id,type,category) VALUES (?,?,?,?,?,?,?)''',
+					(image_id,image,'new',model['id'],admin['id'],type,category))
+					db.commit()
+					cursor.execute('''SELECT data FROM images WHERE id = ? AND user_id = ?''',
+						(image_id, admin['id']))
+					images.append(cursor.fetchone())
+				except sqlite3.IntegrityError as error:
+					print("Error: UNIQUE constraint failed. Image already exists.")
+		if len(images) < len(image_list):
+			msg = f'{len(images)} images uploaded successfully, {len(image_list)-len(images)} images already exists' 
+		else: msg = 'image upload successful'
+		return jsonify({'msg':msg,'data':images}), 200
 	
 	except Exception as error:
 		print(error)
@@ -1165,6 +1190,8 @@ def redirect_images():
 def images(type):
 	g.page = 'images'
 	try:
+		action = request.args.get('action')
+		if action =='add-drive':return render_template('images.html',type=type,action=action,drive_key=app.config['GDRIVEAPI'])
 		page = int(request.args.get('page', 1))
 		limit = int(request.args.get('limit', 10))
 		model_id = session.get('MODEL')['id']
@@ -1172,17 +1199,16 @@ def images(type):
 
 		db = conn()
 		cursor = db.cursor()
-
 		cursor.execute('SELECT COUNT(*) FROM images WHERE model=? AND type=? AND user_id=?',
 			   (model_id, type, admin_id))
 		total = cursor.fetchone()[0]
 
 		offset = (page - 1) * limit if page <= total else 0
 
-		cursor.execute('SELECT data FROM images WHERE model=? AND type=? AND user_id=? LIMIT ? OFFSET ?',
+		cursor.execute('SELECT data, id, category FROM images WHERE model=? AND type=? AND user_id=? LIMIT ? OFFSET ?',
 			   (model_id, type, admin_id, limit, offset))
 		images = cursor.fetchall()
-		images = [imgs[0] for imgs in images]
+		images = [{'img':imgs[0],'id':imgs[1],'cat':imgs[2]} for imgs in images]
 		sum = min((offset) + len(images), total)
 
 		return render_template('images.html', images=images, page=page, 
@@ -1206,7 +1232,11 @@ def delete_item(category):
 				image_name = data['name']
 				type = data['type']
 				image_url = data['url']
-				image_id = str(data['name']).split('.')[0]
+
+				image_id = data['id'].split('_')[0]
+				sub_cat = data['id'].split('_')[1]
+
+
 				model = session.get('MODEL')
 				admin = session.get('ADMIN')
 
@@ -1214,14 +1244,14 @@ def delete_item(category):
 				model =? AND user_id =? AND type =?''',(image_id,model['id'],admin['id'],type))
 				db.commit()
 
+				if sub_cat == 'upload':
+					image_path = os.path.join(app.config['IMAGE_FOLDER'],model['id'],type,image_name)
 
-				image_path = os.path.join(app.config['IMAGE_FOLDER'],model['id'],type,image_name)
-
-				if os.path.exists(image_path):
-					os.remove(image_path)
-					return jsonify({'msg': 'Image deleted successfully'}), 200
-				else:
-					return jsonify({'msg': 'Image not found'}), 404
+					if os.path.exists(image_path):
+						os.remove(image_path)
+					else:
+						return jsonify({'msg': 'Image not found'}), 404
+				return jsonify({'msg': 'Image deleted successfully'}), 200
 	except Exception as error:
 		print(error)
 		return jsonify({'msg':f'error deleting {category}'}), 500
