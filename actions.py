@@ -30,10 +30,10 @@ def upload_image(image_folder=img_folder,headers={},cookies={},proxies={},count=
 			headers = {
 				"accept": "application/json",
 				"x-okcupid-locale": "en",
-				"x-okcupid-app": 'OKCI 77.0.0 {"id":"iPhone; ; iOS; 16.4.1; iPhone; '+device_id+'; ; 0","screen":"390.0x844.0x3.0"}',
+				"x-okcupid-app": 'OKCI 77.3.0 {"id":"iPhone; ; iOS; 16.4.1; iPhone; '+device_id+'; ; 0","screen":"390.0x844.0x3.0"}',
 				"accept-language": "en-us",
 				"accept-encoding": "br, gzip, deflate",
-				"user-agent": 'OKCI 77.0.0 {"id":"iPhone; ; iOS; 16.4.1; iPhone; '+device_id+'","screen":"390.0x844.0x3.0"}',
+				"user-agent": 'OKCI 77.3.0 {"id":"iPhone; ; iOS; 16.4.1; iPhone; '+device_id+'","screen":"390.0x844.0x3.0"}',
 			}
 					
 			
@@ -43,7 +43,7 @@ def upload_image(image_folder=img_folder,headers={},cookies={},proxies={},count=
 				proxies=proxies,
 				files=files,
 				data=data,
-				verify=False,
+				verify='zyte-proxy-ca.crt',
 				timeout=30)
 			if flow.status_code == httpx.codes.OK:i+=1
 			count -= 1
@@ -91,14 +91,73 @@ def verify_phone(action='auth',phone={'id':''}):
 
 def login(user):
 	try:
-		with httpx.Client(proxies=user['ip'],verify=False,timeout=20) as session:
-			headers = user['headers']
-			headers.update({'x-apollo-operation-name': 'LoginWithEmail'})
+		with httpx.Client(proxies=user['ip'],verify='zyte-proxy-ca.crt',timeout=20) as session:
+			print('\n Getting guest token')
+			url = 'https://okcupid.com/graphql'
+			session.headers = {
+				'content-type': 'application/json',
+				'x-okcupid-platform': 'ios',
+				'accept': '*/*',
+				'apollographql-client-version': '77.3.0-374',
+				'x-okcupid-locale': 'en',
+				'accept-language': 'en-us',
+				'x-okcupid-version': '77.3.0',
+				'x-apollo-operation-type': 'query',
+				'apollographql-client-name': 'com.okcupid.app-apollo-ios',
+				'user-agent': 'OkCupid/374 CFNetwork/1404.0.5 Darwin/22.3.0',
+				'x-apollo-operation-name': 'LoggedOutSession',
+				"if-none-match": "W/\"b2-7GHp7IF3eab5lvMofEBEzZ/3mxE\""
+			} 
 
-			cookies = user['cookies']
+			# session.cookies = {
+			# 	'override_session': '0',
+			# 	'secure_check': '0',
+			# 	'secure_login': '0',
+			# 	# 'userid': user['id'],
+			# }  
+			
+			json_data = {
+				'operationName': 'LoggedOutSession',
+				'query': 'query LoggedOutSession($experimentNames: [String]!) {\n  session {\n    __typename\n    isStaff\n    guestId\n    ipCountry\n    shouldUpdateAppDetect\n    isAppsConsentKillswitchEnabled\n    additionalPolicies\n    ...GateKeeperChecksFragment\n    experiments(names: $experimentNames) {\n      __typename\n      group\n    }\n  }\n}\nfragment GateKeeperChecksFragment on Session {\n  __typename\n  gatekeeperChecks {\n    __typename\n    APP_FORCE_UPDATE\n    GDPR_AGE_REDIRECT\n    ONBOARDING_ALLOW_SKIP\n    ONBOARDING_MANDATORY_REDIRECT\n    REBOARDING_MANDATORY_REDIRECT\n    TERMS_MANDATORY_REDIRECT\n    REALNAMES_REDIRECT\n    SMS_MANDATORY_REDIRECT\n    PASSWORD_MANDATORY_REDIRECT\n    BLOCK_PERSONALIZED_MARKETING\n    HAS_PHONE\n    SMS_KILL_SWITCH\n    NEEDS_DETAILS_REBOARDING\n    USE_NEW_INSTAGRAM_API\n    IS_INDIAN_USER\n    GLOBAL_PREFERENCES\n    SUPERLIKES\n    HIDE_INTROS_TAB\n    MARKETING_OPT_IN_NEW_USER\n    IDENTITY_TAGS_QUALIFIES\n    GIF_SEARCH\n    LIVESTREAMING_ALLOWED\n  }\n}',
+				'variables': {
+					'experimentNames': [
+						'CHAT_REACTIONS',
+						'CUPIDS_PICKS_V2',
+						'IOS_DIRECT_NATIVE_ADS_V2',
+						'LIKES_LIST_SORT_V2',
+						'IOS_MATCH_EVENT_V1',
+						'IOS_NATIVIZE_NAME_LOCATION_V2',
+						'PHOTO_MESSAGING',
+						'ONBOARDING_GENDER_EDUCATION',
+						'RR_PACKAGE_TEST',
+						'IOS_NATIVE_SETTINGS_REBOARDING_V3',
+						'IOS_RAINN_REPORTING_DEV',
+						'SELFIE_VERIFICATION_V1',
+						'SENDER_INTERACTION_MECHANICS_IOS_DEV',
+						'IOS_CONTENT_CARD_V1',
+						'SUPERLIKE_COPY',
+						'TEST_EXPERIMENT',
+						'TEST_EXPERIMENT_DEV',
+						'3_AND_6_MONTH_PRICE_REDUCTION_NEW',
+						'TOKEN_PACKAGE_FULL_PRICE',
+						'IOS_FAKE_LOGGED_OUT',
+						'IOS_UNLIMITED_LIQUIDITY',
+						'SUPERLIKE_PACKAGE_TEST',
+					],
+				},
+			}
+			
+			time.sleep(random.randint(0,5))
+			flow = session.post(url,json=json_data)
+			if flow.status_code != 200: return False,'cloudflare blocked'
+			guest_token = flow.json()['data']['session']['guestId']
+			cf_id = flow.headers['etag']
+			print(f'Guest token = {guest_token}\n')
 
-			session.headers.update(headers)
-			# session.cookies.update(cookies)
+			session.headers.update({
+				'x-apollo-operation-name': 'LoginWithEmail',
+				'if-none-match':cf_id
+				})
 
 			json_data = {
 				'operationName': 'LoginWithEmail',
@@ -114,6 +173,7 @@ def login(user):
 			}
 
 			flow = session.post('https://okcupid.com/graphql',json=json_data)
+			print(flow.text)
 			if flow.status_code != 200:return False,flow.text
 			cf_id = flow.headers['etag']
 
@@ -122,13 +182,13 @@ def login(user):
 				'accept': '*/*',
 				'x-apollo-operation-type': 'query',
 				'x-apollo-operation-name': 'LikesCapInfo',
-				#'if-none-match': cf_id,
+				'if-none-match': cf_id,
 			})
 
-			session.cookies.update({
-				'secure_check':'0',
-				'secure_login':'0'
-			})
+			# session.cookies.update({
+			# 	'secure_check':'0',
+			# 	'secure_login':'0'
+			# })
 
 			json_data = {
 				'operationName': 'LikesCapInfo',
@@ -137,13 +197,14 @@ def login(user):
 			}
 
 			flow = session.post('https://okcupid.com/graphql',json=json_data)
+			print(flow.text)
 			if flow.status_code != 200:return False,flow.text
 			cf_id = flow.headers['etag']
 
 
 			session.headers.update({
 				'x-apollo-operation-name': 'StacksSessionQuery',
-				#'if-none-match': cf_id,
+				'if-none-match': cf_id,
 			})
 			json_data = {
 				'operationName': 'StacksSessionQuery',
@@ -176,6 +237,7 @@ def login(user):
 				},
 			}
 			flow = session.post('https://okcupid.com/graphql',json=json_data)
+			print(flow.text)
 			if flow.status_code != 200:return False,flow.text
 			cf_id = flow.headers['etag']
 

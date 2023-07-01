@@ -1,5 +1,30 @@
 from configs import proxy_file,datetime,timezone,random,string
 
+
+def get_proxies():
+    proxies = []
+    with open(proxy_file,"r") as f:
+        for proxy in f.readlines():
+            proxy = proxy.replace("\n","").split(":")
+            ip = proxy[0]
+            port = proxy[1]
+            username = proxy[2]
+            password = proxy[3] if len(proxy) > 3 else None
+            if password is not None:
+                proxy = {
+                    "http://": f'http://{username}:{password}@{ip}:{port}',
+                    "https://": f'http://{username}:{password}@{ip}:{port}'
+                }
+            else:
+                 proxy = {
+                    "http://": f'http://{username}:@{ip}:{port}',
+                    "https://": f'http://{username}:@{ip}:{port}'
+                }
+                 
+            proxies.append(proxy)
+
+    return proxies
+
 def load_proxies():
     with open(proxy_file,'r') as pro_file:
         proxies = []

@@ -14,20 +14,20 @@ def create_accounts(proxies={},password=str,
 	email = f"{fullName.strip()}@{random.choice(['gmail.com','outlook.com'])}".lower().replace(' ','')
 	
 	try:
-		with httpx.Client(proxies=proxies,verify=False,timeout=20) as session:
+		with httpx.Client(proxies=proxies,verify='zyte-proxy-ca.crt',timeout=20) as session:
 			print('\n Getting guest token')
 			url = 'https://okcupid.com/graphql'
 			session.headers = {
 				'content-type': 'application/json',
 				'x-okcupid-platform': 'ios',
 				'accept': '*/*',
-				'apollographql-client-version': '77.0.0-358',
+				'apollographql-client-version': '77.3.0-374',
 				'x-okcupid-locale': 'en',
 				'accept-language': 'en-us',
-				'x-okcupid-version': '77.0.0',
+				'x-okcupid-version': '77.3.0',
 				'x-apollo-operation-type': 'query',
 				'apollographql-client-name': 'com.okcupid.app-apollo-ios',
-				'user-agent': 'OkCupid/358 CFNetwork/1406.0.4 Darwin/22.4.0',
+				'user-agent': 'OkCupid/374 CFNetwork/1404.0.5 Darwin/22.3.0',
 				'x-apollo-operation-name': 'LoggedOutSession',
 			}   
 			
@@ -159,8 +159,8 @@ def create_accounts(proxies={},password=str,
 			
 
 			session.headers.update({
-				"user-agent": 'OKCI 76.1.0 {"id":"iPhone; ; iOS; 16.4.1; iPhone; '+device_id+'","screen":"390.0x844.0x3.0"}',
-				"x-okcupid-app": 'OKCI 76.1.0 {"id":"iPhone; ; iOS; 16.4.1; iPhone; '+device_id+'; ; 0","screen":"390.0x844.0x3.0"}'
+				"user-agent": 'OKCI 77.3.0 {"id":"iPhone; ; iOS; 16.4.1; iPhone; '+device_id+'","screen":"390.0x844.0x3.0"}',
+				"x-okcupid-app": 'OKCI 77.3.0 {"id":"iPhone; ; iOS; 16.4.1; iPhone; '+device_id+'; ; 0","screen":"390.0x844.0x3.0"}'
 			})
 
 			flow = session.get(f'https://www.okcupid.com/1/apitun/location/query?country_code={c_code}&q={zipcode}')
@@ -171,13 +171,13 @@ def create_accounts(proxies={},password=str,
 				'content-type': 'application/json',
 				'x-okcupid-platform': 'ios',
 				'accept': '*/*',
-				'apollographql-client-version': '77.0.0-358',
+				'apollographql-client-version': '77.3.0-374',
 				'x-okcupid-locale': 'en',
 				'accept-language': 'en-us',
-				'x-okcupid-version': '77.0.0',
+				'x-okcupid-version': '77.3.0',
 				'x-apollo-operation-type': 'query',
 				'apollographql-client-name': 'com.okcupid.app-apollo-ios',
-				'user-agent': 'OkCupid/358 CFNetwork/1406.0.4 Darwin/22.4.0',
+				'user-agent': 'OkCupid/374 CFNetwork/1404.0.5 Darwin/22.3.0',
 				'x-apollo-operation-name': 'LoggedOutSession',
 				'if-none-match': f'{cf_id}',
 				'x-apollo-operation-type': 'mutation',
@@ -602,10 +602,9 @@ def create_accounts(proxies={},password=str,
 			user['headers'] = dict(session.headers.items())
 			user['user_data'] = flow.json()
 			user['id'] = guest_token
-
 			print(f'\nAccount creation successful: {email}\n')
 
-			return True,user
+			return True,user,session
 	except Exception as error:
 		print(error)
 		return False,error
@@ -664,6 +663,9 @@ if __name__ == "__main__":
 					users[user[1]['id']] = user[1]
 					users_file.seek(0)
 					json.dump(users,users_file,ensure_ascii=False,indent=4,default=str)
+				with open('session.pickle', 'wb') as file:
+					pickle.dump(user[2], file)
+
 			else:print(user[1])
 
 

@@ -5,8 +5,10 @@ __pycache__
 app/__pycache__
 app/flask_session
 app/okcupid.db
+app/firebase.json
 app.zip
 proxies.txt
 app/data/proxies
 test.py
+BadooAPI.postman_collection.json
 postman-collection.json

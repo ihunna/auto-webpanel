@@ -1,4 +1,4 @@
-import requests,httpx,random,json,string,os,time,uuid
+import requests,httpx,random,json,string,os,time,uuid,pickle
 from concurrent.futures import ThreadPoolExecutor,as_completed
 from datetime import datetime,timezone
 from PIL import Image
@@ -12,8 +12,8 @@ env_path = os.path.join(basedir, '.env')
 proxy_file = os.path.join(basedir, 'proxies.txt')
 img_folder = os.path.join(basedir,'images')
 
-from utils import load_proxies
-proxies = load_proxies()
+from utils import load_proxies,get_proxies
+proxies = get_proxies()
 
 load_dotenv(env_path)
 api_key = os.getenv('APIKEY')
