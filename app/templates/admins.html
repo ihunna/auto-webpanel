@@ -120,10 +120,12 @@
                                                 </a>
                                                 {%if admin.role =='admin' and admin.status == 'active'%}
                                                     <a href="" class="eleveted-a make-super?">make super</a>
+                                                    <a href="" class="eleveted-a login-as-user?">Login as this user</a>
+                                                    <a href="" class="eleveted-a delete-user?">delete this user</a>
                                                 {%endif%}
                                             {%else%}
                                             <a href="/admins?admin={{admin.id}}&action=admin-settings&page={{page}}" class="eleveted-a">edit</a>
-                                            <a href="/admins?admin={{admin.id}}&action=edit-signup-configs&page={{page}}" class="eleveted-a">signup configs</a>
+                                            <a href="/signup" class="eleveted-a add-a-user?">add user</a>
                                             {%endif%}
                                         </span>
                                     </td>

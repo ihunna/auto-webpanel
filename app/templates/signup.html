@@ -21,10 +21,12 @@
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" required>
                 </div>
-                <div>
-                    <label for="passkey">Enter admin passkey</label>
-                    <input type="text" id="passkey" name="passkey" required>
-                </div>
+                {%if g.page == 'signup-hidden'%}
+                    <div>
+                        <label for="passkey">Enter admin passkey</label>
+                        <input type="text" id="passkey" name="passkey" required>
+                    </div>
+                {%endif%}
                 <div>
                     <label for="password">Password (min:8 chars)</label>
                     <input type="password" id="password" name="password" required>

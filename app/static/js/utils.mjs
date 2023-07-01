@@ -250,7 +250,7 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
             const profileIndex = 4;
             const myprofile = urlParts[profileIndex];
 
-            sendRequest('POST',`/upload-images/${myprofile}/upload`,{'data':items})
+            sendRequest('POST',`/upload-images/${myprofile.split("?")[0]}/upload`,{'data':items})
             .then(response => {
               showHide('no-show',[alertBox]);
               con.log(response)
@@ -364,7 +364,7 @@ const getFiles = (fileInput = Element) => {
         if (allowedTypes.includes(selectedFiles[i].type)) {
           const reader = new FileReader();
           reader.addEventListener('load', (e) => {
-            files.push({ 'url': e.target.result, 'name': selectedFiles[i].name });
+            files.push({ 'url': e.target.result, 'name': selectedFiles[i].name,'pose':pose});
             completedCount++; 
             checkCompletion();
           });

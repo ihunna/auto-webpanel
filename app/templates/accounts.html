@@ -27,19 +27,27 @@
                         <tr>
                             <th>Name</th>
                             <th>Email</th>
+                            <th>Status</th>
+                            <th>Created at</th>
                             <th>Actions</th>
                         </tr>
                         </thead>
                         <tbody>
                         {%for account in accounts%}
                         <tr>
-                            <td>{{account.user_data.data.me.displayname}}</td>
-                            <td>{{account.user_data.data.me.emailAddress}}</td>
+                            <td>{{account.displayName}}</td>
+                            <td>{{account.email}}</td>
+                            <td>
+                                <span  class="admin-badge">
+                                    {{account.status}}
+                                </span>
+                            </td>
+                            <td>{{account.created_at}}</td>
                             <td class="actions">
                                 <i class="fas fa-ellipsis-v"></i>
                                 <span class="action-btns no-show">
                                     <a href="" class="eleveted-a delete danger delete-this-account?">delete</a>
-                                    <a href="/account-page?account={{account.user_data.data.me.id}}" class="eleveted-a">view</a>
+                                    <a href="/account-page?account={{account.id}}" class="eleveted-a">view</a>
                                 </span>
                             </td>
                         </tr>

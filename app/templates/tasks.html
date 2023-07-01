@@ -28,7 +28,7 @@
                         <div class="op-card">
                             <div>
                                 <h2>
-                                    {{task.type}}
+                                    {{task.type|capitalize}}
                                 </h2>
                             </div>
                             <div>
@@ -39,19 +39,22 @@
                                 <strong>Started at : </strong>
                                 <span>{{task.start_time}}</span>
                             </div>
-                            {% if task.status == "Running"%}
+                            {% if task.status|lower == "running"%}
                                 <span class="op-spinner bg-warning">
                                     <i class="fa fa-spinner fa-spin"></i>
                                 </span>
-                            {%elif task.status == "Completed"%}
+                            {%elif task.status|lower == "completed"%}
                                 <span class="op-spinner bg-success">
                                     <i class="fa fa-check"></i>
                                 </span>
-                            {%elif task.status == "Failed"%}
+                            {%elif task.status|lower == "failed"%}
                             <span class="op-spinner bg-danger">
                                 <i class="fa fa-close"></i>
                             </span>
                             {%endif%}
+                            <div>
+                                <progress id="progressbar" value="{{task.progress}}" max="100"></progress>
+                            </div>
                         </div>
                     {%endfor%}
                 </div>

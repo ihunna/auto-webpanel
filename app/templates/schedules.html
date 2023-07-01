@@ -64,7 +64,7 @@
                             <label for="s-name">Update schedule name</label>
                             <input type="text" id="s-name" name="s-name" value="{{schedule.name}}">
                         </div>
-                        {% if models%}
+                        <!-- {% if models%}
                             <div>
                                 <label for="op-model">Change model</label>
                                 <select id="op-model" class="op-model" name="op-model">
@@ -78,7 +78,7 @@
                                     for which model do you want to run this operation, if not selected the action is for the already set model <span id="current-model" style="color: #111;">({{g.model.full_name}}) </span>
                                 </h5>
                             </div>
-                        {%endif%}
+                        {%endif%} -->
                         <!-- <div>
                             <label for="s-platform">Platform</label>
                             <input type="text" id="s-platform" name="s-platform" value="{{schedule.platform}}" disabled>
@@ -120,7 +120,7 @@
                         {%elif action_type == 'account'%}
                             <div>
                                 <label for="op-count">Change no. of accounts</label>
-                                <input type="number" id="op-count" name="op-count" value="{{schedule.op_count}}">
+                                <input type="text" id="op-count" name="op-count" value="{{schedule.op_count}}">
                                 <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i>the number of accounts to create</h5>
                             </div>
                             <div>
@@ -133,7 +133,7 @@
                                 <div class="inputs">
                                     <div>
                                         <label for="s-tf-acc-count">accounts</label>
-                                        <input type="text" id="s-tf-acc-count" name="s-tf-acc-count" value="{{schedule.op_timer.count}}">
+                                        <input type="text" id="s-tf-acc-count" name="s-tf-acc-count" value="{{schedule.op_timer.count_}}">
                                         <h5 class="input-highlight"> 
                                             <i class="fas fas fa-exclamation-circle"></i> 
                                             the number of accounts to create in a given timeframe e.g '100'
@@ -160,7 +160,7 @@
                                     <div>
                                         <label for="op-location">proxy location</label>
                                         <input type="text" id="op-location" name="op-location" value="{{schedule.op_location}}">
-                                        <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i>the latitude and longitude for the proxy settings</h5>
+                                        <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the latitude and longitude for the proxy settings</h5>
                                         <div id="op-map" class="map no-show"></div>
                                     </div>
                                     <div class="map-btn">
@@ -351,7 +351,7 @@
                                 </div>
                                 <div>
                                     <label for="max-workers">No. of concurrent actions (optional)</label>
-                                    <input type="number" id="max-workers" name="max-workers">
+                                    <input type="text" id="max-workers" name="max-workers">
                                     <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i>number of threads to run</h5>
                                 </div>
                                 <div class=" double-field">

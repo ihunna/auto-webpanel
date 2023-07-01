@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}
-   Images
+   Configs
 {% endblock %}
 {% block platform %}
     {% if platform != None%}
@@ -38,8 +38,8 @@
             </div>
             <div class="menu">
                 <ul class="menu-options">
-                    {% for title, content in file_contents.items() %}
-                        <li class="title-options eleveted-a" onclick="showTextarea('{{ title }}');handleClick(this)">{{ title }}</li>
+                    {% for config in  configs %}
+                        <li class="title-options eleveted-a" onclick="showTextarea('{{ config.title }}');handleClick(this)">{{ config.title }}</li>
                     {% endfor %}
                     <li style="display: none;"></li>
                     <!-- <li class="title-options different" onclick="showImagearea('imageArea')">Image_file</li> -->
@@ -47,14 +47,14 @@
             </div>
             <div class="main-container">
                 <div class="holder config-holder scroll">
-                    {% for title, content in file_contents.items() %}
-                    <div id="{{ title }}-container" class="content-holder" style="display: none;">
-                        <h3 style="padding: 10px 10px;"><u>{{ title }}</u></h3>
-                        <textarea id="{{ title }}-textarea" rows="10" cols="50" style="width: 100%;">{{ content }}</textarea>
+                    {% for config in  configs %}
+                    <div id="{{ config.title }}-container" class="content-holder" style="display: none;">
+                        <h3 style="padding: 10px 10px;"><u>{{ config.title }}</u></h3>
+                        <textarea id="{{ config.title }}-textarea" rows="10" cols="50" style="width: 100%;">{%if config.content|length > 0%}{{ config.content }}{%endif%}</textarea>
                         <br>
-                        <p id="{{ title }}-message" class="message" style="display: none;"></p>
+                        <p id="{{ config.title }}-message" class="message" style="display: none;"></p>
                     </div>
-                    <button id="{{ title }}-button" class="save-button" onclick="saveContent('{{ title }}')">Save Changes</button>
+                    <button id="{{ config.title }}-button" class="save-button" onclick="saveContent('{{ config.title }}')">Save Changes</button>
                     {% endfor %}
                 </div>
             </div>
@@ -184,12 +184,17 @@
         function saveContent(title) {
             var textarea = document.getElementById(title + '-textarea');
             var message = document.getElementById(title + '-message');
+            
+            message.textContent = 'Saving file content...';
+            message.style.color = 'green';
+            message.style.display = 'block';
 
             // Prepare the data to be sent
             var data = {
                 title: title,
                 content: textarea.value
             };
+
 
             // Send the POST request to the server
             fetch('/account-configs', {

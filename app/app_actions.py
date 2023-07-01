@@ -1,6 +1,5 @@
-from app_configs import uuid,names_file,zip_file,httpx,SearchEngine,sqlite3,database_file,time
-from configs import random,ThreadPoolExecutor,as_completed,json
-from utils import generate_sensor_data
+from app_configs import httpx,SearchEngine,time,random,ThreadPoolExecutor,as_completed,json,firestore
+
 
 
 
@@ -77,102 +76,114 @@ def get_location(zipcode):
 		return False, error
 
 def create_accounts(
-		fullName:str = None,
-		password:str = None,
-		bio:str = None,
-		bday:dict = None,
-		c_code:str = None,
-		zipcode:str = None,
-		image:dict = None,
-		token:str | dict = None):
-	URL = 'https://okcupid-api.uc.r.appspot.com/account'
+			account:int =None,
+			nb_of_images:int=5,
+			nb_of_accounts:int = 1,
+			names:list=None,
+			handles:list=None,
+			bios:list = None,
+			task_id:str = None,
+			profile_images:list = None,
+			verification_images:dict = None,
+			age_range:str = '18-60',
+			gender:str = None,
+			cities:list = None,
+			proxies:list = None,
+			user_agents:list = None,
+			zip_codes:list = None,
+			accounts:list = None,
+			url:str = None,
+			token:str = None):
+	URL = f'{url}/account'
 	try:
-		email = email = f"{fullName.strip()}@{random.choice(['gmail.com','outlook.com'])}".lower().replace(' ','')
 		with httpx.Client() as session:
 			session.headers = {
 				'Content-Type':'application/json',
 				'Authorization': f'Bearer {token}'
 			}
 			
-			location = get_location(zipcode)
-			if not location[0]:return False, location[1]
-			location = location[1]
 			json_data = {
-				"email": email,
-				"password":password,
-				"name": fullName,
-				"birth_date": bday,
-				"country_code": c_code,
-				"region": location['state'],
-				"city": location['city'],
-				"zipcode": zipcode,
-				"area_code": location['area_code'],
-				"gender": 0,
-				"gender_preferences": [1],
-				"connection_types": [1, 3, 2, 6],
-				"age_range": [18, 99],
-				"bio_description": bio,
-				"device_id": str(uuid.uuid4()).upper(),
-				"image_urls": image['links']
+				'nb_of_accounts':nb_of_accounts,
+				'names':names,
+				'bios':bios,
+				'handles':handles,
+				'profile_images':profile_images,
+				"nb_of_images":nb_of_images,
+				'verification_images':verification_images,
+				'age-range':age_range,
+				'gender':gender,
+				'cities':cities,
+				'proxies':proxies,
+				'user_agents':user_agents,
+				'zip_codes':zip_codes,
+				'accounts':accounts,
 			}
 
-			flow = session.post(URL,json=json_data)
-			if flow.status_code != 200:return False,flow.text
+			flow = session.put(URL,json=json_data)
+			if flow.status_code > 299:return False,flow.text
 			
-			print(f'\nWaiting for account to be created for: {email}')
+			print(f'\nWaiting for account to be created for: {account + 1}')
 			status = 'PENDING_CREATION'
-			account_id = flow.json().get('account_id')
+			account_id = flow.json()['accounts'][0].get('id')
 			while status == 'PENDING_CREATION':
-				flow = session.get(f"https://okcupid-api.uc.r.appspot.com/account/{account_id}")
-				if flow.status_code != 200:return False,flow.text
-				status = flow.json().get('status')
+				flow = session.get(f"{URL}/{account_id}")
+				if flow.status_code  > 299:return False,flow.text
+				status = flow.json()['status']
 				time.sleep(10)
-			return True,flow.json()
+			account_details = flow.json()
+			print(f'\nAccount created for: {account + 1}')
+			return True,account_details
 
 	except Exception as error:
 		return False,error
 
 def start_task(
-		op_count:int=None,
-		max_workers:int=None,
-		bio:str=None,
-		images:list=None,
-		task_id:str=None,
-		token:str | dict = None):
+			accounts_ref=None,
+			tasks_ref=None,
+			nb_of_images:int=None,
+			op_count:int = 1,
+			names:list=None,
+			bios:list = None,
+			handles:list=None,
+			max_workers:int = 10,
+			task_id:str = None,
+			images:list = None,
+			verification_images:dict = None,
+			age_range:str = None,
+			gender:str = None,
+			cities:list = None,
+			proxies:list = None,
+			user_agents:list = None,
+			zip_codes:list = None,
+			accounts:list = None,
+			url:str=None,
+			token:str = None):
 	
 	print('\nACCOUNT CREATION STARTED \n')
+	success,msg,task_status = False,'',''
 
-	db = sqlite3.connect(database_file)
-	global account_task_status
-	success,msg = False,''
-
-	cursor = db.cursor()
-	cursor.execute('''UPDATE tasks SET status =? WHERE id =?''',('Failed',task_id))
-	db.commit()
-
-	return success,'Not functional yet'
 	try:
-		names = []
-		zipcodes = []
-		with open(names_file,'r') as n_f:
-			names += n_f.readlines()
-
-		with open(zip_file,'r') as n_f:
-			zipcodes += n_f.readlines()
-
 		kwargs=[{
-			'password':generate_sensor_data(type='password'),
-			'fullName': f'{random.choice(names)} {random.choice(names)}'.replace('\n',''),
-			'bday':{"day":random.randint(1,30),"month":random.randint(1,12),"year":random.randint(1980,2005)},
-			'c_code':'US',
-			'zipcode':f'{random.choice(zipcodes)}'.strip().replace('\n',''),
-			'bio':bio,
-			'image':images[i],
+			'account':i,
+			'nb_of_accounts':1,
+			'names':names[i],
+			'accounts':accounts[i],
+			'bios':bios[i],
+			'handles':handles[i],
+			'cities':cities[i],
+			'zip_codes':zip_codes[i],
+			'proxies':proxies[i],
+			'user_agents':user_agents[i],
+			'age_range':age_range,
+			'gender':gender,
+			'profile_images':images,
+			'nb_of_images':nb_of_images,
+			'verification_images':verification_images,
+			'url':url,
 			'token':token
 		}for i in range(op_count)]
 
 		with ThreadPoolExecutor(max_workers=max_workers) as executor:
-
 			futures = []
 			for kwargs in kwargs:
 				future = executor.submit(create_accounts, **kwargs)
@@ -184,25 +195,34 @@ def start_task(
 					account = result[1]
 					print(account)
 					if account.get('status') == 'CREATION_ERROR':
-						account_task_status = 'Failed'
+						task_status = 'Failed'
 						success,msg = True,'Some accounts failed'
 						continue
-					account_id = account['data']['authUserLoginWithEmail']['userid']
-					cursor.execute('''
-					INSERT INTO accounts (id,data,email,swipes,messages,likes) VALUES (?,?,?,?,?,?)
-					''',(account_id,json.dumps(account),account.get('email'),0,0,0))
-
-					account_task_status = 'Completed'
+					accounts_ref.document(account['id']).set({
+						'id':account['id'],
+						'name':account['name'],
+						'status':account['status'],
+						'email':account['email'],
+						'gender':account['gender'],
+						'city':account['city'],
+						'country':account['country_code'],
+						'created_at':firestore.SERVER_TIMESTAMP,
+						'profile':json.dumps(account['profile'])
+					})
+					task_status = 'Completed'
 					success,msg = True,'Account creation successful'
 					
-				else:print(result[1])
+				else:
+					task_status = 'Failed'
+					print(result[1])
 	except Exception as error:
 		success,msg = False,error
 		print(error)
-		account_task_status = 'Failed'
+		task_status = 'Failed'
 	finally:
-		cursor = db.cursor()
-		cursor.execute('''UPDATE tasks SET status =? WHERE id =?''',(account_task_status,task_id))
-		db.commit()
-
+		tasks_ref.document(task_id).update({
+			'running':False,
+			'status':task_status,
+			'progress':100
+			})
 		return success,msg 

@@ -8,12 +8,12 @@
     {%block main%}
         <div class="main-box">
             <div class="header">
-                <h1>{{ g.model.full_name }} <span class="elt">> {{type}}</span></h1>
+                <h1>{{ g.model.full_name }} <span class="elt">> {{type}} images</span></h1>
                 <div class="action-links scroll">
-                    <a href="./images" id="" class="eleveted-a types">
+                    <a href="./verification" id="" class="eleveted-a types {%if type == 'verification'%}active{%endif%}">
                         verification images
                     </a>
-                    <a href="./profile" id="" class="eleveted-a types" >
+                    <a href="./profile" id="" class="eleveted-a types {%if type == 'profile'%}active{%endif%}">
                        profile images
                     </a>
                     <a href="/models" id="" class="eleveted-a types" >
@@ -26,13 +26,13 @@
                     <div class="holder image-holder scroll">
                         <ul class="images" id="images">
                             {%for img in images%}
-                                <li>
+                                <li data-image-category="{{img.cat}}">
                                     <img src="{{img.img}}" alt="" id="{{img.id}}_{{img.cat}}">
                                 </li>
                             {%endfor%}
                         </ul>
                     </div>
-                {%elif not action and not images%}
+                {%elif not action and not images and active_pose%}
                     <div class="holder image-holder scroll">
                         <div class="no-image">
                             <div class="file-upload upload-image">
@@ -86,7 +86,7 @@
                         </form>
                     </div>
                 {%endif%}
-                {%if images|length > 0%}
+                {%if images|length > 0 %}
                     <div class="bottom-grid-nav for-upload  no-show">
                         <div class="grid-sum">
                             <span>
@@ -99,10 +99,28 @@
                              class="next  eleveted-a">More</a>
                             <a href="/images/{{type}}?page={{ (total + limit - 1) // limit }}&limit={{limit}}" class="end  eleveted-a">Last</a>
                         </div>
-                        <div class="upload-image">
-                            <a href="" class="eleveted-a">
-                                upload more
-                            </a>
+                        {% if type == 'verification' and active_pose %}
+                            <div class="upload-image">
+                                <a href="" class="eleveted-a">
+                                    upload more
+                                </a>
+                            </div>
+                        {% elif type != 'verification' %}
+                            <div class="upload-image">
+                                <a href="" class="eleveted-a">
+                                    upload more
+                                </a>
+                            </div>
+                        {%endif%}
+                    </div>
+                {%endif%}
+                {%if g.platform.name in ['badoo','BADOO'] and type != 'profile'%}
+                    <div class="side-filter-holder scroll">
+                        <div class="filter-drop-down">choose a pose <i class="fas fa-caret-down"></i></div>
+                        <div class="side-filter" id="side-filter">
+                            {%for pose in g.poses%}
+                                <a href="/images/verification?pose={{pose}}" class="{%if active_pose == pose%}active{%endif%}">{{pose}}</a>
+                            {%endfor%}
                         </div>
                     </div>
                 {%endif%}
@@ -120,6 +138,13 @@
             }
         </style>
         <script>
+            const poseDropDown = document.querySelector('.filter-drop-down')
+
+            poseDropDown.addEventListener('click',(e)=>{
+                const sideFilter = document.querySelector('#side-filter');
+                sideFilter.classList.toggle('show')
+            })
+
             const url = new URL(window.location.href);
             const myprofile = url.pathname.split("/")[2];
 
@@ -140,11 +165,15 @@
             profileLink.classList.remove('active');
 
             // Add the "active" class based on the value of myprofile
-            if (myprofile === 'images') {
+            if (myprofile === 'verification') {
             imagesLink.classList.add('active');
             } else if (myprofile === 'profile') {
             profileLink.classList.add('active');
             }
+            </script>
+
+            <script>
+                let pose = "{{active_pose}}"||"None"
             </script>
 
             {%if action and action =='add-drive'%}

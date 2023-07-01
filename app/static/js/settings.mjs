@@ -36,7 +36,9 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             actionBtn.forEach(a=>{
                 if (a.classList.contains('block-this-account?') || 
                     a.classList.contains('unblock-this-account?') ||
-                    a.classList.contains('make-super?'))
+                    a.classList.contains('make-super?') ||
+                    a.classList.contains('login-as-user?')||
+                    a.classList.contains('delete-user?'))
 
                 a.addEventListener('click',(event) =>{
                     event.preventDefault();
@@ -45,6 +47,8 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                     if (a.classList.contains('block-this-account?')){action = 'block'}
                     else if (a.classList.contains('unblock-this-account?')){action='unblock'}
                     else if (a.classList.contains('make-super?')){action='make-super'}
+                    else if (a.classList.contains('login-as-user?')){action='login-as-user'}
+                    else if (a.classList.contains('delete-user?')){action='delete-user'}
                     createModal(modal,'prompt',[{'admin_id':e.id}],text,'admin',action,'admins')
                     showHide('show',[overlay,modal]);
                 })
@@ -144,7 +148,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             const folderId = urlParts[urlParts.length - 1];
             const apiUrl = `https://www.googleapis.com/drive/v3/files?q='${encodeURIComponent(folderId)}'+in+parents&key=${driveKey}`;
             // showHide('show', [alertBox], 'getting images', { 'bg': colorSuccess, 'color': colorLessWhite });
-      
+            showHide('show',[alertBox],'Fetching images...',{'bg':colorSuccess,'color':colorLessWhite});
             fetch(apiUrl)
               .then(response => {
                 if (!response.ok) {
@@ -153,7 +157,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 return response.json();
               })
               .then(response => {
-                const imageLinks = response.files.map(file => `https://drive.google.com/uc?export=view&id=${file.id}`);
+                const imageLinks = response.files.map(file => `https://drive.google.com/uc?export=view&id=${file.name}`);
                 doc.querySelector('#data').value = imageLinks;
                 showHide('show', [gdriveInfo], `${imageLinks.length} images to upload`);
                 showHide('show', [gdriveBtnUpload]);
@@ -197,6 +201,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             e.preventDefault();
             const formData = new FormData(gDriveForm);
             const image_type = gDriveForm.querySelector('#image-type')
+            showHide('show',[alertBox],'Image(s) uploading...',{'bg':colorSuccess,'color':colorLessWhite});
             sendRequest('POST', `/upload-images/${image_type.value}/gdrive`, null, formData)
             .then(response => {
                 showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
@@ -218,12 +223,16 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         accOpForm.addEventListener('submit',(e)=>{
             e.preventDefault();
             const formData = new FormData(accOpForm);
-    
+            
+            showHide('show',[alertBox],'Starting account creation operation...',{'bg':colorSuccess,'color':colorLessWhite});
             sendRequest('POST', '/create-accounts', null, formData)
             .then(response => {
                 showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 accOpForm.reset();
-                setTimeout(() => showHide('no-show',[alertBox]), 5000)
+                setTimeout(() => showHide('no-show',[alertBox]), 3000)
+            })
+            .then(()=>{
+                window.location.href = '/create-accounts'
             })
             .catch(error => {
                 showHide('show',[alertBox],error,{'bg':colorDanger,'color':colorLessWhite});
@@ -237,7 +246,8 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         swipeOpForm.addEventListener('submit',(e)=>{
             e.preventDefault();
             const formData = new FormData(swipeOpForm);
-    
+
+            showHide('show',[alertBox],'Starting swipe operation...',{'bg':colorSuccess,'color':colorLessWhite});
             sendRequest('POST', '/swipe', null, formData)
             .then(response => {
                 showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
@@ -257,7 +267,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         platformForm.addEventListener('submit',(e)=>{
             e.preventDefault();
             const formData = new FormData(platformForm);
-            
+            showHide('show',[alertBox],'Adding platform...',{'bg':colorSuccess,'color':colorLessWhite});
             sendRequest('POST', '/add-platform', null, formData)
             .then(response => {
                 showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
@@ -281,6 +291,8 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             const formData = new FormData(modelForm);
             
             const url = modelForm.classList.contains('edit-model')? '/models/edit-model':'models/add-model'
+            let text = modelForm.classList.contains('edit-model')? 'Adding model...':'Deleting model...'
+            showHide('show',[alertBox],'',{'bg':colorSuccess,'color':colorLessWhite});
             sendRequest('POST', url, null, formData).then(response => {
                 modelForm.reset()
                 showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
@@ -300,6 +312,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         const opModels = doc.querySelectorAll('.op-model')
         opModels.forEach(opModel =>{
             opModel.addEventListener('input',(e)=>{
+                showHide('show',[alertBox],'Setting model...',{'bg':colorSuccess,'color':colorLessWhite});
                 sendRequest('POST','/models/set-model', {'data':e.target.value}).then(response => {
                     showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                     setTimeout(() => {
@@ -321,11 +334,20 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         scheduleForm.addEventListener('submit',(e)=>{
             e.preventDefault();
             const formData = new FormData(scheduleForm);
-            let url
-            if  (scheduleForm.classList.contains('edit-schedule')){url = '/schedules/edit-schedule'}
-            else if (scheduleForm.classList.contains('finish-schedule')){url = '/schedules/finish-schedule'}
-            else {url = '/schedules/add-schedule'}
-
+            let url;
+            let text;
+            if  (scheduleForm.classList.contains('edit-schedule')){
+                url = '/schedules/edit-schedule';
+                text = 'Updating schedule';
+            }
+            else if (scheduleForm.classList.contains('finish-schedule')){
+                url = '/schedules/finish-schedule';
+                showHide('show',[alertBox],text,{'bg':colorSuccess,'color':colorLessWhite});
+            }
+            else {
+                url = '/schedules/add-schedule';
+                text = 'Adding schedule';
+            }
             sendRequest('POST', url, null, formData).then(response => {
                 scheduleForm.reset()
                 showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
@@ -392,7 +414,8 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             e.preventDefault();
             const formData = new FormData(signupForm);
             
-            sendRequest('POST', signup_url, null, formData).then(response => {
+            showHide('show',[alertBox],'Signing up user...',{'bg':colorSuccess,'color':colorLessWhite});
+            sendRequest('POST', `${signup_url}`, null, formData).then(response => {
                 const errors = doc.querySelector('.errors');
                 errors.innerHTML = '';
                 signupForm.reset();
@@ -400,7 +423,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 setTimeout(() => {
                     showHide('no-show',[alertBox]), 
-                    window.location.href = '/login';},
+                    window.location.href = '/admins';},
                 5000);
             })
             .catch(error => {
@@ -418,6 +441,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             e.preventDefault();
             const formData = new FormData(loginForm);
             
+            showHide('show',[alertBox],'Logging you in...',{'bg':colorSuccess,'color':colorLessWhite});
             sendRequest('POST', '/login', null, formData).then(response => {
                 const errors = doc.querySelector('.errors');
                 errors.innerHTML = '';
@@ -447,14 +471,12 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 const imgName = imgSrc.split('/');
                 const imageId = li.querySelector('img').id;
 
-                const url = window.location.href;
-                const parts = url.split('/');
-                let imageType = parts[parts.length - 1];
-                imageType = imageType.split('?')[0];
+                const type = li.getAttribute('data-image-category');
+
                 createModal(modal,'sModalImg',[
                     {'url':imgSrc,
                     'name':imgName[imgName.length - 1],
-                    'type':myprofile,
+                    'type':type,
                     'id':imageId
                     }]);
                 showHide('show',[overlay,modal]);

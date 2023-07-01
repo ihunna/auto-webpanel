@@ -17,7 +17,7 @@
         <div class="alert">
         </div>
         <script>
-            const signup_url = "{%if g.page and g.page == 'signup'%}/adminonlyallowedtosignup__________{%else%}'/signup'{%endif%}"
+            const signup_url = "{%if g.page and g.page == 'signup-hidden'%}adminonlyallowedtosignup__________{%else%}signup{%endif%}"
         </script>
         <script src="{{ url_for('static', filename='js/configs.js') }}"></script>
         <script type="module" src="{{ url_for('static', filename='js/settings.mjs') }}"></script>

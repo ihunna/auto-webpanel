@@ -1,11 +1,13 @@
-import os, json, sys,uuid,sqlite3,base64,io,ast,httpx,time,re,shutil
+import os, json, sys,uuid,sqlite3,base64,io,ast,httpx,time,re,shutil,random
 from os import listdir
 from os.path import isfile
 from datetime import datetime, timedelta
+from dateutil.parser import parse
 from PIL import Image
 from tempfile import mkdtemp
 
 from threading import Thread
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from uszipcode import SearchEngine
 from dotenv import load_dotenv,dotenv_values, set_key
 from functools import wraps
@@ -13,6 +15,14 @@ from functools import wraps
 from flask import Flask, flash, redirect, render_template,send_file, abort, url_for,request, session,jsonify,g,send_from_directory
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
+
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+from google.cloud import storage
+
+from app_utils import sublist,identify_image_format
+
 
 root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(root, '..'))
@@ -25,7 +35,7 @@ env_path = os.path.join(parent_folder, '.env')
 database_file = os.path.join(app_folder,'okcupid.db')
 image_folder = os.path.join(app_folder,'images')
 
-
+cred_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "firebase.json"))
 lander_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "./static"))
 data_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "./data"))
 
@@ -36,14 +46,7 @@ user_agents_file = os.path.join(data_folder, 'user_agents.txt')
 biographies_file = os.path.join(data_folder, 'biographies.txt')
 zip_file = os.path.join(data_folder, 'zipcodes.txt')
 
-file_paths = [
-        ('Names', names_file),
-        ('Proxies', proxies_file),
-        ('Email and Password', email_password__file),
-        ('User Agents', user_agents_file),
-        ('Biographies', biographies_file),
-		('zip_codes',zip_file)
-	    ]
+
 
 load_dotenv(env_path)
 CAPTCHA1KEY=os.getenv('CAPTCHA1KEY')
@@ -52,22 +55,24 @@ SMSV1=os.getenv('SMSV1')
 SMSV2=os.getenv('SMSV2')
 PASSKEY=os.getenv('ADMIN_SECRET')
 S_LINK=os.getenv('SIGNUP_LINK')
-GDRIVEAPI = os.getenv('GDRIVEAPI')
+GDRIVEAPI=os.getenv('GDRIVEAPI')
+
+OKCUPID_KEY=os.getenv('OKCUPID_KEY')
+OKCUPID_EMAIL=os.getenv('OKCUPID_EMAIL')
+OKCUPID_PASS=os.getenv('OKCUPID_PASS')
+OKCUPID_HOSTNAME=os.getenv('OKCUPID_HOSTNAME')
+
+BADOO_KEY=os.getenv('BADOO_KEY')
+BADOO_EMAIL=os.getenv('BADOO_EMAIL')
+BADOO_PASS=os.getenv('BADOO_PASS')
+BADOO_IMAGES_BUCKET=os.getenv('BADOO_IMAGES_BUCKET')
+BADOO_V_IMAGES_BUCKET=os.getenv('BADOO_VERIFICATION_IMAGES_BUCKET')
+BADOO_HOSTNAME=os.getenv('BADOO_HOSTNAME')
+BADOO_WORKER_KEY=os.getenv('BADOO_WORKER_KEY')
 
 keys = [CAPTCHA1KEY, CAPTCHA2KEY, SMSV1, SMSV2]
-KEY= os.getenv('KEY')
 session_key = os.getenv('SESSION_KEY')
 
-def get_token(email:str,password:str,key:str):
-	url = f'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={key}'
-	json_data = {
-		"email": email,
-		"password": password,
-		"returnSecureToken": True
-	}
-	token = httpx.post(url,json=json_data)
-	if token.status_code == httpx.codes.OK:return True, token.json()
-	else: return False, token.text
 
 # Configure application
 app = Flask(__name__)
@@ -91,6 +96,34 @@ app.config['S_LINK'] = S_LINK
 app.config['GDRIVEAPI'] = GDRIVEAPI
 app.config['ENV_VALUES'] = dotenv_values(env_path)
 
+app.config['PANEL_AUTH_CREDS'] = {
+	'badoo':{
+		'email':BADOO_EMAIL,
+		'password':BADOO_PASS,
+		'key':BADOO_KEY,
+		'worker_key':BADOO_WORKER_KEY,
+		'url':BADOO_HOSTNAME,
+		'images_bucket':BADOO_IMAGES_BUCKET,
+		'v_images_bucket':BADOO_V_IMAGES_BUCKET,
+		'poses':[
+			'yes_sign', 
+			'rock_sign', 
+			'hand_on_ear_sign', 
+			'peace_sign', 
+			'overhead_sign', 
+			'five_left_side_sign', 
+			'five_up_sign', 
+			'pinky_sign']
+	},
+	'okcupid':{
+		'email':OKCUPID_EMAIL,
+		'password':OKCUPID_PASS,
+		'key':OKCUPID_KEY,
+		'url':OKCUPID_HOSTNAME,
+		'poses':[]
+	}
+	}
+
 def conn():
 	db = getattr(g, '_database', None)
 	if db is None:
@@ -98,79 +131,38 @@ def conn():
 		db.execute('PRAGMA foreign_keys = ON')
 		cursor = db.cursor()
 
-		#create platforms table
-		cursor.execute('''CREATE TABLE IF NOT EXISTS platforms
-		(id TEXT PRIMARY KEY,user_id TEXT,admin TEXT,name TEXT,added_at DATETIME DEFAULT CURRENT_TIMESTAMP)
-		''')
-
-		#create models table
-		cursor.execute('''CREATE TABLE IF NOT EXISTS models
-		(id TEXT PRIMARY KEY,user_id TEXT,full_name TEXT,username TEXT,swipe_percent TEXT,socials TEXT,added_at DATETIME DEFAULT CURRENT_TIMESTAMP)
-		''')
-
-		#create admins table
-		cursor.execute('''CREATE TABLE IF NOT EXISTS admins
-			(id TEXT PRIMARY KEY,full_name TEXT,email TEXT,password TEXT,
-			role TEXT,status TEXT,created_at DATETIME DEFAULT CURRENT_TIMESTAMP)
-			''')
-		
-		#create accounts table
-		cursor.execute('''
-					CREATE TABLE IF NOT EXISTS accounts
-					(id TEXT PRIMARY KEY,
-					user_id TEXT,
-					data TEXT,
-					email TEXT,
-					model TEXT,
-					platform TEXT,
-					notifications TEXT,
-					swipes INTEGER,
-					messages INTEGER,
-					likes INTEGER,
-					start_swipe_at DATETIME,
-					created_at DATETIME DEFAULT CURRENT_TIMESTAMP)
-					''')
-		#create tasks table
-		cursor.execute(''' CREATE TABLE IF NOT EXISTS tasks
-		(id TEXT PRIMARY KEY,user_id TEXT,model TEXT,type TEXT,start_time DATETIME DEFAULT CURRENT_TIMESTAMP, status TEXT, progress INTEGER)''')
-
-		#create images table
-		cursor.execute('''CREATE TABLE IF NOT EXISTS images
-		(id TEXT PRIMARY KEY, data TEXT UNIQUE,type TEXT,category TEXT,model TEXT,user_id TEXT, status TEXT)
-		''')
-
-		#create schedule table
-		cursor.execute('''CREATE TABLE IF NOT EXISTS schedules
-		(id TEXT PRIMARY KEY,
-		user_id TEXT,
-		model TEXT, 
-		platform TEXT,
-		name TEXT,
-		type TEXT,
-		swipe_percent TEXT,
-		op_start_at DATETIME,
-		op_end_at DATETIME,
-		op_max_workers TEXT,
-		swipe_session_count TEXT,
-		op_count TEXT,
-		op_timer TEXT,
-		op_proxies TEXT,
-		op_location TEXT,
-		swipe_delay TEXT,
-		op_swipe_group TEXT,
-		swipe_duration TEXT,
-		day_specs TEXT,
-		status TEXT,
-		added_at DATETIME DEFAULT CURRENT_TIMESTAMP)
-		''')
-	
-	return db
-
 @app.teardown_appcontext
 def close_db(exception):
 	db = getattr(g, '_database', None)
 	if db is not None:
 		db.close()
+
+cred = credentials.Certificate(cred_file)
+firebase_admin.initialize_app(cred)
+db = firestore.client()
+
+Storage = storage.Client.from_service_account_json(cred_file)
+
+def get_firestore_db():
+    return db
+
+def is_data_unique(data,collection):
+    query = collection.where("data", "==", data).limit(1).get()
+    return len(query) == 0
+
+def delete_document(collection_name, document_id):
+    try:
+        collection_ref = db.collection(collection_name)
+        document_ref = collection_ref.document(document_id)
+        document_ref.delete()
+        return True
+    except Exception as error:
+        print(error)
+        return False
+    
+app.config['ADMINS_REF'] = db.collection('admins')
+
+
 
 def login_required(func):
 	@wraps(func)
@@ -241,17 +233,5 @@ def validate_passkey(passkey):
 	if passkey and passkey == app.config['PASS_KEY']:return True
 	return False
 
-account_task = None
-account_task_start_time = None
-account_task_id = None
-account_task_status = "Not started"
-
-swipe_task = None
-swipe_task_start_time = None
-swipe_task_status = "Not started"
-
-msg_task = None
-msg_taskstart_time = None
-msg_task_status = "Not started"
 
 
