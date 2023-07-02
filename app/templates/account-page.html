@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    {{account.user_data.data.me.displayname}}
+    {{account.name}}
 {% endblock %}
 {% block platform %}
     {% if platform != None%}
@@ -41,25 +41,25 @@
                     <div class="holder profile-holder scroll">
                         <div class="profile-card">
                             <div class="profile-image" class="item-header"  
-                            style="background: url('{{account.user_data.data.me.primaryImage.square800}}');
+                            style="background: url('{{account.profile_image}}');
                             background-repeat: no-repeat;
                             background-size: cover;
                             background-position:top">
                             </div>
                             <div class="profile-card-details">
                                 <h4>
-                                    {{account.user_data.data.me.displayname}}
+                                    {{account.name}}
                                 </h4>
                                 <div class="d-status">
                                     <p class="bg-success">Active</p>
-                                    {% if account.user_data.data.me.selfieVerifiedStatus == 'UNVERIFIED' %}
+                                    {% if account.status != 'VERIFIED' %}
                                         <p class="bg-danger">Not verified</p>
                                     {%else%}
                                     <p class="bg-success">Not verified</p>
                                     {%endif%}
 
                                     <p class="bg-warning">
-                                            {% if account.user_data.data.me.notificationCounts.likesMutual < 1%}
+                                            {% if account.matches < 1%}
                                             not matched
                                             {%else%}
                                             matched
@@ -68,16 +68,16 @@
                                 </div>
                                 <div class="d-items">
                                     <p>
-                                        {{account.user_data.data.me.notificationCounts.likesMutual}} matches
+                                        {{account.matches}} matches
                                     </p>
                                     <p>
-                                        {{account.user_data.data.me.notificationCounts.swipes}} liked
+                                        {{account.swipes}} liked
                                     </p>
                                     <p>
-                                        {{account.user_data.data.me.notificationCounts.likesIncoming}} likes
+                                        {{account.likes}} likes
                                     </p>
                                     <p>
-                                        {{account.user_data.data.me.notificationCounts.messages}} messages
+                                        {{account.messages}} messages
                                     </p>
                                 </div>
                             </div>
@@ -90,10 +90,10 @@
                                     <a href="" class="" id="updateButton">
                                         Update location
                                     </a>
-                                    <a  href="/account-page?account={{account.user_data.data.me.id}}&action=edit-account" class="edit-account">
+                                    <a  href="/account-page?account={{account.id}}&action=edit-account" class="edit-account">
                                         Edit account
                                     </a>
-                                    <a href="/account-page?account={{account.user_data.data.me.id}}" class="upload-account-image">
+                                    <a href="/account-page?account={{account.id}}" class="upload-account-image">
                                         Account details
                                     </a>
                                 </div>
@@ -176,15 +176,17 @@
                                 <ul class="p-details-items">
                                     <li>
                                         <i class="fa fa-envelope"></i>
-                                        {{account.user_data.data.me.emailAddress}}
+                                        {{account.email}}
                                     </li>
-                                    <li>
-                                        <i class="fas fa-phone-square"></i>
-                                        +1{{account.phone.number}}
-                                    </li>
+                                    {%if account.phone%}
+                                        <li>
+                                            <i class="fas fa-phone-square"></i>
+                                            +1{{account.phone.number}}
+                                        </li>
+                                    {%endif%}
                                     <li>
                                         <i class="fa fa-venus-mars"></i>
-                                        {%if account.user_data.data.me.binaryGenderLetter == 'f'%}
+                                        {%if account.gender|lower in ['f','female']%}
                                             Female
                                         {%else%}
                                             Male
@@ -197,9 +199,9 @@
                                 <div class="p-details-bio">
                                     <div class="p-details-bio-item">
                                         <i class="fa fa-map-marker"></i> &nbsp;
-                                        {{account.user_data.data.me.userLocation.publicName[0]}}, {{account.user_data.data.me.userLocation.publicName[1]}}
+                                        {{account.city}}, {{account.country_code}}
                                     </div>
-                                    <a href="/account-page?account={{account.user_data.data.me.id}}&action=map" class="">map</a>
+                                    <a href="/account-page?account={{account.id}}&action=map" class="">map</a>
                                 </div>
                                     
                                 <div class="p-details-bio">
@@ -210,7 +212,7 @@
                                 <ul class="p-details-images" id="profile-images">
                                     {%for image in images%}
                                     <li>
-                                        <img src="{{image.square800}}" class="clickable-image" accountId="{{id}}" alt="">
+                                        <img src="{{image.links}}" class="clickable-image" accountId="{{id}}" alt="">
                                     </li>
                                     {%endfor%}
                                     
@@ -227,7 +229,7 @@
                                     <a href="" class="upload-account-image">
                                         Add images
                                     </a>
-                                    <a href="/account-page?account={{account.user_data.data.me.id}}&action=edit-account" class="edit-account">
+                                    <a href="/account-page?account={{account.id}}&action=edit-account" class="edit-account">
                                         Edit Account
                                     </a>
                                     <a href="" class="view-matches m">

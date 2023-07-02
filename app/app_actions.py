@@ -129,7 +129,7 @@ def create_accounts(
 				flow = session.get(f"{URL}/{account_id}")
 				if flow.status_code  > 299:return False,flow.text
 				status = flow.json()['status']
-				time.sleep(10)
+				time.sleep(60)
 			account_details = flow.json()
 			print(f'\nAccount created for: {account + 1}')
 			return True,account_details

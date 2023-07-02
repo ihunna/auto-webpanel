@@ -10,7 +10,7 @@
             <div class="header">
                 <h1>{{ g.model.full_name }} <span class="elt">> {{type}} images</span></h1>
                 <div class="action-links scroll">
-                    <a href="./verification" id="" class="eleveted-a types {%if type == 'verification'%}active{%endif%}">
+                    <a href="./verification?pose=yes_sign" id="" class="eleveted-a types {%if type == 'verification'%}active{%endif%}">
                         verification images
                     </a>
                     <a href="./profile" id="" class="eleveted-a types {%if type == 'profile'%}active{%endif%}">
@@ -26,28 +26,46 @@
                     <div class="holder image-holder scroll">
                         <ul class="images" id="images">
                             {%for img in images%}
-                                <li data-image-category="{{img.cat}}">
-                                    <img src="{{img.img}}" alt="" id="{{img.id}}_{{img.cat}}">
+                                <li data-image-type="{{img.type}}" data-action="{{action}}" data-image-category="{{img.cat}}">
+                                    <img src="{{img.img}}" alt="" id="{{img.id}}">
                                 </li>
                             {%endfor%}
                         </ul>
                     </div>
-                {%elif not action and not images and active_pose%}
-                    <div class="holder image-holder scroll">
-                        <div class="no-image">
-                            <div class="file-upload upload-image">
-                                <input type="file" name="file" disabled>
-                                <label for="file">
-                                <i class="far fa-folder-open"></i>
-                                Choose a file
-                                </label>
+                {%elif not action and not images%}
+                    {%if type == 'verification' and active_pose%}
+                        <div class="holder image-holder scroll">
+                            <div class="no-image">
+                                <div class="file-upload upload-image">
+                                    <input type="file" name="file" disabled>
+                                    <label for="file">
+                                    <i class="far fa-folder-open"></i>
+                                    Choose a file
+                                    </label>
+                                </div>
+                                <p>OR</p>
+                                <a href="/images/{{type}}?pose={{active_pose}}&action=add-drive" class="add-drive">
+                                    Add from GoogleDrive
+                                </a>
                             </div>
-                            <p>OR</p>
-                            <a href="/images/{{type}}?action=add-drive" class="add-drive">
-                                Add from GoogleDrive
-                            </a>
                         </div>
-                    </div>
+                    {%elif type == 'profile'%}
+                            <div class="holder image-holder scroll">
+                                <div class="no-image">
+                                    <div class="file-upload upload-image">
+                                        <input type="file" name="file" disabled>
+                                        <label for="file">
+                                        <i class="far fa-folder-open"></i>
+                                        Choose a file
+                                        </label>
+                                    </div>
+                                    <p>OR</p>
+                                    <a href="/images/{{type}}?action=add-drive" class="add-drive">
+                                        Add from GoogleDrive
+                                    </a>
+                                </div>
+                            </div>
+                    {%endif%}
                 {%endif%}
                 {%if action and action == 'add-drive'%}
                     <div class="holder scroll form-holder">
@@ -65,7 +83,9 @@
                             <input type="hidden" value="" id="data" name="data">
                             <input type="hidden" value="{{drive_key}}" id="drive_key" name="drive_key">
                             <input type="hidden" value="{{type}}" id="image-type"    name="image-type">
-
+                            {%if type == 'verification' and active_pose%}
+                                <input type="hidden" value="{{active_pose}}" name="pose">
+                            {%endif%}
                             <input type="button" id="gdrive-btn" value="Get images"> 
                             <div class="gdrive-display no-show" id="gdrive-display">
                             </div>

@@ -304,15 +304,16 @@ def models():
 	action = request.args.get('action')
 
 	platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
+	models_ref = platforms_ref.document(platform_id).collection('models')
 
 	if not model_id and not action:
-		models = platforms_ref.document(platform_id).collection('models').order_by('added_at', direction='DESCENDING').get()
+		models = models_ref.order_by('added_at', direction='DESCENDING').get()
 
 		models_list = [{
 			'id': model.id,
 			'full_name': str(model.get('full_name')),
 			'added_at':model.get('added_at').strftime("%Y-%m-%d %H:%M:%S"),
-			'socials': model.get('socials')
+			'socials': json.loads(model.get('socials'))
 		} for model in models]
 
 		for model in models_list:
@@ -329,16 +330,64 @@ def models():
 
 		if model_id in model_ids:
 			if action == 'set-model':
+				schedules_ref = models_ref.document(model_id).collection('schedules').order_by('added_at', direction='DESCENDING').get()
+				schedules = []
+				model_schedules = {}
+				for schedule in schedules_ref:
+					schedule_data = schedule.to_dict()
+					op_timer = schedule_data.get('op_timer','{"count":"0","time":"0 hour"}')
+					op_timer = json.loads(op_timer)
+					schedule = {
+						'id': schedule.id,
+						'model': session['MODELS'][schedule_data['model']]['full_name'],
+						'platform': session['PLATFORMS'][schedule_data['platform']]['name'],
+						'name': str(schedule_data['name']),
+						'type': schedule_data['type'],
+						'swipe_percent': schedule_data.get('swipe_percent'),
+						'op_start_at': schedule_data['op_start_at'],
+						'op_end_at': schedule_data['op_end_at'],
+						'op_max_workers': schedule_data.get('op_max_workers'),
+						'swipe_session_count': schedule_data.get('swipe_session_count'),
+						'op_count': schedule_data.get('op_count'),
+						'op_timer': op_timer,
+						'op_proxies': schedule_data.get('op_proxies'),
+						'op_location': schedule_data.get('op_location'),
+						'swipe_delay': schedule_data.get('swipe_delay'),
+						'op_swipe_group': schedule_data.get('op_swipe_group'),
+						'swipe_duration': schedule_data.get('swipe_duration'),
+						'day_specs': schedule_data.get('day_specs'),
+						'status': schedule_data.get('status'),
+						'added_at': schedule_data.get('added_at')
+					}
+					schedules.append(schedule)
+					model_schedules.update({schedule['id']: schedule})
+
+				configs_ref = models_ref.document(model_id).collection('configs')
+				configs_snap = configs_ref.get()
+				model_configs = []
+				for config in configs_snap:
+					model_configs.append(config.to_dict())
+				
+				# model_tasks = {
+				# 'account_task':{'status':'','running':False,'id':str(uuid.uuid4())},
+				# 'swiping_task':{'status':'','running':False,'id':str(uuid.uuid4())},
+				# 'msg_task':{'status':'','running':False,'id':str(uuid.uuid4())}
+				# }
+				
 				session['MODEL'] = session['MODELS'][model_id]
+				session['MODEL']['SCHEDULES'] = model_schedules
+				session['MODEL']['CONFIGS'] = model_configs
+				# session['MODEL']['TASKS'] = model_tasks
+				g.model = session['MODEL']
 				current_url = session.get('CURRENT_URL')
 				url = str(current_url) if current_url is not None else '/models'
 				return redirect(url)
 			
 			elif action == 'edit-model':
 				model = session['MODELS'][model_id]
-				images_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('images')
-				accounts_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('accounts')
-				tasks_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('tasks')
+				images_ref = models_ref.document(model_id).collection('images')
+				accounts_ref = models_ref.document(model_id).collection('accounts')
+				tasks_ref = models_ref.document(model_id).collection('tasks')
 
 				model_images = len(images_ref.get())
 				model_accounts = len(accounts_ref.get())
@@ -368,22 +417,23 @@ def models():
 def model(action):
 	try:
 		platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
-		platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
+		platform_id = session['PLATFORM']['id']
+		models_ref = platforms_ref.document(platform_id).collection('models')
 
 		if action == 'add-model':
 			full_name = request.form.get('model-fullname')
 			username = request.form.get('model-uname')
 			swipe_percent = request.form.get('model-swipe-percent')
-			model_socials = request.form.get('model-socials')
+			social_platforms = request.form.getlist('platform')
+			social_handles = request.form.getlist('handles')
 
-			model_socials = [
-			    {
-			        "platform": social.split(':')[0],
-			        "handle": social.split(':')[1]
-			    } for social in model_socials.split(',') if social.strip()]
+			model_socials = []
+			if check_values([social_platforms,social_handles]):
+				model_socials = [{"platform": platform, "handles": handle.split('\n')} 
+					for platform,handle in zip(social_platforms, social_handles)]
+
 
 			model_id = str(uuid.uuid4())
-			models_ref = platforms_ref.document(platform_id).collection('models')
 
 			models_ref.document(model_id).set({
 				'id': model_id,
@@ -392,12 +442,25 @@ def model(action):
 				'added_at':firestore.SERVER_TIMESTAMP
 			})
 
+			model_configs = [
+			{'title':'Names','content':[]},
+			{'title':'Proxies','content':[]},
+			{'title':'Email and Password','content':[]},
+			{'title':'User Agents','content':[]},
+			{'title':'Biographies','content':[]},
+			{'title':'zip_codes','content':[]},
+			{'title':'Cities','content':[]},]
+			
+			for config in model_configs:
+				models_ref.document(model_id).collection('configs').document(config['title']).set(config)
+
 			model = models_ref.document(model_id).get().to_dict()
+			model_socials = json.loads(model.get('socials'))
 			session['MODELS'].update({model_id: {
 				'id': model.get('model_id'),
 				'full_name':model.get('full_name'),
 				'added_at': model.get('added_at').strftime("%Y-%m-%d %H:%M:%S"),
-				'socials': model.get('socials')
+				'socials': model_socials
 			}})
 
 			return jsonify({'msg': 'model added successfully'}), 200
@@ -421,7 +484,56 @@ def model(action):
 				'socials': json.dumps(model_socials)
 			})
 
-			session['MODEL'] = model_ref.get().to_dict()
+			schedules_ref = models_ref.document(model_id).collection('schedules').order_by('added_at', direction='DESCENDING').get()
+			schedules = []
+			model_schedules = {}
+			for schedule in schedules_ref:
+				schedule_data = schedule.to_dict()
+				op_timer = schedule_data.get('op_timer','{"count":"0","time":"0 hour"}')
+				op_timer = json.loads(op_timer)
+				schedule = {
+					'id': schedule.id,
+					'model': session['MODELS'][schedule_data['model']]['full_name'],
+					'platform': session['PLATFORMS'][schedule_data['platform']]['name'],
+					'name': str(schedule_data['name']),
+					'type': schedule_data['type'],
+					'swipe_percent': schedule_data.get('swipe_percent'),
+					'op_start_at': schedule_data['op_start_at'],
+					'op_end_at': schedule_data['op_end_at'],
+					'op_max_workers': schedule_data.get('op_max_workers'),
+					'swipe_session_count': schedule_data.get('swipe_session_count'),
+					'op_count': schedule_data.get('op_count'),
+					'op_timer': op_timer,
+					'op_proxies': schedule_data.get('op_proxies'),
+					'op_location': schedule_data.get('op_location'),
+					'swipe_delay': schedule_data.get('swipe_delay'),
+					'op_swipe_group': schedule_data.get('op_swipe_group'),
+					'swipe_duration': schedule_data.get('swipe_duration'),
+					'day_specs': schedule_data.get('day_specs'),
+					'status': schedule_data.get('status'),
+					'added_at': schedule_data.get('added_at')
+				}
+				schedules.append(schedule)
+				model_schedules.update({schedule['id']: schedule})
+			model_swipe_schedules = [{'id':s['id'],'name':s['name']} for s in schedules if s['type'] in ['swipe','swiping']]
+
+			configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
+			configs_snap = configs_ref.get()
+			model_configs = []
+			for config in configs_snap:
+				model_configs.append(config.to_dict())
+			
+			model = model_ref.get().to_dict()
+			model_socials = json.loads(model.get('socials'))
+			session['MODEL'] = {
+				'id': model.get('model_id'),
+				'full_name':model.get('full_name'),
+				'added_at': model.get('added_at').strftime("%Y-%m-%d %H:%M:%S"),
+				'socials': model_socials
+			}
+			session['MODEL']['SCHEDULES'] = model_schedules
+			session['MODEL']['CONFIGS'] = model_configs
+			g.model = session['MODEL']
 
 			return jsonify({'msg': 'model updated successfully'}), 200
 		
@@ -430,9 +542,50 @@ def model(action):
 			model_ids = [u['id'] for u in list(session['MODELS'].values())]
 			if model_id in model_ids:
 				if action == 'set-model':
+					schedules_ref = models_ref.document(model_id).collection('schedules').order_by('added_at', direction='DESCENDING').get()
+					schedules = []
+					model_schedules = {}
+					for schedule in schedules_ref:
+						schedule_data = schedule.to_dict()
+						op_timer = schedule_data.get('op_timer','{"count":"0","time":"0 hour"}')
+						op_timer = json.loads(op_timer)
+						schedule = {
+							'id': schedule.id,
+							'model': session['MODELS'][schedule_data['model']]['full_name'],
+							'platform': session['PLATFORMS'][schedule_data['platform']]['name'],
+							'name': str(schedule_data['name']),
+							'type': schedule_data['type'],
+							'swipe_percent': schedule_data.get('swipe_percent'),
+							'op_start_at': schedule_data['op_start_at'],
+							'op_end_at': schedule_data['op_end_at'],
+							'op_max_workers': schedule_data.get('op_max_workers'),
+							'swipe_session_count': schedule_data.get('swipe_session_count'),
+							'op_count': schedule_data.get('op_count'),
+							'op_timer': op_timer,
+							'op_proxies': schedule_data.get('op_proxies'),
+							'op_location': schedule_data.get('op_location'),
+							'swipe_delay': schedule_data.get('swipe_delay'),
+							'op_swipe_group': schedule_data.get('op_swipe_group'),
+							'swipe_duration': schedule_data.get('swipe_duration'),
+							'day_specs': schedule_data.get('day_specs'),
+							'status': schedule_data.get('status'),
+							'added_at': schedule_data.get('added_at')
+						}
+						schedules.append(schedule)
+						model_schedules.update({schedule['id']: schedule})
+
+					configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
+					configs_snap = configs_ref.get()
+					model_configs = {}
+					for config in configs_snap:
+						model_configs.update({config.to_dict()['title']:config.to_dict()})
+					
+					
 					session['MODEL'] = session['MODELS'][model_id]
+					session['MODEL']['SCHEDULES'] = model_schedules
+					session['MODEL']['CONFIGS'] = model_configs
 					g.model = session['MODEL']
-					return jsonify({'msg': 'model set successfully', 'model': session['MODEL']}), 200
+					return jsonify({'msg': 'model set successfully', 'model': session['MODEL'],'model_swipe_schedules':model_swipe_schedules}), 200
 	
 	except Exception as error:
 		print(error)
@@ -619,21 +772,7 @@ def login():
 
 			session['ADMIN'] = admin
 			session['PLATFORMS'] = {}
-			session['SCHEDULES'] = {}
-			session['MODELS'] = {}
-			session['CONFIGS'] = [
-			{'title':'Names','content':[]},
-			{'title':'Proxies','content':[]},
-			{'title':'Email and Password','content':[]},
-			{'title':'User Agents','content':[]},
-			{'title':'Biographies','content':[]},
-			{'title':'zip_codes','content':[]},
-			{'title':'Cities','content':[]},]
-			session['TASKS'] = {
-				'account_task':{'status':'','running':False,'id':None},
-				'swiping_task':{'status':'','running':False,'id':None},
-				'msg_task':{'status':'','running':False,'id':None}
-			}
+			session['MODELS'] = {} 
 			
 
 			return jsonify({'msg': 'login successful'}), 200
@@ -673,8 +812,8 @@ def schedules():
 	platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
 	schedules_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('schedules')
 
-	account_schedules = [s for s in list(session.get('SCHEDULES').values()) if s['type'] == 'account']
-	swipe_schedules = [s for s in list(session.get('SCHEDULES').values()) if s['type'] == 'swipe' or s['type'] == 'swiping']
+	account_schedules = [s for s in list(session['MODEL'].get('SCHEDULES').values()) if s['type'] == 'account']
+	swipe_schedules = [s for s in list(session['MODEL'].get('SCHEDULES').values()) if s['type'] == 'swipe' or s['type'] == 'swiping']
 
 	if not action and not s_id:
 		schedules_ref = schedules_ref.order_by('added_at', direction='DESCENDING').get()
@@ -706,7 +845,7 @@ def schedules():
 				'added_at': schedule_data.get('added_at')
 			}
 			schedules.append(schedule)
-			session['SCHEDULES'].update({schedule['id']: schedule})
+			session['MODEL']['SCHEDULES'].update({schedule['id']: schedule})
 
 		if len(schedules) > 0:
 			return render_template('schedules.html', schedules=schedules)
@@ -717,13 +856,13 @@ def schedules():
 
 	elif action == 'edit-schedule' and s_id:
 		return render_template('schedules.html', action='edit-schedule',
-							   schedule=session['SCHEDULES'][s_id], swipe_schedules=swipe_schedules,
+							   schedule=session['MODEL']['SCHEDULES'][s_id], swipe_schedules=swipe_schedules,
 							   models=list(session['MODELS'].values()), action_type=action_type, next=next)
 
 	elif action == 'delete-schedule':
 		schedules_ref.document(s_id).delete()
 
-		del session['SCHEDULES'][s_id]
+		del session['MODEL']['SCHEDULES'][s_id]
 		url = f'/{next}' if next else request.path
 		return redirect(url)
 
@@ -940,36 +1079,38 @@ def accounts():
 @check_model
 def account_page():
 	g.page = 'accounts'
-	id = request.args.get('account')
+	account_id = request.args.get('account')
 	action = request.args.get('action')
 	images = []
 	matches = {}
 	
-	if id:
+	if account_id:
 		platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 		platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
 		accounts_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('accounts')
-		
-		account_snapshot = accounts_ref.document(id).get()
-		
-		if account_snapshot.exists:
-			account_data = account_snapshot.to_dict()
-			data = json.loads(account_data.get('data'))
-			print(data)
-			if len(list(data.values())) > 0:
-				matches = data['user_data']['data']['me']['stack']
-				
-				if 'photos' in data['user_data']['data']['me']:
-					for image in data['user_data']['data']['me']['photos']:
-						if len(images) >= 3:
-							break
-						images.append(image)
-				else:
-					images.append(data['user_data']['data']['me']['primaryImage'])
+		panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
 
-				account_data['matches']=matches
-				account_data['images']=images
-				
+		panel_email = panel_creds['email']
+		panel_pass = panel_creds['password']
+		panel_key = panel_creds['key']
+
+		TOKEN = get_token(panel_email, panel_pass, panel_key)
+		if not TOKEN[0]:
+			return jsonify({'msg': TOKEN[1]}), 403
+		TOKEN = TOKEN[1]['idToken']
+		
+		account_snapshot = get_profile(panel_creds['url'],account_id,TOKEN)
+		if account_snapshot[0]:
+			account_data = account_snapshot[1]
+			print(account_data)
+
+			account_data['matches']=0
+			account_data['images']=0,
+			account_data['swipes']=0
+			account_data['likes']=0
+			account_data['messages']=0
+			account_data['profile_image'] = 'https://storage.googleapis.com/badoo-api-models-verification-images/6d3b0e1b-af0c-43c4-94c4-a2ef505fff9d/1f048933-0e29-4f75-b472-16d69e515639/911f50df-70a6-44b2-9a9f-ffef5bf9c89e/4739614b-13dc-4f12-9dda-fbe57cdf8b8c.jpeg'
+			
 			if action == 'map':
 				return render_template('account-page.html', account=account_data, action=action)
 			elif action == 'edit-account':
@@ -1014,27 +1155,28 @@ def show_create_accounts():
 	accounts_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('accounts')
 	tasks_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('tasks')
 
-	task_status = session['TASKS']['account_task']
-	task_doc = tasks_ref.document(task_status['id']).get()
+	task_status = session['MODEL'].get('TASKS')
+	if check_values([task_status]):
+		task_doc = tasks_ref.document(task_status['account_task']['id']).get()
+		if task_doc.exists:
+			task_data = task_doc.to_dict()
+			task_status = {
+				'type': task_data['type'],
+				'start_time': task_data['start_time'],
+				'status': task_data['status'],
+				'running':task_data['running'],
+				'progress':task_data['progress']
+			}
 
-	if task_doc.exists:
-		task_data = task_doc.to_dict()
-		task_status = {
-			'type': task_data['type'],
-			'start_time': task_data['start_time'],
-			'status': task_data['status'],
-			'running':task_data['running'],
-			'progress':task_data['progress']
-		}
-
-		session['TASKS']['account_task']['status'] =task_data['status']
-		session['TASKS']['account_task']['running'] =task_data['running']
-		session['TASKS']['account_task']['progress'] =task_data['progress']
-
-	account_schedules = [s for s in list(session['SCHEDULES'].values()) if s['type'] == 'account']
-	swipe_schedules = [s for s in list(session['SCHEDULES'].values()) if s['type'] == 'swipe' or s['type'] == 'swiping']
+			session['MODEL']['TASKS']['account_task']['status'] =task_data['status']
+			session['MODEL']['TASKS']['account_task']['running'] =task_data['running']
+			session['MODEL']['TASKS']['account_task']['progress'] =task_data['progress']
+		else:task_status = {'status':'','running':False,'id':str(uuid.uuid4())}
+	else:task_status = {'status':'','running':False,'id':str(uuid.uuid4())}
+	account_schedules = [s for s in list(session['MODEL']['SCHEDULES'].values()) if s['type'] == 'account']
+	swipe_schedules = [s for s in list(session['MODEL']['SCHEDULES'].values()) if s['type'] == 'swipe' or s['type'] == 'swiping']
 	models = [s for s in list(session['MODELS'].values())]
-
+	print(task_status)
 	return render_template('create-accounts.html',
 						   schedules=account_schedules,
 						   swipe_schedules=swipe_schedules,
@@ -1072,7 +1214,7 @@ def create_accounts():
 		TOKEN = TOKEN[1]['idToken']
 
 		op_count = request.form.get('op-count',None)
-		op_count = int(op_count)
+
 
 		bio = request.form.get('bio',None)
 
@@ -1084,32 +1226,35 @@ def create_accounts():
 
 		age_range_start = request.form.get('op-age-range-start')
 		age_range_end = request.form.get('op-age-range-end')
-		age_range = f'{age_range_start}-{age_range_end}'
 
 		gender = request.form.get('op-gender')
+		if not check_values([op_count,age_range_start,age_range_end,gender]):raise ValueError(f'Empty values, fill in all inputs correctly')
+		
+		op_count = int(op_count)
+		age_range = f'{age_range_start}-{age_range_end}'
 		swipe_schedule = request.form.get('op-swipe-group',None)
 		op_location = request.form.get('op-location',None)
 
 
 		img_cursor = images_ref.get()
 		images = [img.to_dict()['image'] for img in img_cursor if img.to_dict()['type'] == 'profile']
+		
+		if not check_values([images]):raise ValueError(f'No image for selected model')
+
 		v_images = [{'pose':img.to_dict()['pose'],'link':img.to_dict()['image']} for img in img_cursor if img.to_dict()['type'] == 'verification']
 		verification_images = {}
 		for pose in poses:
 			verification_images[pose] = [image['link'] for image in v_images if image['pose'] == pose]
-		
-		configs = {}
+			if not check_values([verification_images[pose]]):raise ValueError(f'No {pose} image for selected model')
+
 		configs_snap = configs_ref.get()
+		configs = {}
 		for config in configs_snap:
-			for c in session['CONFIGS']:
-				if c['title'] == config.to_dict()['title']:
-					if isinstance(config.to_dict()['content'], int):print(config.to_dict()['content'])
-					if not isinstance(config.to_dict()['content'], int):
-						c['content'] = config.to_dict()['content'].split('\n')
-						configs[c['title']] = config.to_dict()['content'].split('\n')
-					else:
-						c['content'] = []
-						configs[c['title']] = []
+			config = config.to_dict()
+			if not check_values([config['content']]) and config['title'] != 'zip_codes':
+				raise ValueError(f'{config["title"]} is empty for selected model')
+			config = {config['title']:config['content'].split('\n')} if config['title'] != 'zip_codes' else {config['title']:[]}
+			configs.update(config)
 
 		names = configs['Names']
 		bios = configs['Biographies']
@@ -1118,23 +1263,26 @@ def create_accounts():
 		cities = configs['Cities']
 		zip_codes = configs['zip_codes']
 		creds = configs['Email and Password']
-		handles = json.loads(session['MODEL']['socials'])
-		handles = [handle['handle'].replace('@','') for handle in handles]
+		handles = session['MODEL']['socials']
+		handles = [h.replace('\r','') for handle in handles 
+	     if handle['platform'].lower() in ['instagram','ig','insta'] 
+		 for h in handle['handles']]
 		
-		swipe_configs = {}
-		schedules = [s for s in list(session.get('SCHEDULES').values()) if s['type'] in ['swiping','swipe']]
-		if swipe_schedule is not None and len(schedules) > 0:
-			swipe_configs = [s for s in schedules if s['id'] == swipe_schedule][0]
+		if check_values([session['MODEL'].get('SCHEDULES')]):
+			schedules = [s for s in list(session['MODEL'].get('SCHEDULES').values()) if s['type'] in ['swiping','swipe']]
+			if not check_values([swipe_schedule,schedules]):raise ValueError('No swiping schedule for selected model')
+			if swipe_schedule is not None and len(schedules) > 0:
+				swipe_configs = [s for s in schedules if s['id'] == swipe_schedule][0]
 
-			swipe_delay_start = swipe_configs['swipe_delay'].split('-')[0]
-			swipe_delay_end = swipe_configs['swipe_delay'].split('-')[1]
-			swipe_configs['swipe_delay'] = random.randint(int(swipe_delay_start),int(swipe_delay_end))
-			
-			swipe_duration_start = swipe_configs['swipe_duration'].split('-')[0]
-			swipe_duration_end = swipe_configs['swipe_duration'].split('-')[1]
-			swipe_configs['swipe_duration'] = random.randint(int(swipe_duration_start),int(swipe_duration_end))
-			swipe_configs['first_swipe'] = True
-
+				swipe_delay_start = swipe_configs['swipe_delay'].split('-')[0]
+				swipe_delay_end = swipe_configs['swipe_delay'].split('-')[1]
+				swipe_configs['swipe_delay'] = random.randint(int(swipe_delay_start),int(swipe_delay_end))
+				
+				swipe_duration_start = swipe_configs['swipe_duration'].split('-')[0]
+				swipe_duration_end = swipe_configs['swipe_duration'].split('-')[1]
+				swipe_configs['swipe_duration'] = random.randint(int(swipe_duration_start),int(swipe_duration_end))
+				swipe_configs['first_swipe'] = True
+		print()
 		task_id = str(uuid.uuid4())
 		task_status = 'running'
 		task_progress = 0
@@ -1174,13 +1322,21 @@ def create_accounts():
 				'progress': task_progress,
 				'running':True
 			})
-			session['TASKS']['account_task']['id']  = task_id
-			session['TASKS']['account_task']['status'] = task_status
-			session['TASKS']['account_task']['running'] = True
-			session['TASKS']['account_task']['progress'] = task_progress
+
+			session['MODEL']['TASKS'] = {
+				'account_task':{
+					'id':task_id,
+					'task_status':task_status,
+					'running':True,
+					'task_progress':task_progress
+				}
+			}
 			return jsonify({'msg': 'Task started, please wait while it finishes'}), 200
 		else:
 			return jsonify({'msg': 'No tasks running'}), 200
+	except ValueError as v_error:
+		print(v_error)
+		return jsonify({'msg': f'{v_error}'}), 400
 	except Exception as error:
 		print(error)
 		return jsonify({'msg': 'Error starting task'}), 500
@@ -1209,7 +1365,7 @@ def swipe_page():
 		schedule['model'] = session['MODELS'][schedule['model']]['full_name']
 		schedule['platform'] = session['PLATFORMS'][schedule['platform']]['name']
 		schedules.append(schedule)
-		session['SCHEDULES'][schedule['id']] = schedule
+		session['MODEL']['SCHEDULES'][schedule['id']] = schedule
 	
 	if len(schedules) < 1:
 		return redirect(url_for('schedules', action='add-schedule', type='swiping', next='swipe'))
@@ -1333,11 +1489,12 @@ def get_configuration():
 	configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
 	
 	configs_snap = configs_ref.get()
+	model_configs = []
 	for config in configs_snap:
-		for c in session['CONFIGS']:
-			if c['title'] == config.to_dict()['title']:
-				c['content'] = config.to_dict()['content']
-	return render_template('accounts-config.html',configs=session['CONFIGS'])
+		model_configs.append(config.to_dict())
+	session['MODEL']['CONFIGS'] = model_configs
+	print(session['MODEL']['CONFIGS'])
+	return render_template('accounts-config.html',configs=session['MODEL']['CONFIGS'])
 
 @app.route('/account-configs',methods=['POST'])
 @login_required
@@ -1352,10 +1509,17 @@ def update_file_content():
 		
 		data = request.get_json()
 		title = data['title']
-		new_content = data['content'] if data['content'] != '' else None
+		new_content = data['content'] if data['content'] and len(data['content']) > 0 else []
 
 		configs = {'title':title,'content':str(new_content)}
 		configs_ref.document(title).set(configs)
+
+		configs_snap = configs_ref.get()
+		model_configs = {}
+		for config in configs_snap:
+			model_configs.update({config.to_dict()['title']:config.to_dict()})
+		session['MODEL']['CONFIGS'] = model_configs
+
 		return jsonify({'message': 'File content updated successfully.'}), 200
 	except Exception as error:
 		print(error)
@@ -1378,6 +1542,7 @@ def upload_image(type, category):
 		
 		if category == 'upload':
 			image_list = request.get_json()['data']
+			if not check_values(image_list):raise ValueError('No image uploaded, supply at least one image file')
 
 			def _upload(bucket, filename, image,image_type,image_id,image_pose,_bucket_name):
 				blob = bucket.blob(filename)
@@ -1411,20 +1576,23 @@ def upload_image(type, category):
 		elif category == 'gdrive':
 			image_list = request.form.get('data')
 			image_list = image_list.split(',')
+			if not check_values(image_list):raise ValueError('No image uploaded, supply at least one image file')
 			type = request.form.get('image-type')
+			image_pose = request.form.get('pose')
 
 			def _upload(image,image_pose):
-				images_ref.document(image_id).set({'image':image,'type':'profile','category':category,'pose':image_pose})
+				image_data = {'image':image,'type':'profile','category':category}
+				if type=='verification':
+					image_data['pose']:image_pose
+
+				images_ref.document(image_id).set(image_data)
 				uploaded.append(image)
 
+			threads = []
 			sub_list = sublist(image_list, 20)
 			for chunk in sub_list:
 				for image in chunk:
 					image_id = str(uuid.uuid4())
-					image_byte = base64.b64decode(image['url'].split(',')[1])
-					xtension = image['name'].split('.')
-					image_type = f'image/{xtension[-1]}'
-					image_pose = image['pose']
 					thread = Thread(target=_upload, args=(image,image_pose))
 					threads.append(thread)
 					thread.start()
@@ -1433,24 +1601,13 @@ def upload_image(type, category):
 
 		
 			msg = f'{len(uploaded)} images uploaded successfully'
-		
+		if len(uploaded) < 1:raise ValueError('No image uploaded, could be network error, please try again')
 		return jsonify({'msg': msg, 'data':uploaded}), 200
-	
+	except ValueError as v_error:
+		return jsonify({'msg':v_error})
 	except Exception as error:
 		print(error)
 		return jsonify({'msg': 'Image upload unsuccessful'}), 500
-
-
-@app.route(f'/files/<type>/<folder>/<subfolder>/<types>/<file>', methods=['GET'])
-def serve_files(type,folder,subfolder,types,file): 
-	try:
-		if isfile(os.path.abspath(f'{folder}/{subfolder}/{types}/{file}')):
-			filename  = os.path.abspath(f'{folder}/{subfolder}/{types}/{file}')
-		if type == 'image':
-			return send_file(filename, mimetype='image/jpeg')
-		return send_file(filename)
-	except:
-		return abort(404)
 
 @app.route('/images', methods=['GET'])
 @login_required
@@ -1458,11 +1615,6 @@ def serve_files(type,folder,subfolder,types,file):
 @check_platform
 @check_model
 def redirect_images():
-	# db = conn()
-	# cursor = db.cursor()
-
-	# cursor.execute('DELETE FROM images')
-	# db.commit()
 	return redirect('images/profile')
 
 @app.route('/images/<type>', methods=['GET'])
@@ -1499,7 +1651,7 @@ def images(type):
 
 		query = total_query.limit(limit).offset(offset).get()
 		
-		images = [{'img': doc.to_dict()['image'], 'id': doc.id, 'cat': doc.to_dict()['type']} for doc in query]
+		images = [{'img': doc.to_dict()['image'], 'id': doc.id, 'type': doc.to_dict()['type'],'cat':doc.to_dict()['category']} for doc in query]
 		sum = min((offset) + len(images), total)
 
 		return render_template('images.html', images=images, page=page, limit=limit, total=total, type=type,active_pose=pose, sum=sum)
@@ -1508,47 +1660,59 @@ def images(type):
 		print(error)
 		return render_template('images.html')
 
-@app.route('/delete/<category>', methods=['POST'])
+@app.route('/delete-image', methods=['POST'])
 @login_required
 @blocked
 @check_platform
 @check_model
-def delete_item(category):
+def delete_item():
 	try:
-		db = get_firestore_db()
-		payload = request.get_json()['data']
+		platform_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
+		platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
+		platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
+		images_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('images')
 		
-		for data in payload:
-			if category == 'image':
-				image_name = data['name']
-				type = data['type']
-				image_url = data['url']
+		image_list = request.get_json()['data']
+		if not check_values:raise ValueError('No image uploaded, supply at least one image file')
+		sub_list = sublist(image_list, 20)
+		threads = []
+		_bucket_name = platform_creds['images_bucket'] if type != 'verification' else platform_creds['v_images_bucket']
+		bucket = Storage.bucket(_bucket_name)
+		def _delete(image):
+			print(image)
+			image_id = image['id']
+			image_upload_type = image['upload_type']
+			images_ref.document(image_id).delete()
+			if image_upload_type == 'upload':
+				image_name = image['name']
+				image_blob = bucket.blob(image_name)
+				image_blob.delete()
+		for chunk in sub_list:
+			for image in chunk:
+				thread = Thread(target=_delete, args=(image,))
+				threads.append(thread)
+				thread.start()
+			for thread in threads:
+				thread.join()
 
-				image_id = data['id'].split('_')[0]
-				sub_cat = data['id'].split('_')[1]
-
-				model = session.get('MODEL')
-				admin = session.get('ADMIN')
-
-				images_ref = db.collection('images')
-				query = images_ref.where('id', '==', image_id).where(field_path='model', op_string='==', value=model['id']).where(field_path='user_id', op_string='==', value=admin['id']).where(field_path='type', op_string='==', value=type).get()
-				
-				for doc in query:
-					doc.reference.delete()
-				
-				if sub_cat == 'upload':
-					image_path = os.path.join(app.config['IMAGE_FOLDER'], model['id'], type, image_name)
-
-					if os.path.exists(image_path):
-						os.remove(image_path)
-					else:
-						return jsonify({'msg': 'Image not found'}), 404
-				
-				return jsonify({'msg': 'Image deleted successfully'}), 200
-	
+		return jsonify({'msg':'image(s) deleted successfully'})
+	except TypeError as error:
+		print(error)
+		return jsonify({'msg': f'error deleting image'}), 500
 	except Exception as error:
 		print(error)
-		return jsonify({'msg': f'error deleting {category}'}), 500
+		return jsonify({'msg': f'error deleting image'}), 500
+	
+@app.route(f'/files/<type>/<folder>/<subfolder>/<types>/<file>', methods=['GET'])
+def serve_files(type,folder,subfolder,types,file): 
+	try:
+		if isfile(os.path.abspath(f'{folder}/{subfolder}/{types}/{file}')):
+			filename  = os.path.abspath(f'{folder}/{subfolder}/{types}/{file}')
+		if type == 'image':
+			return send_file(filename, mimetype='image/jpeg')
+		return send_file(filename)
+	except:
+		return abort(404)
 
 if __name__ == "__main__":
 	app.run()

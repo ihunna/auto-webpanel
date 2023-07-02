@@ -49,15 +49,37 @@
                         <h2>
                             {{model.full_name}}
                         </h2>
-                        <form action="" class="op-form edit-model" id="model-form">
+                        <form action="" class="op-form edit-model" id="model-form" data-action="edit-model" data-action-message="Updating model...>
                             <div>
                                 <label for="model-fullname">Full name &nbsp;<span>format: firstname surname</label>
                                 <input type="text" id="model-fullname" name="model-fullname" value="{{model.full_name}}">
                             </div>
-                            <div>
-                                <label for="model-socials">Socials</label>
-                                <input id="model-socials" name="model-socials" class="scroll" value="{{model.socials}}">
-                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the social media handles seperated by comma if multiple e.g IG : @maggies__,SC : @maggies001</h5>
+                            <div class="double-field" id="socials">
+                                <label for="">Socials</label>
+                                {%for i in range(model.socials|length)%}
+                                    <div class="inputs">
+                                        <div>
+                                            <label for="platform-{{i}}">platform</label>
+                                            <input type="text" id="platform-{{i}}" name="platform" value="{{model.socials[i].platform}}">
+                                            <h5 class="input-highlight"> 
+                                                <i class="fas fas fa-exclamation-circle"></i> 
+                                                enter the platform for which you want to add handle, e.g Instagram or IG
+                                            </h5>
+                                        </div>
+                                        <div>
+                                            <label for="handle-{{i}}">handles</label>
+                                            <textarea type="text" id="handle-{{i}}" name="handles">{% for handle in model.socials[i].handles%}{{handle}}{%endfor%}</textarea>
+                                            <h5 class="input-highlight"> 
+                                                <i class="fas fas fa-exclamation-circle"></i> 
+                                                enter the social media handle followed by newline(enter key) without the '@' sign. e.g myusername__
+                                            </h5>
+                                        </div>
+                                    </div>
+                                {%endfor%}
+                                <div class="more-or-less" id="more-or-less"> 
+                                    <i class="fas fa-minus-square no-show" id="add-less"></i>
+                                    <i class="fas fa-plus-square" id="add-more"></i>
+                                </div>
                             </div>
                             <input type="hidden" class="not-edit" id="model-id" name="model-id" value="{{model.id}}">
                             <div>
@@ -84,20 +106,103 @@
                         <h2>
                             Add model
                         </h2>
-                        <form action="" class="op-form" id="model-form">
+                        <form action="" class="op-form" id="model-form" data-action="add-model" data-action-message="Adding model...">
                             <div>
                                 <label for="model-fullname">Full name &nbsp;<span>format: firstname surname</label>
                                 <input type="text" id="model-fullname" name="model-fullname" required>
                             </div>
-                            <div>
-                                <label for="model-socials">Socials</label>
-                                <input id="model-socials" name="model-socials" value={{model_socials}}>
-                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the social media handles seperated by comma if multiple e.g IG : @maggies__, SC : @maggies001</h5>
+                            <div class="double-field" id="socials">
+                                <label for="">Socials</label>
+                                <div class="inputs">
+                                    <div>
+                                        <label for="platform-1">platform</label>
+                                        <input type="text" id="platform-1" name="platform">
+                                        <h5 class="input-highlight"> 
+                                            <i class="fas fas fa-exclamation-circle"></i> 
+                                            enter the platform for which you want to add handle, e.g Instagram or IG
+                                        </h5>
+                                    </div>
+                                    <div>
+                                        <label for="handle-1">handles</label>
+                                        <textarea type="text" id="handle-1" name="handles"></textarea>
+                                        <h5 class="input-highlight"> 
+                                            <i class="fas fas fa-exclamation-circle"></i> 
+                                            enter the social media handle followed by newline(enter key) without the '@' sign. e.g myusername__
+                                        </h5>
+                                    </div>
+                                </div>
+                                <div class="more-or-less" id="more-or-less"> 
+                                    <i class="fas fa-minus-square no-show" id="add-less"></i>
+                                    <i class="fas fa-plus-square" id="add-more"></i>
+                                </div>
                             </div>
-                            <input type="submit" value="submit"> 
+                            <input type="submit" value="Submit"> 
                         </form>
                     </div>
                 {%endif%}
             </div>
         </div>
+
+        <script>
+            const more_less = document.getElementById('more-or-less');
+            const addMore = more_less.querySelector('#add-more');
+            const addLess = more_less.querySelector('#add-less');
+            const socials = document.getElementById('socials');
+            let socialCount = socials.querySelectorAll('.inputs').length;
+            let [m,n] = [2,1];
+
+            {%if action and action=='edit-model'%}
+                if(socialCount > 0){
+                    addLess.classList.remove('no-show');
+                    more_less.style.gridTemplateColumns ='repeat(2,1fr)';
+                }
+                [m,n] = [1,0];
+            {%endif%}
+
+            addMore.addEventListener('click', () => {
+                const newSocial = document.createElement('div');
+                newSocial.className = 'inputs';
+                newSocial.innerHTML = `
+                    <div>
+                        <label for="platform-${socialCount+1}">platform</label>
+                        <input type="text" id="platform-${socialCount+1}" name="platform">
+                        <h5 class="input-highlight"> 
+                            <i class="fas fas fa-exclamation-circle"></i> 
+                            enter the platform for which you want to add handle, e.g Instagram or IG
+                        </h5>
+                    </div>
+                    <div>
+                        <label for="handle-${socialCount+1}">handles</label>
+                        <textarea type="text" id="handle-${socialCount+1}" name="handles"></textarea>
+                        <h5 class="input-highlight"> 
+                            <i class="fas fas fa-exclamation-circle"></i> 
+                            enter the social media handle followed by newline(enter key) without the '@' sign. e.g myusername__
+                        </h5>
+                    </div>
+                `;
+
+                socials.insertBefore(newSocial, more_less);
+                socialCount++;
+                if(socialCount >= m){
+                    addLess.classList.remove('no-show');
+                    more_less.style.gridTemplateColumns ='repeat(2,1fr)';
+                }
+                else{
+                    addLess.classList.add('no-show');
+                }
+            });
+
+            addLess.addEventListener('click', () => {
+                if (socialCount > n) {
+                    const allSocials= socials.querySelectorAll('.inputs');
+                    const secToLast = allSocials[allSocials.length - 1]
+                    socials.removeChild(secToLast);
+                    socialCount--;
+                    if (socialCount <= n) {
+                        more_less.style.gridTemplateColumns ='repeat(1,1fr)';
+                        addLess.classList.add('no-show');
+                    }
+                }
+            });
+        </script>
     {%endblock%}

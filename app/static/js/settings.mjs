@@ -21,6 +21,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 e.target.innerHTML = `close map &nbsp;
                 <i class="fas fa-map-marked"></i>`;
             }
+            console.log(map)
         })
     }catch(error){con.log(error)}
     try{
@@ -157,7 +158,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 return response.json();
               })
               .then(response => {
-                const imageLinks = response.files.map(file => `https://drive.google.com/uc?export=view&id=${file.name}`);
+                const imageLinks = response.files.map(file => `https://drive.google.com/uc?export=download&id=${file.id}`);
                 doc.querySelector('#data').value = imageLinks;
                 showHide('show', [gdriveInfo], `${imageLinks.length} images to upload`);
                 showHide('show', [gdriveBtnUpload]);
@@ -289,10 +290,11 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         modelForm.addEventListener('submit',(e)=>{
             e.preventDefault();
             const formData = new FormData(modelForm);
-            
-            const url = modelForm.classList.contains('edit-model')? '/models/edit-model':'models/add-model'
-            let text = modelForm.classList.contains('edit-model')? 'Adding model...':'Deleting model...'
-            showHide('show',[alertBox],'',{'bg':colorSuccess,'color':colorLessWhite});
+            const action = modelForm.getAttribute('data-action');
+
+            const url = `/models/${action}`;
+            let text = modelForm.getAttribute('data-action-message');
+            showHide('show',[alertBox],text,{'bg':colorSuccess,'color':colorLessWhite});
             sendRequest('POST', url, null, formData).then(response => {
                 modelForm.reset()
                 showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
@@ -315,11 +317,28 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 showHide('show',[alertBox],'Setting model...',{'bg':colorSuccess,'color':colorLessWhite});
                 sendRequest('POST','/models/set-model', {'data':e.target.value}).then(response => {
                     showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
+
+                    const opSwipe = doc.querySelector('#op-swipe-group');
+                    opSwipe.innerHTML=``;
+                    const swipeGroups = response.model_swipe_schedules;
+                    const optionElement = document.createElement('option');
+                        optionElement.value = '';
+                        optionElement.setAttribute('disabled','')
+                        optionElement.textContent = 'select schedule group';
+                        opSwipe.appendChild(optionElement);
+                    swipeGroups.forEach(swipe=>{
+                        const optionElement = document.createElement('option');
+                        optionElement.value = swipe.id;
+                        optionElement.textContent = swipe.name;
+                        opSwipe.appendChild(optionElement);
+                    })
+                    doc.querySelector('.model-tag').textContent = `${response.model.full_name}`;
+                    doc.querySelector('#current-model').textContent = `(${response.model.full_name})`;
+                })
+                .then(() =>{
                     setTimeout(() => {
                         showHide('no-show',[alertBox]);
-                        doc.querySelector('.model-tag').textContent = `${response.model.full_name}`;
-                        doc.querySelector('#current-model').textContent = `(${response.model.full_name})`;
-                    }, 5000)
+                    }, 3000)
                 })
                 .catch(error => {
                     showHide('show',[alertBox],error,{'bg':colorDanger,'color':colorLessWhite});
@@ -471,13 +490,15 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 const imgName = imgSrc.split('/');
                 const imageId = li.querySelector('img').id;
 
-                const type = li.getAttribute('data-image-category');
+                const type = li.getAttribute('data-image-type');
+                const cat = li.getAttribute('data-image-category')
 
                 createModal(modal,'sModalImg',[
                     {'url':imgSrc,
                     'name':imgName[imgName.length - 1],
                     'type':type,
-                    'id':imageId
+                    'id':imageId,
+                    'upload_type':cat
                     }]);
                 showHide('show',[overlay,modal]);
             })

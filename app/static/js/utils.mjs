@@ -67,7 +67,7 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
       yesLink.addEventListener('click',(e)=>{
         e.preventDefault();
         action = action === ''?action:`/${action}`
-        let url = route === 'delete'? `/delete/${cat}`:`/${route}${action}`
+        let url = route === 'delete'? `/delete-image`:`/${route}${action}`
         text = cat !=='admin'?`Deleting ${cat}`:`Updating ${cat}`
         text = cat === 'logout'?'logging out user':text
         con.log(url)
@@ -265,7 +265,7 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
             })
             .catch(error => {
               showHide('no-show',[alertBox]);
-              showHide('show',[alertBox],'image upload unsuccessful',{'bg':colorDanger,'color':colorLessWhite});
+              showHide('show',[alertBox],response.msg,{'bg':colorDanger,'color':colorLessWhite});
               setTimeout(() => showHide('no-show',[alertBox]), 5000);
               con.error(error);
             });
@@ -316,9 +316,13 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
 
       const url = window.location.href;
       const parts = url.split('/');
-      let imageType = parts[parts.length - 1];
-      imageType = imageType.split('?')[0];
-      gdrive.setAttribute('href',`/images/${imageType}?action=add-drive`);
+      let linkParts = parts[parts.length - 1]
+      let imageType = linkParts.split('?')[0];
+      if (imageType == 'verification'){
+        let pose;
+        pose = linkParts.split('?')[1]
+        gdrive.setAttribute('href',`/images/${imageType}?pose=${pose.split('=')[1]}&action=add-drive`);
+      }else{gdrive.setAttribute('href',`/images/${imageType}?action=add-drive`);}
       gdrive.classList.add('add-drive');
       gdrive.textContent = 'Add from GoogleDrive';
       

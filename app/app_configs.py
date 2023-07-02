@@ -1,4 +1,4 @@
-import os, json, sys,uuid,sqlite3,base64,io,ast,httpx,time,re,shutil,random
+import os, json, sys,uuid,sqlite3,base64,io,ast,httpx,time,re,shutil,random,requests
 from os import listdir
 from os.path import isfile
 from datetime import datetime, timedelta
@@ -232,6 +232,38 @@ def validate_password(password):
 def validate_passkey(passkey):
 	if passkey and passkey == app.config['PASS_KEY']:return True
 	return False
+
+def check_values(values:list):
+	for value in values:
+		if value is None or not value or len(value) < 1:
+			return False
+	else:return True
+
+def get_profile(host,account_id,token):
+	try:
+		url = f'{host}/account/{account_id}'
+		headers = {
+				'content-type':'application/json',
+				'authorization': f'Bearer {token}'}
+		data = httpx.get(url,headers=headers)
+		if data.status_code > 299:return False,data.text
+		return True,data.json()
+	except Exception as error:
+		return False,error
+	
+def get_stats(host,account_id,token):
+	try:
+		url = f'{host}/account/{account_id}/stats'
+		headers = {
+				'content-type':'application/json',
+				'authorization': f'Bearer {token}'}
+		data = httpx.get(url,headers=headers)
+		if data.status_code > 299:return False,data.text
+		return True,data.json()
+	except Exception as error:
+		return False,error
+
+
 
 
 
