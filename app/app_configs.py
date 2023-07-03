@@ -113,7 +113,123 @@ app.config['PANEL_AUTH_CREDS'] = {
 			'overhead_sign', 
 			'five_left_side_sign', 
 			'five_up_sign', 
-			'pinky_sign']
+			'pinky_sign'],
+		'edit_configs':{
+			"relationship": ["Single", "Taken", "ExperimentComplicated", "ExperimentOpen", "None"],
+			"sexuality": ["None", "Questioning", "Queer", "Pansexual", "Demisexual", "Asexual", "Bi", "ExperimentLesbian", "ExperimentGay", "Straight"],
+			"kids": ["None", "HavePlenty", "Never", "Want", "Someday"],
+			"smoking": ["None", "Social", "No", "Yes"],
+			"drinking": ["None", "No", "Yes", "NoAtAll", "InCompany"],
+			"languages": [
+			"English",
+			"Spanish",
+			"German",
+			"French",
+			"Italian",
+			"Portuguese",
+			"Russian",
+			"Chinese",
+			"Afrikaans",
+			"Indonesian",
+			"Bosnian",
+			"Catalan",
+			"Czech",
+			"Creole",
+			"Welsh",
+			"Danish",
+			"Divehi",
+			"Estonian",
+			"Esperanto",
+			"Basque",
+			"Afar",
+			"Albanian",
+			"Amharic",
+			"Arabic",
+			"Aramaic",
+			"Armenian",
+			"Assamese",
+			"Azerbaijani",
+			"Belarusian",
+			"Bengali",
+			"Berber",
+			"Bulgarian",
+			"Cornish",
+			"Croatian",
+			"Dutch",
+			"Dzongkha",
+			"Faroese",
+			"Finnish",
+			"Galician",
+			"Georgian",
+			"Greek",
+			"Gujarati",
+			"Hawaiian",
+			"Hebrew",
+			"Hindi",
+			"Hungarian",
+			"Icelandic",
+			"Irish",
+			"Japanese",
+			"Kalaallisut",
+			"Kannada",
+			"Kazakh",
+			"Konkani",
+			"Korean",
+			"Kurdish - Kurmanji",
+			"Kurdish - Sorani",
+			"Kyrgyz",
+			"Lao",
+			"Latvian",
+			"Lithuanian",
+			"Luxembourgish",
+			"Macedonian",
+			"Malay",
+			"Malayalam",
+			"Maltese",
+			"Manx",
+			"Marathi",
+			"Mongolian",
+			"Nepali",
+			"Norwegian Bokmal",
+			"Norwegian Nynorsk",
+			"Oriya",
+			"Oromo",
+			"Pashto",
+			"Persian",
+			"Polish",
+			"Punjabi",
+			"Romanian",
+			"Sami",
+			"Sanskrit",
+			"Serbian",
+			"Serbo-Croatian",
+			"Sidamo",
+			"Sign language",
+			"Slovak",
+			"Slovenian",
+			"Somali",
+			"Swahili",
+			"Swedish",
+			"Syriac",
+			"Tagalog",
+			"Tamil",
+			"Tatar",
+			"Telugu",
+			"Thai",
+			"Tigrinya",
+			"Turkish",
+			"Ukrainian",
+			"Urdu",
+			"Uzbek",
+			"Valencian",
+			"Vietnamese"
+			],
+			"pets": ["None", "No", "Other", "Multiple", "Dogs", "Cats"],
+			"personality": ["None", "Between", "Extravert", "Introvert"],
+			"religion": ["None", "Other", "Spiritual", "Sikh", "Zoroastrian", "Muslim", "Mormon", "Jewish", "Jain", "Hindu", "Christian", "Catholic", "Buddhist", "Atheist", "Agnostic"],
+			"star_sign": ["None", "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricon", "Aquarius", "Pisces"],
+			"education_level": ["None", "Undergraduate", "InColledge", "InGradSchool", "Graduate", "HighSchool"],
+  }
 	},
 	'okcupid':{
 		'email':OKCUPID_EMAIL,
@@ -239,32 +355,72 @@ def check_values(values:list):
 			return False
 	else:return True
 
-def get_profile(host,account_id,token):
-	try:
-		url = f'{host}/account/{account_id}'
-		headers = {
-				'content-type':'application/json',
-				'authorization': f'Bearer {token}'}
-		data = httpx.get(url,headers=headers)
-		if data.status_code > 299:return False,data.text
-		return True,data.json()
-	except Exception as error:
-		return False,error
-	
-def get_stats(host,account_id,token,json_data={}):
-	try:
-		url = f'{host}/account/{account_id}/stats'
-		headers = {
-				'Content-Type':'application/json',
-				'Content-Length':f'{len(json_data)}',
-				'Authorization': f'Bearer {token}'}
-		data = requests.get(url,json=json_data,headers=headers)
-		print(data)
-		if data.status_code > 299:return False,data.text
-		return True,data.json()
-	except Exception as error:
-		return False,error
+class API:
+	def __init__(self,timeout:int=30):
+		self.timeout = timeout
+	def get_token(self,email:str,password:str,key:str):
+		url = f'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={key}'
+		json_data = {
+			"email": email,
+			"password": password,
+			"returnSecureToken": True
+		}
+		token = httpx.post(url,json=json_data,timeout=self.timeout)
+		if token.status_code == httpx.codes.OK:return True, token.json()
+		else: return False, token.text
 
+	def get_profile(self,host,account_id:str,token:str):
+		try:
+			url = f'{host}/account/{account_id}'
+			headers = {
+					'content-type':'application/json',
+					'authorization': f'Bearer {token}'}
+			data = httpx.get(url,headers=headers,timeout=self.timeout)
+			if data.status_code > 299:return False,data.text
+			return True,data.json()
+		except Exception as error:
+			return False,error
+	
+	def get_stats(self,host,account_id:str,token:str,json_data:dict={}):
+		try:
+			url = f'{host}/account/{account_id}/stats'
+			headers = {
+					'Content-Type':'application/json',
+					'Content-Length':f'{len(json_data)}',
+					'Authorization': f'Bearer {token}'}
+			data = httpx.get(url,json=json_data,headers=headers,timeout=self.timeout)
+			print(data)
+			if data.status_code > 299:return False,data.text
+			return True,data.json()
+		except Exception as error:
+			return False,error
+		
+	def update_profile(self,host,account_id:str,token:str,json_data:dict=None):
+		try:
+			url = f'{host}/account/{account_id}'
+			
+			payload = {
+				'category_payload_pairs':[]
+			}
+			for key, value in json_data.items():
+				if value != "None":
+					payload["category_payload_pairs"].append({
+						"category": key,
+						"payload": {
+							"content": value
+						}
+					})
+			headers = {
+					'Content-Type':'application/json',
+					'Authorization': f'Bearer {token}'}
+			data = httpx.patch(url,json=payload,headers=headers,timeout=self.timeout)
+			if data.status_code > 299:return False,data.text
+			return True,data.json()
+		except Exception as error:
+			print(error)
+			return False,error
+		
+api = API()
 
 
 

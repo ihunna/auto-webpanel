@@ -414,8 +414,10 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         accountForm.addEventListener('submit',(e)=>{
             e.preventDefault();
             const formData = new FormData(accountForm);
-            
-            const url = '/account-page/edit-account'
+            const action = accountForm.getAttribute('data-action');
+            const actionMsg = accountForm.getAttribute('data-action-message');
+            const url = `/account-page/${action}`;
+            showHide('show',[alertBox],actionMsg,{'bg':colorSuccess,'color':colorLessWhite});
             sendRequest('POST', url, null, formData).then(response => {
                 showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 setTimeout(() => showHide('no-show',[alertBox]), 5000)

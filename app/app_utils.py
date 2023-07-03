@@ -19,19 +19,20 @@ def generate_uuid(*values):
     SEED = UUID("87a5a26d-39fc-497c-8007-e4cf083b7a19")
     return str(uuid5(SEED, ''.join(values))).replace('-', '')
 
-
-def get_token(email:str,password:str,key:str):
-	url = f'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={key}'
-	json_data = {
-		"email": email,
-		"password": password,
-		"returnSecureToken": True
-	}
-	token = httpx.post(url,json=json_data)
-	if token.status_code == httpx.codes.OK:return True, token.json()
-	else: return False, token.text
         
 def write_log(file,log):
      with open(file,'w+',encoding='utf-8') as f:
           f.write(log)
+
+def create_edit_menu(data):
+    edit_menus = ""
+    for key, values in data.items():
+        edit_menus += f'<div>'
+        edit_menus += f'<label for="{key}">{key.capitalize()}: </label>'
+        edit_menus += f'<select name="{key}" id="{key}">'
+        for value in values:
+            edit_menus += f'<option value="{value}">{value}</option>'
+        edit_menus += '</select>'
+        edit_menus += '</div>'
+    return edit_menus
 	

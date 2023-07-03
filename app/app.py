@@ -1,5 +1,5 @@
 from app_configs import *
-from app_utils import get_token
+from app_utils import create_edit_menu
 from app_actions import start_task
 
 
@@ -1094,17 +1094,19 @@ def account_page():
 		panel_email = panel_creds['email']
 		panel_pass = panel_creds['password']
 		panel_key = panel_creds['key']
+		panel_edit_configs = panel_creds['edit_configs']
 
-		TOKEN = get_token(panel_email, panel_pass, panel_key)
+		TOKEN = api.get_token(panel_email, panel_pass, panel_key)
 		if not TOKEN[0]:
 			return jsonify({'msg': TOKEN[1]}), 403
 		TOKEN = TOKEN[1]['idToken']
+
 
 		# proxies  = configs_ref.document('Proxies').get()
 		# json_data = {'proxies':proxies.split('\n')} if check_values(proxies) else {}
 		# get_stats(panel_creds['url'],account_id,TOKEN,json_data=json_data)
 		
-		account_snapshot = get_profile(panel_creds['url'],account_id,TOKEN)
+		account_snapshot = api.get_profile(panel_creds['url'],account_id,TOKEN)
 		if account_snapshot[0]:
 			account_data = account_snapshot[1]
 			account_data['matches']=0
@@ -1117,10 +1119,10 @@ def account_page():
 			if action == 'map':
 				return render_template('account-page.html', account=account_data, action=action)
 			elif action == 'edit-account':
-				return render_template('account-page.html', account=account_data, action=action)
+				edit_data = panel_edit_configs
+				return render_template('account-page.html', account=account_data, action=action,edit_data=edit_data)
 			
 			return render_template('account-page.html', account=account_data)
-	
 	return redirect('/accounts')
 
 @app.route('/account-page/<action>',methods=['POST'])
@@ -1133,17 +1135,46 @@ def account_action(action):
 		platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 		platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
 		accounts_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('accounts')
+		panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
 		
-		if action=='edit-account':
-			return jsonify({'msg': 'account updated successfully'}), 200
-		elif action=='map-update':
-			data = request.json['data']
-			longitude = data['long']
-			latitude = data['lat']
+		panel_edit_configs = panel_creds['edit_configs']
+
+		if action == 'edit-account':
+			form_data = request.form
+			account_id = form_data.get('account-id')
+
+			account_profile = {
+				'bio':form_data.get('bio'),
+				'height':form_data.get('height')
+			}
+			for key in panel_edit_configs.keys():
+				account_profile[key] = form_data.get(key)
+
+			panel_email = panel_creds['email']
+			panel_pass = panel_creds['password']
+			panel_key = panel_creds['key']
+			panel_edit_configs = panel_creds['edit_configs']
+
+			TOKEN = api.get_token(panel_email, panel_pass, panel_key)
+			if not TOKEN[0]:
+				return jsonify({'msg': TOKEN[1]}), 403
+			TOKEN = TOKEN[1]['idToken']
+
+			update_profile = api.update_profile(panel_creds['url'],account_id,TOKEN,json_data=account_profile)
+			if not update_profile[0]:raise ValueError("couldn't update account")
+			elif 'error_code' in update_profile[1]: raise ValueError(update_profile[1]['message'])
+			
+			account_data = accounts_ref.document(account_id).get()
+			if account_data.exists:
+				accounts_ref.document(account_id).update({'profile':json.dumps(account_profile)})
+			else:raise ValueError('account does not exist')
 
 			return jsonify({'msg': 'location updated successfully'}), 200
-	except:
-		return jsonify({'msg': 'Error'}), 404
+	except ValueError as error:
+		return jsonify({'msg': f'account update unsuccessful. {error}'}), 400
+	except Exception as error:
+		print(error)
+		return jsonify({'msg': 'account update unsuccessful'}), 500
 	
 @app.route('/create-accounts',methods=['GET'])
 @login_required
@@ -1212,7 +1243,7 @@ def create_accounts():
 		platform_host = panel_creds['url']
 		poses = panel_creds['poses']
 		
-		TOKEN = get_token(panel_email, panel_pass, panel_key)
+		TOKEN = api.get_token(panel_email, panel_pass, panel_key)
 		if not TOKEN[0]:
 			return jsonify({'msg': TOKEN[1]}), 403
 		TOKEN = TOKEN[1]['idToken']
@@ -1286,7 +1317,6 @@ def create_accounts():
 				swipe_duration_end = swipe_configs['swipe_duration'].split('-')[1]
 				swipe_configs['swipe_duration'] = random.randint(int(swipe_duration_start),int(swipe_duration_end))
 				swipe_configs['first_swipe'] = True
-		print()
 		task_id = str(uuid.uuid4())
 		task_status = 'running'
 		task_progress = 0

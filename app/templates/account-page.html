@@ -252,263 +252,38 @@
                         <h2>
                             Edit-Account
                         </h2>
-                        <form action="" class="op-form edit-account" id="account-form">
+                        
+                        <form action="" class="op-form edit-account" id="account-form" 
+                            data-action="edit-account" data-action-message="Updating account details">
                             <div>
-                                <label for="profile_height">Person's physical height</label>
-                                <input type="int" id="profile_heigh" name="profile_heigh" value="{{account.profile_heigh}}">
+                                <label for="bio">Biography</label>
+                                <input type="text" name="bio" id="bio" value="{{account.profile.bio}}">
                             </div>
+                            <input type="hidden" id="account-id" name="account-id" value="{{account.id}}">
                             <div>
-                                <label for="profile_body_type">Person's body type</label>
-                                <select id="profile_body_type" name="profile_body_type">
-                                    <option value="">{{account.profile_body_type}}</option>
-                                    <option value="2">Thin</option>
-                                    <option value="3">Overweight</option>
-                                    <option value="5">Average build</option>
-                                    <option value="6">Fit</option>
-                                    <option value="8">Jacked</option>
-                                    <option value="9">A little extra</option>
-                                    <option value="10">Curvy</option>
-                                    <option value="11">Full figured</option>
-                                </select>
-                                
+                                <label for="height">Height</label>
+                                <input type="number" name="height" id="height" 
+                                    value="{%if account.profile.height != ''%}{{account.profile.height}}{%else%}91{%endif%}" 
+                                    min="91" max="220">
+                                <h5 class="input-highlight"> 
+                                    <i class="fas fas fa-exclamation-circle"></i> 
+                                    must be between 91 - 220. e.g 91
+                                </h5>
                             </div>
-                            <div>
-                                <label for="profile_ethnicities">Person's body type</label>
-                                <select id="profile_ethnicities" name="profile_ethnicities" class="multiple scroll" multiple>
-                                    <option value="1">Asian</option>
-                                    <option value="3">Black</option>
-                                    <option value="7">Hispanic / Latin</option>
-                                    <option value="5">Indian</option>
-                                    <option value="2">Middle Eastern</option>
-                                    <option value="4">Native American</option>
-                                    <option value="6">Pacific Islander</option>
-                                    <option value="8">White</option>
-                                    <option value="9">Other ethnicity</option>
-                                </select>
-                                <script>
-                                    var selectedEthnicities = '{{account.profile_ethnicities}}'; // Assuming account.profile_ethnicities is an array of selected ethnicity IDs
-                                    
-                                    var ethnicityDropdown = document.getElementById('ethnicities');
-                                    for (var i = 0; i < ethnicityDropdown.options.length; i++) {
-                                    if (selectedEthnicities.includes(parseInt(ethnicityDropdown.options[i].value))) {
-                                        ethnicityDropdown.options[i].selected = true;
-                                    }
-                                    }
-                                </script>
-                            </div>
-                            <input type="hidden" class="not-edit" id="account-id" name="account-id" value="{{account.id}}">
-                            <div>
-                                <label for="profile_religion">Person's religion</label>
-                                <ul class="p-religion">
-                                    <li>
-                                    <label for="religion">Religion:</label>
-                                    <select id="religion" name="religion">
-                                    <option value="">Select religion</option>
-                                    <option value="2">Agnosticism</option>
-                                    <option value="3">Atheism</option>
-                                    <option value="4">Christianity</option>
-                                    <option value="5">Judaism</option>
-                                    <option value="6">Catholicism</option>
-                                    <option value="7">Islam</option>
-                                    <option value="8">Hinduism</option>
-                                    <option value="9">Buddhism</option>
-                                    <option value="11">Sikh</option>
-                                    <option value="10">Other religion</option>
+                            {% for key, options in edit_data.items() %}
+                                <div>
+                                    <label for="{{ key }}">{{ key|capitalize }}:</label>
+                                    <select name="{{key}}" id="{{ key }}">
+                                        {%if account.profile[key] != ''%}
+                                            <option value="{{account.profile[key]}}">{{account.profile[key]}}</option>
+                                        {%endif%}
+                                        {% for option in options %}
+                                        <option value="{{ option }}">{{ option }}</option>
+                                        {% endfor %}
                                     </select>
-                                    </li>
-                                    <li>
-                                        <label for="seriousness">Religious Seriousness:</label>
-                                        <select id="seriousness">
-                                            <option value="">Select seriousness</option>
-                                            <option value="null">None</option>
-                                            <option value="2">It's important</option>
-                                            <option value="3">It's not important</option>
-                                            <option value="4">Laughing about it</option>
-                                        </select>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div>
-                                <label for="profile_astro_sign">Person's astrological sign:</label>
-                                    <select id="profile_astro_sign" name="profile_astro_sign">
-                                    <option value="">{{account.profile_astro_sign}}</option>
-                                    <option value="1">Aquarius</option>
-                                    <option value="2">Pisces</option>
-                                    <option value="3">Aries</option>
-                                    <option value="4">Taurus</option>
-                                    <option value="5">Gemini</option>
-                                    <option value="6">Cancer</option>
-                                    <option value="7">Leo</option>
-                                    <option value="8">Virgo</option>
-                                    <option value="9">Libra</option>
-                                    <option value="10">Scorpio</option>
-                                    <option value="11">Sagittarius</option>
-                                    <option value="12">Capricorn</option>
-                                    </select>
-                            </div>
-                            <div>
-                                <label for="profile_politics">Person's political beliefs: </label>
-                                    <select id="profile_politics" name="profile_politics">
-                                    <option value="">{{account.profile_politics}}</option>
-                                    <option value="1">Liberal</option>
-                                    <option value="2">Moderate</option>
-                                    <option value="3">Conservative</option>
-                                    <option value="4">Other political beliefs</option>
-                                    </select>
-                            </div>
-                            <div>
-                                <label for="profile_occupation_status">Person's Employment Status:</label>
-                                    <select id="profile_occupation_status" name="profile_occupation_status">
-                                    <option value="">{{account.profile_occupation_status}}</option>
-                                    <option value="1">Employed full-time</option>
-                                    <option value="2">Employed part-time</option>
-                                    <option value="3">Freelance worker</option>
-                                    <option value="4">Self-employed</option>
-                                    <option value="5">Unemployed</option>
-                                    <option value="6">Retired</option>
-                                    </select>
-                            </div>
-                            <div>
-                                <label for="profile_occupation">Person's Employment: </label>
-                                <input type="text" id="profile_occupation" name="profile_occupation" value="{{account.profile_occupation}}">
-                            </div>
-                            <div>
-                                <label for="profile_education_category">Persons's Education Level:</label>
-                                    <select id="profile_education_category" name="profile_education_category">
-                                    <option value="">{{account.profile_education_category}}</option>
-                                    <option value="1">High school</option>
-                                    <option value="2">Trade/tech school</option>
-                                    <option value="10">In college</option>
-                                    <option value="11">Undergraduate degree</option>
-                                    <option value="12">In grad school</option>
-                                    <option value="13">Graduate degree</option>
-                                    </select>
-                            </div>
-                            <input type="hidden" class="not-edit" id="account-id" name="account-id" value="{{account.id}}">
-                            <div>
-                                <label for="profile_school_name">Person's physical height</label>
-                                <input type="text" id="profile_school_name" name="profile_school_name" value="{{account.profile_school_name}}">
-                            </div>
-                            <div>
-                                <label for="profile_known_languages">Person's Known Languages:</label>
-                                    <select id="profile_known_languages" name="profile_known_languages" class="multiple" multiple>
-                                    <option value="74">English</option>
-                                    <option value="17">Dutch</option>
-                                    <option value="22">French</option>
-                                    <option value="25">German</option>
-                                    <option value="58">Spanish</option>
-                                    </select>
-                            </div>
-                            <div>
-                                <label for="profile_diet">Person's Diet:</label>
-                                    <select id="profile_diet" name="profile_diet">
-                                    <option value="">{{account.profile_diet}}</option>
-                                    <option value="1">Omnivore</option>
-                                    <option value="2">Vegetarian</option>
-                                    <option value="3">Vegan</option>
-                                    <option value="4">Kosher</option>
-                                    <option value="5">Halal</option>
-                                    <option value="7">Gluten Free</option>
-                                    <option value="8">Pescatarian</option>
-                                    <option value="9">Jain</option>
-                                    <option value="10">Lactovegetarian</option>
-                                    <option value="11">Intermittent Fasting</option>
-                                    <option value="12">Ketogenic</option>
-                                    </select>
-                            </div>
-                            <div>
-                                <label for="profile_smoking">Person's Smoking Habit:</label>
-                                    <select id="profile_smoking">
-                                    <option value="">{{account.profile_smoking}}</option>
-                                    <option value="1">Often</option>
-                                    <option value="2">Sometimes</option>
-                                    <option value="5">Never</option>
-                                    </select>
-                            </div>
-                            <div>
-                                <label for="profile_drinking">Person's Drinking Habit:</label>
-                                    <select id="profile_drinking" name="profile_drinking">
-                                    <option value="">{{account.profile_drinking}}</option>
-                                    <option value="2">Often</option>
-                                    <option value="3">Sometimes</option>
-                                    <option value="6">Never</option>
-                                    </select>
-                            </div>
-                            <div>
-                                <label for="profile_marijuana">Person's Weed Smoking Habit:</label>
-                                    <select id="profile_marijuana" name="profile_marijuana">
-                                    <option value="">{{account.profile_marijuana}}</option>
-                                    <option value="24">Often</option>
-                                    <option value="16">Sometimes</option>
-                                    <option value="8">Never</option>
-                                    </select>
-                            </div>
-                            <div>
-                                <label for="profile_children">Person's Children:</label>
-                                <select id="profile_children" name="profile_children">
-                                <option value="">{{account.profile_children}}</option>
-                                <option value="1">Doesn't have kids but might want them</option>
-                                <option value="2">Doesn't have kids but wants them</option>
-                                <option value="3">Doesn't have kids and doesn't want them</option>
-                                <option value="4">Has kid(s) and doesn't want more</option>
-                                <option value="5">Has kid(s) and might want more</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="profile_pets">Person's Pets:</label>
-                                    <select id="profile_pets" name="profile_pets" class="multiple" multiple>
-                                    <option value="1">{{account.profile_pets}}</option>
-                                    <option value="2">Has other pet(s)</option>
-                                    <option value="3">Has cat(s)</option>
-                                    <option value="4">Has dog(s)</option>
-                                    </select>
-                            </div>
-                            <div>
-                                <label for="bio">Person's self-summary:</label>
-                                <input type="text" id="bio" name="bio" value="{{account.bio}}">
-                            </div>
-                            
-                            <div>
-                                <label for="aspirations">Person's current goal:</label>
-                                <input type="text" id="aspirations" name="aspirations" value="{{account.aspirations}}">
-                            </div>
-                            
-                            <div>
-                                <label for="talent">Person's talent:</label>
-                                <input type="text" id="talent" name="talent" value="{{account.talent}}">
-                            </div>
-                            
-                            <div>
-                                <label for="traits">Person's golden rule:</label>
-                                <input type="text" id="traits" name="traits" value="{{account.traits}}">
-                            </div>
-                            
-                            <div>
-                                <label for="needs">Person's needs:</label>
-                                <input type="text" id="needs" name="needs" value="{{account.needs}}">
-                            </div>
-                            
-                            <div>
-                                <label for="hobbies">Person's hobbies:</label>
-                                <input type="text" id="hobbies" name="hobbies" value="{{account.hobbies}}">
-                            </div>
-                            
-                            <div>
-                                <label for="moments">Person's perfect day:</label>
-                                <input type="text" id="moments" name="moments" value="{{account.moments}}">
-                            </div>
-                            
-                            <div>
-                                <label for="secrets">Person's secrets:</label>
-                                <input type="text" id="secrets" name="secrets" value="{{account.secrets}}">
-                            </div>
-                            
-                            <div>
-                                <label for="dating">Person's dating preferences:</label>
-                                <input type="text" id="dating" name="dating" value="{{account.dating}}">
-                            </div>
-                            
-                            <input type="submit" value="Edit"> 
+                                </div>
+                            {% endfor %}
+                            <input type="submit" name="Submit">
                         </form>
                     </div>
                     {%endif%}
