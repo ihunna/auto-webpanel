@@ -1164,13 +1164,14 @@ def show_create_accounts():
 		if task_doc.exists:
 			task_data = task_doc.to_dict()
 			task_status = {
+				'id':task_data['id'],
 				'type': task_data['type'],
 				'start_time': task_data['start_time'],
 				'status': task_data['status'],
 				'running':task_data['running'],
 				'progress':task_data['progress']
 			}
-
+			session['MODEL']['TASKS']['account_task']['id'] = task_data['id']
 			session['MODEL']['TASKS']['account_task']['status'] =task_data['status']
 			session['MODEL']['TASKS']['account_task']['running'] =task_data['running']
 			session['MODEL']['TASKS']['account_task']['progress'] =task_data['progress']
