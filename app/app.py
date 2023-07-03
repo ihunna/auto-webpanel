@@ -1464,6 +1464,7 @@ def swipe_page_p():
 @check_platform
 @check_model
 def send_msg():
+	return redirect('/accounts')
 	g.page = 'send-msg'
 	global msg_task, msg_task_id
 	running = False
