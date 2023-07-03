@@ -1157,7 +1157,9 @@ def account_action(action):
 				'height':form_data.get('height')
 			}
 			for key in panel_edit_configs.keys():
-				account_profile[key] = form_data.get(key)
+				account_profile[key] = form_data.getlist(key) if key.lower() in ['languages','pets'] else form_data.get(key)
+
+			print(account_profile)
 
 			update_profile = api.update_profile(panel_creds['url'],account_id,TOKEN,json_data=account_profile)
 			if not update_profile[0]:raise ValueError("couldn't update account")

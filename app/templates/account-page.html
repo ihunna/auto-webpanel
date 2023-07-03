@@ -198,7 +198,7 @@
                             {% for key, options in edit_data.items() %}
                                 <div>
                                     <label for="{{ key }}">{{ key|capitalize }}:</label>
-                                    <select name="{{key}}" id="{{ key }}">
+                                    <select name="{{key}}" id="{{ key }}" {%if key|lower in ['languages','pets']%}multiple{%endif%}>
                                         {%if account.profile[key] != ''%}
                                             <option value="{{account.profile[key]}}">{{account.profile[key]}}</option>
                                         {%endif%}
