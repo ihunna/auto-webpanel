@@ -110,7 +110,7 @@
             </ul>
             <ul class="links services">
                 <li>actions</li>
-                <li  class="{% if g.page == 'accounts' %}active{% endif %}">
+                <li  class="{% if g.page in ['accounts','account-page'] %}active{% endif %}">
                     <a href="/accounts">
                         <i class="fas fa-user-friends"></i>
                         Accounts
@@ -192,47 +192,49 @@
     <div class="modal-holder">
     </div>
 
-    {%if g.page == 'schedules' or g.page == 'create-accounts'%}
-    <style>
-        .map{
-               position: absolute;
-               bottom: 80%;
-               left: -100px;
-               width: 300px;
-               height: 200px;
-               border: 10px solid var(--soft-white);
-       }
-
-       .map.show{
-           display: block;
-       }
-
-       .map.no-show{
-           display: none;
-       }
-
-       .double-field > .inputs > .map-btn > #toggle-map{
-           margin: 20px auto;
-           padding: 5px 16px;
-           background: var(--soft-white);
-           color: #333;
-           border-radius: 20px;
-
-       }
-
-       @media screen  and (max-width:768.99px){
-           .map{
-               left: 0;
-               /* bottom: 0;
-               top: 90%; */
-               width: 100%;
-           }
-
-           .double-field > .inputs > .map-btn > #toggle-map{
-               margin: 5px auto;
-           }
-       }
-   </style>
+    {%if g.page in ['schedules','create-accounts','account-page']%}
+        {%if g.page != 'account-page'%}
+            <style>
+                .map{
+                    position: absolute;
+                    bottom: 80%;
+                    left: -100px;
+                    width: 300px;
+                    height: 200px;
+                    border: 10px solid var(--soft-white);
+            }
+        
+            .map.show{
+                display: block;
+            }
+        
+            .map.no-show{
+                display: none;
+            }
+        
+            .double-field > .inputs > .map-btn > #toggle-map{
+                margin: 20px auto;
+                padding: 5px 16px;
+                background: var(--soft-white);
+                color: #333;
+                border-radius: 20px;
+        
+            }
+        
+            @media screen  and (max-width:768.99px){
+                .map{
+                    left: 0;
+                    /* bottom: 0;
+                    top: 90%; */
+                    width: 100%;
+                }
+        
+                .double-field > .inputs > .map-btn > #toggle-map{
+                    margin: 5px auto;
+                }
+            }
+            </style>
+       {%endif%}
     <script
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAEvNick1R-fwUdIS5Gj9gwjUL_EUuZ-j0&callback=initMap&v=weekly"
     defer>

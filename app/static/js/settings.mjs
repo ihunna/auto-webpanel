@@ -430,6 +430,36 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         })
     }catch(error){con.log(error)}
     try{
+        const updateLocation = doc.querySelector('#updateButton');
+        updateLocation.addEventListener('click',(e)=>{
+            e.preventDefault();
+            let location = doc.querySelector('#op-location');
+            const accountId = location.getAttribute('data-account-id');
+
+            location = String(location.value).split(',')
+            if (location.length > 1){
+
+                const lat = parseFloat(location[0]);
+                const long = parseFloat(location[1]);
+    
+                const data = {'account_id':accountId,'data':{'long':long,'lat':lat}}
+                showHide('show',[alertBox],'updating location...',{'bg':colorSuccess,'color':colorLessWhite});
+                sendRequest('POST', `/account-page/map`,data,null).then(response => {
+                    showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
+                    setTimeout(() => {
+                        showHide('no-show',[alertBox]);
+                    },
+                    3000);
+                })
+                .catch(error => {
+                    showHide('show',[alertBox],error,{'bg':colorDanger,'color':colorLessWhite});
+                    setTimeout(() => showHide('no-show',[alertBox]), 5000);
+                    con.error(error);
+                });
+            }
+        })
+    }catch(error){con.log(error)}
+    try{
         const signupForm = doc.querySelector('#signup-form');
         signupForm.addEventListener('submit',(e)=>{
             e.preventDefault();

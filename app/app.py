@@ -1078,7 +1078,7 @@ def accounts():
 @check_platform
 @check_model
 def account_page():
-	g.page = 'accounts'
+	g.page = 'account-page'
 	account_id = request.args.get('account')
 	action = request.args.get('action')
 	images = []
@@ -1138,6 +1138,15 @@ def account_action(action):
 		panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
 		
 		panel_edit_configs = panel_creds['edit_configs']
+		panel_email = panel_creds['email']
+		panel_pass = panel_creds['password']
+		panel_key = panel_creds['key']
+		panel_edit_configs = panel_creds['edit_configs']
+
+		TOKEN = api.get_token(panel_email, panel_pass, panel_key)
+		if not TOKEN[0]:
+			return jsonify({'msg': TOKEN[1]}), 403
+		TOKEN = TOKEN[1]['idToken']
 
 		if action == 'edit-account':
 			form_data = request.form
@@ -1150,16 +1159,6 @@ def account_action(action):
 			for key in panel_edit_configs.keys():
 				account_profile[key] = form_data.get(key)
 
-			panel_email = panel_creds['email']
-			panel_pass = panel_creds['password']
-			panel_key = panel_creds['key']
-			panel_edit_configs = panel_creds['edit_configs']
-
-			TOKEN = api.get_token(panel_email, panel_pass, panel_key)
-			if not TOKEN[0]:
-				return jsonify({'msg': TOKEN[1]}), 403
-			TOKEN = TOKEN[1]['idToken']
-
 			update_profile = api.update_profile(panel_creds['url'],account_id,TOKEN,json_data=account_profile)
 			if not update_profile[0]:raise ValueError("couldn't update account")
 			elif 'error_code' in update_profile[1]: raise ValueError(update_profile[1]['message'])
@@ -1169,6 +1168,19 @@ def account_action(action):
 				accounts_ref.document(account_id).update({'profile':json.dumps(account_profile)})
 			else:raise ValueError('account does not exist')
 
+			return jsonify({'msg': 'account updated successfully'}), 200
+		elif action == 'map':
+			account_id = request.get_json()['account_id']
+			location = request.get_json()['data']
+
+			update_location = api.update_location(panel_creds['url'],account_id,TOKEN,json_data=location)
+			if not update_location[0]:raise ValueError(f"couldn't update account {update_location[1]}")
+			elif 'error_code' in update_location[1]: raise ValueError(update_location[1]['message'])
+
+			account_data = accounts_ref.document(account_id).get()
+			if account_data.exists:
+				accounts_ref.document(account_id).update({'city':update_location[1]['location']})
+			else:raise ValueError('account does not exist')
 			return jsonify({'msg': 'location updated successfully'}), 200
 	except ValueError as error:
 		return jsonify({'msg': f'account update unsuccessful. {error}'}), 400

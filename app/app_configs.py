@@ -398,7 +398,6 @@ class API:
 	def update_profile(self,host,account_id:str,token:str,json_data:dict=None):
 		try:
 			url = f'{host}/account/{account_id}'
-			
 			payload = {
 				'category_payload_pairs':[]
 			}
@@ -414,6 +413,19 @@ class API:
 					'Content-Type':'application/json',
 					'Authorization': f'Bearer {token}'}
 			data = httpx.patch(url,json=payload,headers=headers,timeout=self.timeout)
+			if data.status_code > 299:return False,data.text
+			return True,data.json()
+		except Exception as error:
+			print(error)
+			return False,error
+		
+	def update_location(self,host,account_id:str,token:str,json_data:dict=None):
+		try:
+			url = f'{host}/account/{account_id}/location'
+			headers = {
+					'Content-Type':'application/json',
+					'Authorization': f'Bearer {token}'}
+			data = httpx.patch(url,json=json_data,headers=headers,timeout=self.timeout)
 			if data.status_code > 299:return False,data.text
 			return True,data.json()
 		except Exception as error:

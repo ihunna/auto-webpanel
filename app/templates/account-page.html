@@ -84,94 +84,19 @@
                         </div>
                         <div class="profile-details">
                             {%if action == 'map'%}
-                                <div id="map" class="map p-details-actions"></div>
-                                <input id="locInput" value="" style="display: none;" title="none" />
+                                <div id="op-map" class="map p-details-actions"></div>
+                                <input type="hidden" name="op-location" id="op-location" value="" data-account-id="{{account.id}}"/>
                                 <div class="p-details-actions">
-                                    <a href="" class="" id="updateButton">
-                                        Update location
-                                    </a>
                                     <a  href="/account-page?account={{account.id}}&action=edit-account" class="edit-account">
                                         Edit account
                                     </a>
                                     <a href="/account-page?account={{account.id}}" class="upload-account-image">
                                         Account details
                                     </a>
+                                    <a href="" class="eleveted-a" id="updateButton">
+                                        Update location
+                                    </a>
                                 </div>
-                                <script
-                                src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBFhK9-HFdkegWcsmq6ue770uDIlRX5CdI&callback=initMap&v=weekly"
-                                defer
-                              ></script>
-                                <script>
-                                    window.onload = function() {
-                                        // This code will be executed when the window has finished loading
-                                        initMap();
-                                    };
-                                    function initMap() {
-                                        const myLatlng = { lat: -25.363, lng: 131.044 };
-                                        const map = new google.maps.Map(document.getElementById("map"), {
-                                            zoom: 4,
-                                            center: myLatlng,
-                                        });
-                                        // Create the initial InfoWindow.
-                                        let infoWindow = new google.maps.InfoWindow({
-                                            content: "Click the map to get Lat/Lng!",
-                                            position: myLatlng,
-                                        });
-                        
-                                        infoWindow.open(map);
-                                        // Configure the click listener.
-                                        map.addListener("click", (mapsMouseEvent) => {
-                                            // Close the current InfoWindow.
-                                            infoWindow.close();
-                                            // Create a new InfoWindow.
-                                            const latLng = mapsMouseEvent.latLng;
-                                            const latitude = latLng.lat();
-                                            const longitude = latLng.lng();
-                                            document.getElementById("updateButton").addEventListener("click", function() {
-                                                // Call your function here
-                                                sendLocationToServer(longitude, latitude);
-                                            });
-                                                    
-                                            // Update the value of the input field
-                                            document.getElementById("locInput").value = `${latitude}, ${longitude}`;
-                                            infoWindow = new google.maps.InfoWindow({
-                                            position: mapsMouseEvent.latLng,
-                                            });
-                                            infoWindow.setContent(
-                                            JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2)
-                                            );
-                                            infoWindow.open(map);
-                                        });
-                                    }
-                                    function sendLocationToServer(longitude, latitude) {                             
-                                        const url = `/account-page/map-update`;
-                                        const data = {
-                                            data: {
-                                                long: longitude,
-                                                lat: latitude
-                                            }
-                                        };
-                                        
-                                        fetch(url, {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json'
-                                            },
-                                            body: JSON.stringify(data)
-                                        })
-                                        .then(response => {
-                                            if (response.ok) {
-                                                console.log('Location data sent successfully');
-                                            } else {
-                                                console.error('Failed to send location data');
-                                            };
-                                        })
-                                        .catch(error => {
-                                            console.error('Error occurred while sending location data:', error);
-                                        });
-                                    }
-                                    window.initMap = initMap;
-                                </script>
                             {%else%}
                                 <ul class="p-details-items">
                                     <li>
@@ -328,69 +253,12 @@
             .map{
                 height: 70%;
             }
-        
+            
+            #updateButton{
+                background: var(--secondary);
+            }
             
         </style>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-        <script>
-            $(document).ready(function() {
-                // Function to handle the update button click event
-                $('#updateButton').click(function() {
-                    // Make the input field editable
-                    $('#bioInput').removeClass('text-style').removeClass('border-style').prop('readonly', false);
-                    // Change the button text and click event
-                    $('#updateButton').val('Submit').unbind('click').click(function() {
-                        // Get the updated bio from the input field
-                        var updatedBio = $('#bioInput').val();
-                        // Make a POST request to the update endpoint with the updated bio
-                        $.ajax({
-                            url: '/update/bio/{{id}}',
-                            type: 'POST',
-                            contentType: 'application/json',
-                            data: JSON.stringify({data: updatedBio}),
-                            success: function(response) {
-                                // Handle the response
-                                console.log(response);
-                                // Reload the page
-                                location.reload();
-                            }
-                        });
-                    });
-                });
-            });
-            const id ='{{id}}';
-        </script>
-        <!-- <script>
-            $(document).ready(function() {
-            // Handle click event on the clickable image
-            $('.clickable-image').click(function() {
-                // Get the image source and account ID
-                var imageSrc = $(this).attr('src');
-                var accountId = '{{id}}'; // Replace with the actual account ID
-                
-                // Show the confirmation window
-                var confirmation = confirm('Do you want to delete the image?');
-                
-                if (confirmation) {
-                    // Delete button clicked, send delete request
-                    $.ajax({
-                        url: '/delete-profile-image',
-                        type: 'DELETE',
-                        data: {
-                            data: imageSrc,
-                            id: accountId
-                        },
-                        success: function(response) {
-                            // Handle the delete response
-                            console.log(response);
-                            // Reload the page or perform any other necessary actions
-                            location.reload();
-                        }
-                    });
-                }
-            });
-        });
-        </script> -->
         {%if matches%}
             <script>
                 const _matches ='{{matches | tojson | safe}}';
