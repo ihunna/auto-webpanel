@@ -1088,6 +1088,7 @@ def account_page():
 		platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 		platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
 		accounts_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('accounts')
+		configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
 		panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
 
 		panel_email = panel_creds['email']
@@ -1098,18 +1099,20 @@ def account_page():
 		if not TOKEN[0]:
 			return jsonify({'msg': TOKEN[1]}), 403
 		TOKEN = TOKEN[1]['idToken']
+
+		# proxies  = configs_ref.document('Proxies').get()
+		# json_data = {'proxies':proxies.split('\n')} if check_values(proxies) else {}
+		# get_stats(panel_creds['url'],account_id,TOKEN,json_data=json_data)
 		
 		account_snapshot = get_profile(panel_creds['url'],account_id,TOKEN)
 		if account_snapshot[0]:
 			account_data = account_snapshot[1]
-			print(account_data)
-
 			account_data['matches']=0
-			account_data['images']=0,
+			account_data['upload_images']=0,
 			account_data['swipes']=0
 			account_data['likes']=0
 			account_data['messages']=0
-			account_data['profile_image'] = 'https://storage.googleapis.com/badoo-api-models-verification-images/6d3b0e1b-af0c-43c4-94c4-a2ef505fff9d/1f048933-0e29-4f75-b472-16d69e515639/911f50df-70a6-44b2-9a9f-ffef5bf9c89e/4739614b-13dc-4f12-9dda-fbe57cdf8b8c.jpeg'
+			account_data['profile_image'] = account_data.get('images')[0] if 'images' in account_data.keys() else ''
 			
 			if action == 'map':
 				return render_template('account-page.html', account=account_data, action=action)
@@ -1118,7 +1121,7 @@ def account_page():
 			
 			return render_template('account-page.html', account=account_data)
 	
-	return redirect('/dashboard')
+	return redirect('/accounts')
 
 @app.route('/account-page/<action>',methods=['POST'])
 @login_required

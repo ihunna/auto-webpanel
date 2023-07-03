@@ -251,13 +251,15 @@ def get_profile(host,account_id,token):
 	except Exception as error:
 		return False,error
 	
-def get_stats(host,account_id,token):
+def get_stats(host,account_id,token,json_data={}):
 	try:
 		url = f'{host}/account/{account_id}/stats'
 		headers = {
-				'content-type':'application/json',
-				'authorization': f'Bearer {token}'}
-		data = httpx.get(url,headers=headers)
+				'Content-Type':'application/json',
+				'Content-Length':f'{len(json_data)}',
+				'Authorization': f'Bearer {token}'}
+		data = requests.get(url,json=json_data,headers=headers)
+		print(data)
 		if data.status_code > 299:return False,data.text
 		return True,data.json()
 	except Exception as error:
