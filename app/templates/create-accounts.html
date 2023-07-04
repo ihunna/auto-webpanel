@@ -108,7 +108,11 @@
                             </div>
                             <div>
                                 <label for="op-gender">Choose prefered gender</label>
-                                <input type="text" id="op-gender" name="op-gender" required>
+                                <select type="text" id="op-gender" name="op-gender" required> 
+                                    <option value="female">Female</option>
+                                    <option value="male">Male</option>
+                                    <option value="nonbinary">Nonbinary</option>
+                                </select>
                                 <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the prefered gender e.g male, female or none</h5>
                             </div>
                              {% if models%}
