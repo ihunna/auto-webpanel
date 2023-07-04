@@ -59,7 +59,7 @@
                                         {%endif%}
 
                                         <p class="bg-warning">
-                                                {% if account.matches < 1%}
+                                                {% if account.stats.matches < 1%}
                                                 not matched
                                                 {%else%}
                                                 matched
@@ -68,16 +68,16 @@
                                     </div>
                                     <div class="d-items">
                                         <p>
-                                            {{account.matches}} matches
+                                            {{account.stats.matches}} matches
                                         </p>
                                         <p>
-                                            {{account.swipes}} liked
+                                            {{account.stats.swipes}} liked
                                         </p>
                                         <p>
-                                            {{account.likes}} likes
+                                            {{account.stats.likes}} likes
                                         </p>
                                         <p>
-                                            {{account.messages}} messages
+                                            {{account.stats.messages}} messages
                                         </p>
                                     </div>
                                 </div>
