@@ -12,7 +12,7 @@ from uszipcode import SearchEngine
 from dotenv import load_dotenv,dotenv_values, set_key
 from functools import wraps
 
-from flask import Flask, flash, redirect, render_template,send_file, abort, url_for,request, session,jsonify,g,send_from_directory
+from flask import Flask, flash, redirect, render_template,send_file, abort, url_for,request, session,jsonify,g,send_from_directory,make_response
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -229,7 +229,14 @@ app.config['PANEL_AUTH_CREDS'] = {
 			"religion": ["None", "Other", "Spiritual", "Sikh", "Zoroastrian", "Muslim", "Mormon", "Jewish", "Jain", "Hindu", "Christian", "Catholic", "Buddhist", "Atheist", "Agnostic"],
 			"star_sign": ["None", "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricon", "Aquarius", "Pisces"],
 			"education_level": ["None", "Undergraduate", "InColledge", "InGradSchool", "Graduate", "HighSchool"],
-  }
+  		},
+		'configs':[
+			{'title':'Names','content':[]},
+			{'title':'Proxies','content':[]},
+			{'title':'Email and Password','content':[]},
+			{'title':'User Agents','content':[]},
+			{'title':'Biographies','content':[]},
+			{'title':'Cities','content':[]},]
 	},
 	'okcupid':{
 		'email':OKCUPID_EMAIL,
@@ -260,22 +267,22 @@ db = firestore.client()
 Storage = storage.Client.from_service_account_json(cred_file)
 
 def get_firestore_db():
-    return db
+	return db
 
 def is_data_unique(data,collection):
-    query = collection.where("data", "==", data).limit(1).get()
-    return len(query) == 0
+	query = collection.where("data", "==", data).limit(1).get()
+	return len(query) == 0
 
 def delete_document(collection_name, document_id):
-    try:
-        collection_ref = db.collection(collection_name)
-        document_ref = collection_ref.document(document_id)
-        document_ref.delete()
-        return True
-    except Exception as error:
-        print(error)
-        return False
-    
+	try:
+		collection_ref = db.collection(collection_name)
+		document_ref = collection_ref.document(document_id)
+		document_ref.delete()
+		return True
+	except Exception as error:
+		print(error)
+		return False
+	
 app.config['ADMINS_REF'] = db.collection('admins')
 
 
@@ -348,6 +355,16 @@ def validate_password(password):
 def validate_passkey(passkey):
 	if passkey and passkey == app.config['PASS_KEY']:return True
 	return False
+
+def logout():
+	try:
+		for key in list(session.keys()):
+			session.pop(key, None)
+		session.modified = True
+		return session.modified
+	except Exception as error:
+		print(error)
+		return False
 
 def check_values(values:list):
 	for value in values:

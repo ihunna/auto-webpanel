@@ -49,12 +49,15 @@
                 <div class="holder config-holder scroll">
                     {% for config in  configs %}
                     <div id="{{ config.title }}-container" class="content-holder" style="display: none;">
-                        <h3 style="padding: 10px 10px;"><u>{{ config.title }}</u></h3>
-                        <textarea id="{{ config.title }}-textarea" rows="10" cols="50" style="width: 100%;">{%if config.content|length > 0%}{{ config.content }}{%endif%}</textarea>
-                        <br>
                         <p id="{{ config.title }}-message" class="message" style="display: none;"></p>
+                        <textarea id="{{ config.title }}-textarea" rows="10" cols="50" style="width: 100%;">{%if config.content|length > 0%}{{ config.content }}{%endif%}</textarea>
+                        <div class="config-header">
+                            <h3 style="padding: 10px 10px;"><u>{{ config.title }}</u></h3>
+                            <div class="save-button">
+                                <button id="{{ config.title }}-button" class="save-button" onclick="saveContent('{{ config.title }}')">Save Changes</button>
+                            </div>
+                        </div>
                     </div>
-                    <button id="{{ config.title }}-button" class="save-button" onclick="saveContent('{{ config.title }}')">Save Changes</button>
                     {% endfor %}
                 </div>
             </div>
@@ -65,6 +68,8 @@
             }
             /* Files Buttons */
                 .holder.config-holder{
+                    display: grid;
+                    grid-template-columns: repeat(1,1fr);
                     height: calc(100% - 100px);
                     margin: 10px auto;
                     position: relative;
@@ -104,27 +109,35 @@
                 width: 100%;
                 height: 100%;
             }
+
+            .config-header{
+                margin: auto 0;
+                display: grid;
+                grid-template-columns: repeat(2,1fr);
+            }
+
+            .config-header > .save-button{
+                display: flex;
+                justify-content: end;
+                padding: 10px;
+            }
             
             /* Button style */
-            .save-button {
-                position: absolute;
-                padding: 8px 16px;
-                /* background-color: #cbadff; */
-                color: black;
+            .config-header > .save-button > button{
                 border: none;
-                border-radius: 4px;
-                font-size: 16px;
+                margin: auto 0;
+                border-radius: 20px;
+                font-size: 14px;
                 cursor: pointer;
-                bottom: 10px;
-                right: 40px;
-                padding: 10px 20px;
-                background: #000000;
-                color: var(--soft-white);
+                width: fit-content;
+                padding: 5px 10px;
+                background: var(--secondary);
+                color: #000000;
                 font-weight: 500;
                 display: none;
             }
 
-            .save-button:hover {
+            .config-header > .save-button > button:hover {
                 background-color: #f1f1f1;
                 color: #000000;
             }
@@ -139,6 +152,9 @@
             textarea::-webkit-scrollbar {
                 width: 0;
                 height: 0;
+            }
+            .message{
+                padding: 0 10px;
             }
             @media screen and (max-width: 999.9px){
                 

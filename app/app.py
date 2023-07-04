@@ -94,6 +94,8 @@ def admins():
 @blocked
 def admin(action):
 	try:
+		admin = session.get('ADMIN')
+		
 		if action == 'admin-settings':
 			full_name = request.form.get('admin-fullname')
 			email = request.form.get('admin-email')
@@ -118,8 +120,6 @@ def admin(action):
 			op_admin = app.config['ADMINS_REF'].document(op_admin_id).get().to_dict()
 			op_admin_status = op_admin.get('status')
 
-			admin = session.get('ADMIN')
-
 			if (admin['role'] == 'super-admin' and op_admin_status == 'active') and admin['id'] != op_admin_id:
 				app.config['ADMINS_REF'].document(op_admin_id).update({
 					'role': 'super-admin'
@@ -133,8 +133,6 @@ def admin(action):
 			op_admin_id = request.get_json()['data'][0]['admin_id']
 			op_admin = app.config['ADMINS_REF'].document(op_admin_id).get().to_dict()
 			op_admin_status = op_admin.get('status')
-
-			admin = session.get('ADMIN')
 
 			if (admin['role'] == 'super-admin' and op_admin_status == 'active') and admin['id'] != op_admin_id:
 				app.config['ADMINS_REF'].document(op_admin_id).update({
@@ -151,8 +149,6 @@ def admin(action):
 			op_admin = app.config['ADMINS_REF'].document(op_admin_id).get().to_dict()
 			op_admin_status = op_admin.get('status')
 
-			admin = session.get('ADMIN')
-
 			if (admin['role'] == 'super-admin' and op_admin_status == 'blocked') and admin['id'] != op_admin_id:
 				app.config['ADMINS_REF'].document(op_admin_id).update({
 					'status': 'active'
@@ -168,11 +164,15 @@ def admin(action):
 			op_admin_status = op_admin.get('status')
 			op_admin_role = op_admin.get('role')
 
-			admin = session.get('ADMIN')
-
 			if (admin['role'] == 'super-admin' and op_admin_status == 'active') and op_admin_role != 'super-admin':
-				session['ADMIN'] = app.config['ADMINS'][op_admin_id]
-				return jsonify({'msg': f"Logged in as {session['ADMIN']['full_name']}"}), 200
+				if logout():
+					session['ADMIN'] = app.config['ADMINS'][op_admin_id]
+					session['PLATFORMS'] = {}
+					session['MODELS'] = {} 
+					response = make_response(jsonify({'msg': f"Logged in as {session['ADMIN']['full_name']}"}),200)
+					response.delete_cookie('session')
+					return response
+				jsonify({'msg': f"couldn't log you in as user"}, 400)
 			return jsonify({'msg': 'Unauthorized'}), 403 
 		
 		elif action == 'delete-user':
@@ -188,7 +188,7 @@ def admin(action):
 				if delete_user:
 					del app.config['ADMINS'][op_admin_id]
 					return jsonify({'msg': 'User deleted successfully'}), 200
-				else:return jsonify({'msg': 'Error deleting user'}), 400
+				else:return jsonify({'msg': "couldn't delete user"}), 400
 			else:return jsonify({'msg': 'Unauthorized'}), 403
 
 		elif action == 'edit-signup-configs':
@@ -211,7 +211,7 @@ def admin(action):
 
 	except Exception as error:
 		print(error)
-		return jsonify({'msg': 'Error updating admin'}), 500
+		return jsonify({'msg': 'admin update unsccuessful'}), 500
 
 
 @app.route('/platforms',methods=['GET'])
@@ -419,6 +419,8 @@ def model(action):
 		platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 		platform_id = session['PLATFORM']['id']
 		models_ref = platforms_ref.document(platform_id).collection('models')
+		panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
+		
 
 		if action == 'add-model':
 			full_name = request.form.get('model-fullname')
@@ -442,14 +444,7 @@ def model(action):
 				'added_at':firestore.SERVER_TIMESTAMP
 			})
 
-			model_configs = [
-			{'title':'Names','content':[]},
-			{'title':'Proxies','content':[]},
-			{'title':'Email and Password','content':[]},
-			{'title':'User Agents','content':[]},
-			{'title':'Biographies','content':[]},
-			{'title':'zip_codes','content':[]},
-			{'title':'Cities','content':[]},]
+			model_configs = panel_creds['configs']
 			
 			for config in model_configs:
 				models_ref.document(model_id).collection('configs').document(config['title']).set(config)
@@ -640,23 +635,7 @@ def signup():
 				'status': status,
 				'created_at': firestore.SERVER_TIMESTAMP
 			})
-
-			# Retrieve the created admin document from Firestore
-			admin_doc = admin_doc_ref.get().to_dict()
-
-			admin = {
-				'id': admin_doc['id'],
-				'full_name': admin_doc['full_name'],
-				'email': admin_doc['email'],
-				'password': admin_doc['password'],
-				'role': admin_doc['role'],
-				'status': admin_doc['status'],
-				'created_at': admin_doc['created_at']
-			}
-
-			# Add the admin to the app's configuration
-			app.config['ADMINS'].update({admin['id']: admin})
-
+			
 			return jsonify({'msg': 'Signup successful'}), 200
 	return jsonify({'msg':'Not authorized'}),403
 
@@ -670,7 +649,6 @@ def signup_page(key):
 
 
 @app.route(f'/adminonlyallowedtosignup__________',methods=['POST'])
-
 def do_signup():
 	try:
 		if request.method == 'GET':
@@ -783,17 +761,23 @@ def login():
 
 @app.route('/logout',methods=['GET','POST'])
 @login_required
-def logout():
+def do_logout():
 	try:
 		if request.method == 'GET':
-			session.clear()
-			return redirect(url_for('login'))
+			if logout(): 
+				response = make_response(jsonify({'msg': f"Logout successful"}), 200)
+				response.delete_cookie('session')
+				return response
+			return jsonify({'msg':'logout unsuccessful'}), 400
 		elif request.method == 'POST':
-			session.clear()
-			return jsonify({'msg':'You are successfully logged out'}), 200
+			if logout(): 
+				response = make_response(jsonify({'msg': f"Logout successful"}), 200)
+				response.delete_cookie('session')
+				return response
+			return jsonify({'msg':'logout unsuccessful'}), 400
 	except Exception as error:
 		print(error)
-		abort(500)
+		return jsonify({'msg':'logout unsuccessful'}), 500
 
 
 @app.route('/schedules',methods=['GET'])
@@ -1109,20 +1093,28 @@ def account_page():
 		account_snapshot = api.get_profile(panel_creds['url'],account_id,TOKEN)
 		if account_snapshot[0]:
 			account_data = account_snapshot[1]
-			account_data['matches']=0
-			account_data['upload_images']=0,
-			account_data['swipes']=0
-			account_data['likes']=0
-			account_data['messages']=0
+			account_data['created_at'] = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+			account_data['stats'] = {
+				'matches':5,
+				'swipes':0,
+				'liked':300,
+				'disliked':20,
+				'likes':200,
+				'messages':0
+			}
+			account_data['upload_images']=0
 			account_data['profile_image'] = account_data.get('images')[0] if 'images' in account_data.keys() else ''
 			
-			if action == 'map':
+			if action and action == 'map':
 				return render_template('account-page.html', account=account_data, action=action)
-			elif action == 'edit-account':
+			elif action and action == 'edit-account':
 				edit_data = panel_edit_configs
 				return render_template('account-page.html', account=account_data, action=action,edit_data=edit_data)
-			
+			elif action and action == 'view-details':
+				return render_template('account-page.html', account=account_data, action=action)
 			return render_template('account-page.html', account=account_data)
+	elif action and action == 'view-details':
+			return render_template('account-page.html', action=action)
 	return redirect('/accounts')
 
 @app.route('/account-page/<action>',methods=['POST'])
@@ -1625,7 +1617,7 @@ def upload_image(type, category):
 		elif category == 'gdrive':
 			image_list = request.form.get('data')
 			image_list = image_list.split(',')
-			if not check_values(image_list):raise ValueError('No image uploaded, supply at least one image file')
+			if not check_values([image_list]):raise ValueError('No image uploaded, supply at least one image file')
 			type = request.form.get('image-type')
 			image_pose = request.form.get('pose')
 
@@ -1652,8 +1644,9 @@ def upload_image(type, category):
 			msg = f'{len(uploaded)} images uploaded successfully'
 		if len(uploaded) < 1:raise ValueError('No image uploaded, could be network error, please try again')
 		return jsonify({'msg': msg, 'data':uploaded}), 200
+	
 	except ValueError as v_error:
-		return jsonify({'msg':v_error})
+		return jsonify({'msg':v_error}),400
 	except Exception as error:
 		print(error)
 		return jsonify({'msg': 'Image upload unsuccessful'}), 500
@@ -1722,13 +1715,12 @@ def delete_item():
 		images_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('images')
 		
 		image_list = request.get_json()['data']
-		if not check_values:raise ValueError('No image uploaded, supply at least one image file')
+		if not check_values([image_list]):raise ValueError('No image uploaded, supply at least one image file')
 		sub_list = sublist(image_list, 20)
 		threads = []
 		_bucket_name = platform_creds['images_bucket'] if type != 'verification' else platform_creds['v_images_bucket']
 		bucket = Storage.bucket(_bucket_name)
 		def _delete(image):
-			print(image)
 			image_id = image['id']
 			image_upload_type = image['upload_type']
 			images_ref.document(image_id).delete()
@@ -1738,13 +1730,18 @@ def delete_item():
 				image_blob.delete()
 		for chunk in sub_list:
 			for image in chunk:
+				if not check_values([image.get('upload_type'),image.get('id')]):
+					raise ValueError('Image does not exist or is not of supported type')
 				thread = Thread(target=_delete, args=(image,))
 				threads.append(thread)
 				thread.start()
 			for thread in threads:
 				thread.join()
 
-		return jsonify({'msg':'image(s) deleted successfully'})
+		return jsonify({'msg':'image(s) deleted successfully'}), 200
+	
+	except ValueError as error:
+		return jsonify({'msg': f'{error}'}), 400
 	except TypeError as error:
 		print(error)
 		return jsonify({'msg': f'error deleting image'}), 500

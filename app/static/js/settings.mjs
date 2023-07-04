@@ -118,7 +118,18 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         const viewAll = doc.querySelector('.view-all');
         viewAll.addEventListener('click',(e) => {
             e.preventDefault();
-            createModal(modal,'sModalImg',[]);
+            const imageList = doc.querySelectorAll('#profile-images li img')
+            const images = Array.from(imageList).map((img) => {
+                const url = img.getAttribute('src');
+                let name = url.split('/')
+                name = name[name.length-1]
+                return {
+                  url: url,
+                  name: name,
+                  'id':null,
+                };
+              });
+            createModal(modal,'sModalImg',images);
             showHide('show',[overlay,modal]);
         });
     }catch(error){con.log(error)}

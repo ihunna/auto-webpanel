@@ -186,6 +186,7 @@ td.actions{
     width: 70%;
     height: 100%;
     margin: auto;
+    overflow: visible;
 }
 
 
@@ -195,7 +196,7 @@ td.actions{
 .profile-holder > 
 .profile-card > 
 .profile-card-details > .d-status p.bg-success{
-    background: none;
+    background: none !important;
     color: var(--success);
 }
 
@@ -205,7 +206,7 @@ td.actions{
 .profile-holder > 
 .profile-card > 
 .profile-card-details > .d-status p.bg-danger{
-    background: none;
+    background: none !important;
     color: var(--danger);
 }
 
@@ -215,7 +216,7 @@ td.actions{
 .profile-holder > 
 .profile-card > 
 .profile-card-details > .d-status p.bg-warning{
-    background: none;
+    background: none !important;
     color: var(--warning);
 }
 
@@ -251,6 +252,34 @@ td.actions{
 .profile-details > .p-details-actions{
     grid-template-columns: repeat(1,1fr);
 }
+
+.main > 
+.main-box > 
+.main-container > 
+.account-details-holder{
+    grid-template-columns: repeat(1,1fr);
+}
+
+.main > 
+.main-box > 
+.main-container > 
+.account-details-holder > .configurations{
+    overflow: visible;
+}
+
+.main > 
+.main-box > 
+.main-container > 
+.account-details-holder> .profile > .account-details > .header,
+.main > 
+.main-box > 
+.main-container > 
+.account-details-holder > .configurations > .configs > .header{
+    left: 25%;
+    width: 50%;
+}
+
+
 
 @media screen and (max-width: 767px){
     #menu-btn{
@@ -498,6 +527,14 @@ td.actions{
     .main-container > 
     .profile-holder > .profile-card{
         width: 90%;
+        border-radius: 0;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > 
+    .profile-holder > .profile-card > .profile-image{
+        border-radius: 0;
     }
 
     .main > 
@@ -505,6 +542,47 @@ td.actions{
     .main-container > 
     .profile-holder > .profile-details{
         width: 90%;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > 
+    .account-details-holder > .configurations,
+    .main > 
+    .main-box > 
+    .main-container > 
+    .account-details-holder> .profile{
+        margin: auto;
+        width: 90%;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > 
+    .account-details-holder > .configurations > .configs > .body,
+    .main > 
+    .main-box > 
+    .main-container > 
+    .account-details-holder> .profile> .account-details > .body > .detail{
+        font-size: 12px;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > 
+    .account-details-holder > .profile>
+    .account-details > .body > .detail > span > i{
+        width: 18px;
+        height: 18px;
+        font-size: 8px;
+        padding: 5px 2.5px;
+    }
+
+    .main > 
+    .main-box > 
+    .main-container > 
+    .account-details-holder > .configurations > .configs > .body > .detail{
+        overflow-wrap: break-word
     }
 
     .form-holder{
@@ -596,12 +674,12 @@ td.actions{
     .model-tag{
         display: none;
     }
-    .main > 
+    /* .main > 
     .main-box > 
     .main-container > 
     .profile-holder > .profile-card{
         width: 98%;
-    }
+    } */
 
     .main > 
     .main-box > 

@@ -200,6 +200,7 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
           const image = doc.createElement('img');
           image.src = `${e.url}`;
           image.alt = '';
+          
 
           const imgName = doc.createElement('div');
           imgName.classList.add('img-name');
