@@ -1095,11 +1095,11 @@ def account_page():
 			account_data = account_snapshot[1]
 			account_data['created_at'] = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 			account_data['stats'] = {
-				'matches':5,
+				'matches':0,
 				'swipes':0,
-				'liked':300,
-				'disliked':20,
-				'likes':200,
+				'liked':0,
+				'disliked':0,
+				'likes':0,
 				'messages':0
 			}
 			account_data['upload_images']=0
