@@ -1086,23 +1086,24 @@ def account_page():
 		TOKEN = TOKEN[1]['idToken']
 
 
-		# proxies  = configs_ref.document('Proxies').get()
-		# json_data = {'proxies':proxies.split('\n')} if check_values(proxies) else {}
-		# get_stats(panel_creds['url'],account_id,TOKEN,json_data=json_data)
+		proxies  = configs_ref.document('Proxies').get().to_dict()
+		json_data = {'proxies':proxies['content'].split('\n')} if check_values([proxies['content']]) else {}
+		account_stats = api.get_stats(panel_creds['url'],account_id,TOKEN,json_data=json_data)
+		print(account_stats)
 		
 		account_snapshot = api.get_profile(panel_creds['url'],account_id,TOKEN)
-		if account_snapshot[0]:
+		if account_snapshot[0] and account_stats[0]:
 			account_data = account_snapshot[1]
-			account_data['created_at'] = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-			account_data['stats'] = {
-				'matches':0,
-				'swipes':0,
-				'liked':0,
-				'disliked':0,
-				'likes':0,
-				'messages':0
-			}
-			account_data['upload_images']=0
+			account_stats = account_stats[1]
+
+			created_at = account_data.get('created') if 'created_at' in account_data.keys() else str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+			account_data['created_at'] = created_at
+			account_data['stats'] = account_stats['stats']
+			account_data['stats']['swpies'] = 0
+			account_data['stats']['liked'] = 0
+			account_data['stats']['disliked'] = 0
+
+			account_data['status'] = account_stats['status']
 			account_data['profile_image'] = account_data.get('images')[0] if 'images' in account_data.keys() else ''
 			
 			if action and action == 'map':
@@ -1113,8 +1114,6 @@ def account_page():
 			elif action and action == 'view-details':
 				return render_template('account-page.html', account=account_data, action=action)
 			return render_template('account-page.html', account=account_data)
-	elif action and action == 'view-details':
-			return render_template('account-page.html', action=action)
 	return redirect('/accounts')
 
 @app.route('/account-page/<action>',methods=['POST'])
@@ -1292,9 +1291,9 @@ def create_accounts():
 		configs = {}
 		for config in configs_snap:
 			config = config.to_dict()
-			if not check_values([config['content']]) and config['title'] != 'zip_codes':
+			if not check_values([config['content']]):
 				raise ValueError(f'{config["title"]} is empty for selected model')
-			config = {config['title']:config['content'].split('\n')} if config['title'] != 'zip_codes' else {config['title']:[]}
+			config = {config['title']:config['content'].split('\n')}
 			configs.update(config)
 
 		names = configs['Names']
@@ -1302,27 +1301,27 @@ def create_accounts():
 		proxies = configs['Proxies'] 
 		user_agents = configs['User Agents']
 		cities = configs['Cities']
-		zip_codes = configs['zip_codes']
 		creds = configs['Email and Password']
 		handles = session['MODEL']['socials']
 		handles = [h.replace('\r','') for handle in handles 
 	     if handle['platform'].lower() in ['instagram','ig','insta'] 
 		 for h in handle['handles']]
 		
-		if check_values([session['MODEL'].get('SCHEDULES')]):
-			schedules = [s for s in list(session['MODEL'].get('SCHEDULES').values()) if s['type'] in ['swiping','swipe']]
-			if not check_values([swipe_schedule,schedules]):raise ValueError('No swiping schedule for selected model')
-			if swipe_schedule is not None and len(schedules) > 0:
-				swipe_configs = [s for s in schedules if s['id'] == swipe_schedule][0]
+		# if check_values([session['MODEL'].get('SCHEDULES')] and swipe_schedule):
+		# 	schedules = [s for s in list(session['MODEL'].get('SCHEDULES').values()) if s['type'] in ['swiping','swipe']]
+		# 	if not check_values([session['MODEL']['SCHEDULES'][swipe_schedule],schedules]):raise ValueError('No swiping schedule for selected model')
+		# 	if swipe_schedule is not None and len(schedules) > 0:
+		# 		swipe_configs = [s for s in schedules if s['id'] == swipe_schedule][0]
 
-				swipe_delay_start = swipe_configs['swipe_delay'].split('-')[0]
-				swipe_delay_end = swipe_configs['swipe_delay'].split('-')[1]
-				swipe_configs['swipe_delay'] = random.randint(int(swipe_delay_start),int(swipe_delay_end))
+		# 		swipe_delay_start = swipe_configs['swipe_delay'].split('-')[0]
+		# 		swipe_delay_end = swipe_configs['swipe_delay'].split('-')[1]
+		# 		swipe_configs['swipe_delay'] = random.randint(int(swipe_delay_start),int(swipe_delay_end))
 				
-				swipe_duration_start = swipe_configs['swipe_duration'].split('-')[0]
-				swipe_duration_end = swipe_configs['swipe_duration'].split('-')[1]
-				swipe_configs['swipe_duration'] = random.randint(int(swipe_duration_start),int(swipe_duration_end))
-				swipe_configs['first_swipe'] = True
+		# 		swipe_duration_start = swipe_configs['swipe_duration'].split('-')[0]
+		# 		swipe_duration_end = swipe_configs['swipe_duration'].split('-')[1]
+		# 		swipe_configs['swipe_duration'] = random.randint(int(swipe_duration_start),int(swipe_duration_end))
+		# 		swipe_configs['first_swipe'] = True
+		
 		task_id = str(uuid.uuid4())
 		task_status = 'running'
 		task_progress = 0
@@ -1344,7 +1343,6 @@ def create_accounts():
 			'cities': [cities[:] for _ in range(op_count)],
 			'proxies':[proxies[:] for _ in range(op_count)],
 			'user_agents':[user_agents[:] for _ in range(op_count)],
-			'zip_codes':[zip_codes[:] for _ in range(op_count)],
 			'accounts':[creds[:] for _ in range(op_count)],
 			'url':platform_host,
 			'token': TOKEN
@@ -1360,7 +1358,11 @@ def create_accounts():
 				"start_time":firestore.SERVER_TIMESTAMP,
 				'status': task_status,
 				'progress': task_progress,
-				'running':True
+				'running':True,
+				'failed':0,
+				'successful':0,
+				'task_count':op_count,
+				'message':'Account creation just started'
 			})
 
 			session['MODEL']['TASKS'] = {
@@ -1368,7 +1370,6 @@ def create_accounts():
 					'id':task_id,
 					'task_status':task_status,
 					'running':True,
-					'task_progress':task_progress
 				}
 			}
 			return jsonify({'msg': 'Task started, please wait while it finishes'}), 200
@@ -1450,8 +1451,6 @@ def swipe_page_p():
 	else:
 		return jsonify({'msg': 'No tasks running'}), 200
 
-
-
 @app.route('/send-msg', methods=['GET'])
 @login_required
 @blocked
@@ -1496,6 +1495,9 @@ def send_msg():
 def show_tasks():
 	g.page = 'tasks'
 	tasks = []
+	task = request.args.get('task')
+	action = request.args.get('action')
+
 
 	platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 	platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
@@ -1503,19 +1505,28 @@ def show_tasks():
 	tasks_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('tasks')
 	schedules_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('schedules')
 
-	# Retrieve tasks from Firestore
+	if (task and action) and action == 'view-task':
+		task_status = tasks_ref.document(task).get()
+		if task_status.exists: 
+			task_status = task_status.to_dict()
+			start_time = task_status['start_time'].strftime("%Y-%m-%d %H:%M:%S")
+			task_status['start_time'] = start_time
+			return render_template('tasks.html', task_status=task_status,action=action)
+		else: 
+			return redirect(url_for('show_tasks'))
+		
 	tasks_ref = tasks_ref.order_by('start_time', direction='DESCENDING')
 	tasks_data = tasks_ref.get()
 
 	for task_doc in tasks_data:
 		task = task_doc.to_dict()
 		tasks.append({
+			'id':task['id'],
 			'type': task['type'],
 			'start_time': task['start_time'],
 			'status': task['status'],
 			'progress':task['progress']
 		})
-
 	return render_template('tasks.html', tasks=tasks)
 
 @app.route('/account-configs',methods=['GET'])

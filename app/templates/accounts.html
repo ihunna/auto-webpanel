@@ -25,9 +25,9 @@
                     <table class="scroll">
                         <thead>
                         <tr>
+                            <th>ID</th>
                             <th>Name</th>
                             <th>Email</th>
-                            <th>Status</th>
                             <th>Created at</th>
                             <th>Actions</th>
                         </tr>
@@ -35,13 +35,9 @@
                         <tbody>
                         {%for account in accounts%}
                         <tr>
+                            <td>{{account.id}}</td>
                             <td>{{account.name}}</td>
                             <td>{{account.email}}</td>
-                            <td>
-                                <span  class="admin-badge">
-                                    {{account.status}}
-                                </span>
-                            </td>
                             <td>{{account.created_at}}</td>
                             <td class="actions">
                                 <i class="fas fa-ellipsis-v"></i>

@@ -90,7 +90,6 @@ def create_accounts(
 			cities:list = None,
 			proxies:list = None,
 			user_agents:list = None,
-			zip_codes:list = None,
 			accounts:list = None,
 			url:str = None,
 			token:str = None):
@@ -115,7 +114,6 @@ def create_accounts(
 				'cities':cities,
 				'proxies':proxies,
 				'user_agents':user_agents,
-				'zip_codes':zip_codes,
 				'accounts':accounts,
 			}
 
@@ -154,13 +152,13 @@ def start_task(
 			cities:list = None,
 			proxies:list = None,
 			user_agents:list = None,
-			zip_codes:list = None,
 			accounts:list = None,
 			url:str=None,
 			token:str = None):
 	
 	print('\nACCOUNT CREATION STARTED \n')
 	success,msg,task_status = False,'',''
+	fails,passes,completed= 0,0,0
 
 	try:
 		kwargs=[{
@@ -171,7 +169,6 @@ def start_task(
 			'bios':bios[i],
 			'handles':handles[i],
 			'cities':cities[i],
-			'zip_codes':zip_codes[i],
 			'proxies':proxies[i],
 			'user_agents':user_agents[i],
 			'age_range':age_range,
@@ -193,36 +190,53 @@ def start_task(
 				result = future.result()
 				if result[0]:
 					account = result[1]
+					completed += 1
 					print(account)
 					if account.get('status') == 'CREATION_ERROR':
-						task_status = 'Failed'
-						success,msg = True,'Some accounts failed'
+						fails += 1
+						msg = f'{fails} account of {op_count} failed and {op_count - (fails+passes)} waiting to be created'
+						tasks_ref.document(task_id).update({
+							'message':msg,
+							'progress':(completed / op_count) * 100,
+							'successful':passes,
+							'failed':fails
+							})
 						continue
-					accounts_ref.document(account['id']).set({
-						'id':account['id'],
-						'name':account['name'],
-						'status':account['status'],
-						'email':account['email'],
-						'gender':account['gender'],
-						'city':account['city'],
-						'country':account['country_code'],
-						'created_at':firestore.SERVER_TIMESTAMP,
-						'profile':json.dumps(account['profile'])
-					})
-					task_status = 'Completed'
-					success,msg = True,'Account creation successful'
+					account['profile'] = json.dumps(account['profile'])
+					accounts_ref.document(account['id']).set(account)
+					
+					passes += 1
+					msg = f'{passes} account of {op_count} created successfully and {op_count - (passes+fails)} waiting to be created'
+					tasks_ref.document(task_id).update({
+						'message':msg,
+						'progress':(completed / op_count) * 100,
+						'successful':passes,
+						'failed':fails
+						})
 					
 				else:
-					task_status = 'Failed'
+					fails += 1
+					msg = f'{fails} account of {op_count} failed and {op_count - (fails+passes)} waiting to be created'
+					tasks_ref.document(task_id).update({
+						'message':msg,
+						'progress':(completed / op_count) * 100,
+						'successful':passes,
+						'failed':fails
+						})
 					print(result[1])
+		task_status ='completed'
+		msg = f'account creation completed, {passes} accounts created'
 	except Exception as error:
-		success,msg = False,error
 		print(error)
-		task_status = 'Failed'
+		task_status ='failed'
+		msg = f'account creation failed, no accounts created'
 	finally:
 		tasks_ref.document(task_id).update({
-			'running':False,
 			'status':task_status,
-			'progress':100
+			'running':False,
+			'message':msg,
+			'progress':(completed / op_count) * 100,
+			'successful':passes,
+			'failed':fails
 			})
 		return success,msg 

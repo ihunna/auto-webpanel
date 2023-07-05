@@ -743,15 +743,77 @@ li >
     height: 90%;
 }
 
-.op-holder > .op-card{
+.holder.t-d-holder{
+    border: none;
+}
+
+.op-holder > .op-card, .op-holder > .task-display{
     position: relative;
     display: flex;
     flex-direction: column;
-    box-shadow: 0.2px 0.2px 10px #e2e2e2;
     margin:auto;
     width: 80%;
-    max-height: 200px;
     padding: 10px;
+}
+.op-holder > .task-display{
+    border: 2px solid var(--soft-white);
+}
+.op-holder > .task-display > .task-header{
+    margin: 0 auto 10px auto;
+}
+
+.op-holder > .task-display > .detail{
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    width: 90%;
+    margin: 5px auto;
+    border-bottom: 2px solid var(--soft-white);
+    padding: 3px 10px;
+}
+
+.op-holder > .task-display > .detail > .key{
+    text-align: left;
+}
+
+.op-holder > .task-display > .detail > .val{
+    margin: auto 0 auto auto;
+    text-align: right;
+}
+
+.op-holder > .task-display > .detail.status > .val{
+    width: fit-content;
+    padding: 2.5px 10px;
+    border-radius: 20px;
+}
+
+.op-holder > .task-display > .detail.message{
+    grid-template-columns: repeat(1,1fr);
+    border: none;
+}
+
+.op-holder > .task-display > .detail.message > .key{
+    color: #333;
+}
+
+.op-holder > .task-display > .detail.message > .key,
+.op-holder > .task-display > .detail.message >.val{
+    margin: auto;
+}
+
+.op-holder > .task-display > .detail.message >.val{
+    background: var(--soft-white);
+    padding: 5px;
+    color: #333;
+    margin-top: 5px;
+    border-radius: 20px;
+    padding: 10px 16px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.op-holder > .op-card{
+    max-height: 200px;
+    box-shadow: 0.2px 0.2px 10px #e2e2e2;
 }
 
 .op-holder.holder.task-holder > .op-card{

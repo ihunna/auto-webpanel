@@ -403,10 +403,9 @@ class API:
 			url = f'{host}/account/{account_id}/stats'
 			headers = {
 					'Content-Type':'application/json',
-					'Content-Length':f'{len(json_data)}',
 					'Authorization': f'Bearer {token}'}
-			data = httpx.get(url,json=json_data,headers=headers,timeout=self.timeout)
-			print(data)
+			data = requests.get(url,json=json_data,headers=headers,timeout=self.timeout)
+
 			if data.status_code > 299:return False,data.text
 			return True,data.json()
 		except Exception as error:

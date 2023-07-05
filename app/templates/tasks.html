@@ -23,41 +23,97 @@
             </div>
 
             <div class="main-container">
-                <div class="holder scroll task-holder op-holder">
-                    {% for task in tasks%}
-                        <div class="op-card">
-                            <div>
-                                <h2>
-                                    {{task.type|capitalize}}
-                                </h2>
-                            </div>
-                            <div>
-                                <strong>Status : </strong>
-                                <span>{{task.status}}</span>
-                            </div>
-                            <div>
-                                <strong>Started at : </strong>
-                                <span>{{task.start_time}}</span>
-                            </div>
-                            {% if task.status|lower == "running"%}
-                                <span class="op-spinner bg-warning">
-                                    <i class="fa fa-spinner fa-spin"></i>
-                                </span>
-                            {%elif task.status|lower == "completed"%}
-                                <span class="op-spinner bg-success">
-                                    <i class="fa fa-check"></i>
-                                </span>
-                            {%elif task.status|lower == "failed"%}
-                            <span class="op-spinner bg-danger">
-                                <i class="fa fa-close"></i>
-                            </span>
-                            {%endif%}
-                            <div>
-                                <progress id="progressbar" value="{{task.progress}}" max="100"></progress>
-                            </div>
+                {%if action and action == 'view-task'%}
+                <div class="holder op-holder task-holder t-d-holder scroll">
+                   <div class="task-display">
+                        <div class="task-header">
+                            <h3>
+                                {{task_status.type}}
+                            </h3>
                         </div>
-                    {%endfor%}
+                        <div class="detail status">
+                           <div class="key">
+                                Status
+                           </div>
+                           <div class="val {%if task_status.status|lower == 'running'%}bg-warning
+                            {%elif task_status.status|lower == 'failed'%}bg-danger
+                            {%elif task_status.status|lower == 'completed'%}bg-success
+                            {%endif%}">
+                                {{task_status.status|capitalize}}
+                           </div>
+                        </div>
+                        <div class="detail">
+                            <div class="key">
+                                 Start at
+                            </div>
+                            <div class="val">
+                                 {{task_status.start_time|capitalize}}
+                            </div>
+                         </div>
+                         <div class="detail">
+                            <div class="key">
+                                 Successful
+                            </div>
+                            <div class="val">
+                                 {{task_status.successful}} out of {{task_status.task_count}}
+                            </div>
+                         </div>
+                         <div class="detail">
+                            <div class="key">
+                                 Failed
+                            </div>
+                            <div class="val">
+                                 {{task_status.failed}} out of {{task_status.task_count}}
+                            </div>
+                         </div>
+                         <div class="detail  message">
+                            <div class="key">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                             <div class="val">
+                                 {{task_status.message}}
+                             </div>
+                         </div>
+                   </div>
                 </div>
+                {%else%}
+                    <div class="holder scroll task-holder op-holder">
+                        {% for task in tasks%}
+                            <a href="/tasks?task={{task.id}}&action=view-task" class="op-card">
+                                <div>
+                                    <h2>
+                                        {{task.type|capitalize}}
+                                    </h2>
+                                </div>
+                                <div>
+                                    <strong>Status : </strong>
+                                    <span>{{task.status}}</span>
+                                </div>
+                                <div>
+                                    <strong>Started at : </strong>
+                                    <span>{{task.start_time}}</span>
+                                </div>
+                                {% if task.status|lower == "running"%}
+                                    <span class="op-spinner bg-warning">
+                                        <i class="fa fa-spinner fa-spin"></i>
+                                    </span>
+                                {%elif task.status|lower == "completed"%}
+                                    <span class="op-spinner bg-success">
+                                        <i class="fa fa-check"></i>
+                                    </span>
+                                {%elif task.status|lower == "failed"%}
+                                <span class="op-spinner bg-danger">
+                                    <i class="fa fa-close"></i>
+                                </span>
+                                {%endif%}
+                                <div>
+                                    <progress id="progressbar" value="{{task.progress}}" max="100"></progress>
+                                </div>
+                            </a>
+                        {%endfor%}
+                    </div>
+                {%endif%}
+
             </div>
         </div>
     {%endblock%}

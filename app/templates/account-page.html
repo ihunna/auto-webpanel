@@ -51,27 +51,22 @@
                                         {{account.name}}
                                     </h4>
                                     <div class="d-status">
-                                        <p class="bg-success">Active</p>
-                                        {% if account.status != 'VERIFIED' %}
-                                            <p class="bg-danger">Not verified</p>
-                                        {%else%}
-                                        <p class="bg-success">Not verified</p>
+                                        {% if account.status == 'NO_FACIAL' %}
+                                            <p class="bg-warning">Not verified</p>
+                                        {%elif account.status == 'FULL'%}
+                                            <p class="bg-success">active</p>
+                                        {%elif account.status == 'BANNED'%}
+                                            <p class="bg-danger">banned</p>
+                                        {%elif account.status == 'PHONE_VERIFICATION_NEEDED'%}
+                                            <p class="bg-warning">needs attention</p>
                                         {%endif%}
-
-                                        <p class="bg-warning">
-                                                {% if account.stats.matches < 1%}
-                                                not matched
-                                                {%else%}
-                                                matched
-                                                {%endif%}
-                                        </p>
                                     </div>
                                     <div class="d-items">
                                         <p>
                                             {{account.stats.matches}} matches
                                         </p>
                                         <p>
-                                            {{account.stats.swipes}} liked
+                                            {{account.stats.liked}} liked
                                         </p>
                                         <p>
                                             {{account.stats.likes}} likes
@@ -220,6 +215,41 @@
                                     </div>
                                     <div class="body">
                                         <div class="detail">
+                                           {%if account.status == 'NO_FACIAL'%}
+                                                <span>
+                                                <i class="fas fa-exclamation-circle"></i>
+                                                    status
+                                                </span>
+                                                <div class="status warning">
+                                                    not verified
+                                                </div>
+                                            {%elif account.status == 'FULL'%}
+                                                <span>
+                                                <i class="fas fa-check-circle"></i>
+                                                    status
+                                                </span>
+                                                <div class="status success">
+                                                    verified
+                                                </div>
+                                            {%elif account.status == 'BANNED'%}
+                                                <span>
+                                                <i class="fas fa-times-danger"></i>
+                                                    status
+                                                </span>
+                                                <div class="status danger">
+                                                    banned
+                                                </div>
+                                            {%elif account.status == 'PHONE_VERIFICATION_NEEDED'%}
+                                                <span>
+                                                <i class="fas fa-exclamation-circle"></i>
+                                                    status
+                                                </span>
+                                                <div class="status warning">
+                                                    needs attention
+                                                </div>
+                                            {%endif%}
+                                        </div>
+                                        <div class="detail">
                                             <span><i class="fas fa-user"></i> name</span>
                                             <div>
                                                 {{account.name}}
@@ -227,7 +257,7 @@
                                         </div>
                                         <div class="detail">
                                             <span><i class="fas fa-map-marker"></i> location</span>
-                                            <div>{{account.city}}, {{account.country_code}}</div>
+                                            <div>{{account.city|capitalize}}, {{account.country_code}}</div>
                                         </div>
                                         <div class="detail">
                                             <span><i class="fas fa-history"></i> created at</span>
@@ -235,7 +265,7 @@
                                         </div>
                                         <div class="detail">
                                             <span><i class="fas fa-venus-mars"></i> gender</span>
-                                            <div>{{account.gender}}</div>
+                                            <div>{{account.gender|capitalize}}</div>
                                         </div>
 
                                         <div class="stats">
@@ -246,27 +276,27 @@
                                                 <div class="stat">
                                                     <span><i class="fas fa-handshake"></i> matches</span>
                                                     <div class="count">{{account.stats.matches}}</div>
-                                                    <div class="metric plus" data-stat="matches">+ 20%</div>
+                                                    <div class="metric plus" data-stat="matches">+0%</div>
                                                 </div>
                                                 <div class="stat">
                                                     <span><i class="fas fa-heart"></i> likes</span>
                                                     <div class="count">{{account.stats.likes}}</div>
-                                                    <div class="metric" data-stat="likes">+ 20%</div>
+                                                    <div class="metric" data-stat="likes">+0%</div>
                                                 </div>
                                                 <div class="stat">
                                                     <span><i class="fas fa-thumbs-up"></i> swipe rights</span>
                                                     <div class="count">{{account.stats.liked}}</div>
-                                                    <div class="metric" data-stat="liked">+ %20</div>
+                                                    <div class="metric" data-stat="liked">+0%</div>
                                                 </div>
                                                 <div class="stat">
                                                     <span><i class="fas fa-thumbs-down"></i> swipe left</span>
                                                     <div class="count">{{account.stats.disliked}}</div>
-                                                    <div class="metric" data-stat="disliked">+ 20%</div>
+                                                    <div class="metric" data-stat="disliked">+0%</div>
                                                 </div>
                                                 <div class="stat">
                                                     <span><i class="fas fa-paper-plane"></i> messages</span>
                                                     <div class="count">{{account.stats.messages}}</div>
-                                                    <div class="metric" data-stat="messages">+ 20%</div>
+                                                    <div class="metric" data-stat="messages">+0%</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -283,6 +313,9 @@
                                             <strong>Email</strong>: {{account.email}}
                                         </div>
                                         <div class="detail">
+                                            <strong>Password</strong>: {{account.password}}
+                                        </div>
+                                        <div class="detail">
                                             <strong>Proxy</strong>: {%if account.proxy%}{{account.proxy}}{%else%}None{%endif%}
                                         </div>
                                         <div class="detail">
@@ -290,6 +323,9 @@
                                         </div>
                                         <div class="detail">
                                             <Strong>Account ID</Strong>: {{account.id}}
+                                        </div>
+                                        <div class="detail">
+                                            <strong>User ID</strong>: {{account.user_id}}
                                         </div>
                                     </div>
                                 </div>
@@ -404,11 +440,11 @@
                 if (result > 0){
                     stat.classList.add('plus');
                     stat.classList.remove('minus');
-                    stat.textContent = `+ ${result}%`;
+                    stat.textContent = `+${result}%`;
                 }else if (result == 0){
                     stat.classList.remove('plus');
                     stat.classList.remove('minus');
-                    stat.textContent = `${result}%`;
+                    stat.textContent = `+${result}%`;
                 }else{
                     stat.classList.remove('plus');
                     stat.classList.add('minus');

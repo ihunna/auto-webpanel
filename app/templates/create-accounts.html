@@ -29,7 +29,7 @@
                         An account creation operation is already running, please wait till it's done!
                     </h4>
                     <div class="op-action">
-                        <a href="/tasks?task={{task_status.id}}">
+                        <a href="/tasks?task={{task_status.id}}&action=view-task">
                             view operation
                         </a>
                     </div>
@@ -38,7 +38,7 @@
                     </span>
                 </div>
                 <div class="holder scroll op-holder">
-                    <div class="op-card">
+                    <a href="/tasks?task={{task_status.id}}&action=view-task" class="op-card">
                         <div>
                             <h2>
                                 {{task_status.type}}
@@ -68,7 +68,7 @@
                         <div>
                             <progress id="progressbar" value="{{task_status.progress}}" max="100"></progress>
                         </div>
-                    </div>
+                    </a>
                 </div>
                 {%else%}
                     <div class="holder scroll form-holder">
@@ -109,7 +109,7 @@
                             <div>
                                 <label for="op-gender">Choose prefered gender</label>
                                 <select type="text" id="op-gender" name="op-gender" required> 
-                                    <option value="female">Female</option>
+                                    <option value="female" selected>Female</option>
                                     <option value="male">Male</option>
                                     <option value="nonbinary">Nonbinary</option>
                                 </select>

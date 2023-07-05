@@ -476,6 +476,10 @@ td.actions{
         right: 5%;
     }
 
+    .op-holder > .op-card, .op-holder > .task-display{
+        width: 95%;
+        margin: 10px auto;
+    }
     td > .eleveted-a{
         padding: 0;
         border: none;
@@ -673,6 +677,9 @@ td.actions{
     }
     .model-tag{
         display: none;
+    }
+    .op-holder > .task-display > .detail{
+        font-size: 13px;
     }
     /* .main > 
     .main-box > 
