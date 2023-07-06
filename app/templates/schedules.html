@@ -59,7 +59,7 @@
                     <h2>
                         Edit schedule
                     </h2>
-                    <form action="" class="op-form edit-schedule" id="schedule-form">
+                    <form action="" class="op-form edit-schedule" id="schedule-form" data-action="edit-schedule" data-action-message="Updating schedule...">
                         <div>
                             <label for="s-name">Update schedule name</label>
                             <input type="text" id="s-name" name="s-name" value="{{schedule.name}}">
@@ -215,7 +215,7 @@
                         <h2>
                             Add a schedule group
                         </h2>
-                        <form action="" class="op-form " id="schedule-form">
+                        <form action="" class="op-form " id="schedule-form" data-action="add-schedule" data-action-message="Adding schedule...">
                             <div class="double-field">
                                 <label for="s-type">Schedule type</label>
                                 <div class="inputs">
@@ -441,7 +441,7 @@
                             <h2>
                                 Edit date specifications
                             </h2>
-                            <form action="" class="op-form finish-schedule" id="schedule-form">
+                            <form action="" class="op-form finish-schedule" id="schedule-form" data-action="finish-schedule" data-action-message="Updating schedule...">
                                 {%if day_specs|length > 0%}
                                     {% for i in range(day_specs|length) %}
                                         <div class="double-field">
@@ -498,7 +498,7 @@
                             <h2>
                                 Add date specifications
                             </h2>
-                            <form action="" class="op-form finish-schedule" id="schedule-form">
+                            <form action="" class="op-form finish-schedule" id="schedule-form" data-action="finish-schedule" data-action-message="Adding schedule...">
                                 <div class="double-field">
                                     <div class="inputs">
                                         <div>

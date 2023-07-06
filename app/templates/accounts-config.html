@@ -51,8 +51,15 @@
                     <div id="{{ config.title }}-container" class="content-holder" style="display: none;">
                         <p id="{{ config.title }}-message" class="message" style="display: none;"></p>
                         <textarea id="{{ config.title }}-textarea" rows="10" cols="50" style="width: 100%;">{%if config.content|length > 0%}{{ config.content }}{%endif%}</textarea>
+                        {%if config.title|lower == 'biographies'%} 
+                            <h5 class="input-highlight" style="padding: 5px 10px; font-size: 13px;"> <i class="fas fas fa-exclamation-circle"></i> 
+                                biographies must be seperated by doudle newlines (double enter key)
+                            </h5>
+                        {%endif%}
                         <div class="config-header">
-                            <h3 style="padding: 10px 10px;"><u>{{ config.title }}</u></h3>
+                            <h3 style="padding: 10px 10px;">
+                                <u>{{ config.title }}</u>
+                            </h3>
                             <div class="save-button">
                                 <button id="{{ config.title }}-button" class="save-button" onclick="saveContent('{{ config.title }}')">Save Changes</button>
                             </div>
@@ -212,7 +219,7 @@
             };
 
 
-            // Send the POST request to the server
+           // Send the POST request to the server
             fetch('/account-configs', {
                 method: 'POST',
                 headers: {
@@ -223,13 +230,20 @@
             .then(response => {
                 // Handle the response
                 if (response.ok) {
-                    message.textContent = 'File content saved successfully.';
-                    message.style.color = 'green';
+                    return response.json().then(data => {
+                        const msg = data.message;
+                        message.textContent = msg;
+                        message.style.color = 'green';
+                        message.style.display = 'block';
+                    });
                 } else {
-                    message.textContent = 'Error occurred while saving file content.';
-                    message.style.color = 'red';
+                    return response.json().then(data => {
+                        console.log(message);
+                        message.textContent = msg;
+                        message.style.color = 'red';
+                        message.style.display = 'block';
+                    });
                 }
-                message.style.display = 'block';
             })
             .catch(error => {
                 console.error('Error:', error);

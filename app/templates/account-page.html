@@ -57,6 +57,8 @@
                                             <p class="bg-success">active</p>
                                         {%elif account.status == 'BANNED'%}
                                             <p class="bg-danger">banned</p>
+                                        {%elif account.status == 'SHADOW_BANNED'%}
+                                            <p class="bg-danger">shadow banned</p>
                                         {%elif account.status == 'PHONE_VERIFICATION_NEEDED'%}
                                             <p class="bg-warning">needs attention</p>
                                         {%endif%}
@@ -238,6 +240,14 @@
                                                 </span>
                                                 <div class="status danger">
                                                     banned
+                                                </div>
+                                            {%elif account.status == 'SHADOW_BANNED'%}
+                                                <span>
+                                                <i class="fas fa-times-danger"></i>
+                                                    status
+                                                </span>
+                                                <div class="status danger">
+                                                    shadow banned
                                                 </div>
                                             {%elif account.status == 'PHONE_VERIFICATION_NEEDED'%}
                                                 <span>

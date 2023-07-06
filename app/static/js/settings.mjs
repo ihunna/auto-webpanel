@@ -364,25 +364,16 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         scheduleForm.addEventListener('submit',(e)=>{
             e.preventDefault();
             const formData = new FormData(scheduleForm);
-            let url;
-            let text;
-            if  (scheduleForm.classList.contains('edit-schedule')){
-                url = '/schedules/edit-schedule';
-                text = 'Updating schedule';
-            }
-            else if (scheduleForm.classList.contains('finish-schedule')){
-                url = '/schedules/finish-schedule';
-                showHide('show',[alertBox],text,{'bg':colorSuccess,'color':colorLessWhite});
-            }
-            else {
-                url = '/schedules/add-schedule';
-                text = 'Adding schedule';
-            }
+
+            const action = scheduleForm.getAttribute('data-action');
+            const actionMsg = scheduleForm.getAttribute('data-action-message');
+            const url = `/schedules/${action}`;
+
+            if (action == 'finish-schedule'){showHide('show',[alertBox],actionMsg,{'bg':colorSuccess,'color':colorLessWhite});}
             sendRequest('POST', url, null, formData).then(response => {
                 scheduleForm.reset()
                 showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 if (response.action && response.action === 'finish-schedule'){
-                    url = '/schedules/finish-schedule'
                     window.location.href=`/schedules?action=next&s=${response.schedule}&type=${response.action_type}&next=${response.next}`
                 }else{
                 setTimeout(() => {
