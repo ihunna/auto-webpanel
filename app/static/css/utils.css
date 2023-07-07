@@ -41,6 +41,38 @@
     display: none;
 }
 
+.radio-box input[type="radio"] {
+    display: none;
+}
+
+.radio-box label {
+    display: inline-block;
+    position: relative;
+    padding-left: 28px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 24px;
+    color: #333;
+}
+
+.radio-box label::before {
+    content: "";
+    display: inline-block;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    background-color: transparent;
+}
+
+.radio-box input[type="radio"]:checked + label::before {
+    background-color: #007bff; /* Change the active color here */
+}
+
 #progressbar {
     position: absolute;
     bottom: 0;
@@ -1089,4 +1121,29 @@ li >
 
 .table-bottom, .bottom-grid-nav{
     box-shadow: 0.1px 0.1px 10px var(--soft-text);
+}
+
+/* .gender-menu{
+    margin-bottom: 20px !important;
+} */
+
+.gender-menu > div{
+    display: flex;
+    flex: auto;
+    margin-top: 5px;
+}
+.gender-menu > div > select{
+    min-width: 50%;
+}
+.gender-menu > div > div{
+    margin: auto;
+    width: 100%;
+}
+
+.gender-menu > div > div:first-child{
+    margin-left: 0;
+}
+
+.gender-menu > div > div:last-child{
+    margin-right: 0;
 }

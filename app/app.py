@@ -481,7 +481,7 @@ def model(action):
 
 			schedules_ref = models_ref.document(model_id).collection('schedules')
 			model_swipe_schedules = schedules_ref.where(field_path='type',op_string='==',value='swiping').get()
-			model_swipe_schedules = [{'id':s.to_dict()['id'],'name':s['name']} for s in model_swipe_schedules]
+			model_swipe_schedules = [{'id':s.to_dict()['id'],'name':s.to_dict()['name']} for s in model_swipe_schedules]
 			
 			
 			configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
@@ -511,7 +511,7 @@ def model(action):
 				if action == 'set-model':
 					schedules_ref = models_ref.document(model_id).collection('schedules')
 					model_swipe_schedules = schedules_ref.where(field_path='type',op_string='==',value='swiping').get()
-					model_swipe_schedules = [{'id':s.to_dict()['id'],'name':s['name']} for s in model_swipe_schedules]
+					model_swipe_schedules = [{'id':s.to_dict()['id'],'name':s.to_dict()['name']} for s in model_swipe_schedules]
 
 					configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
 					configs_snap = configs_ref.get()
@@ -1148,14 +1148,15 @@ def show_create_accounts():
 	swipe_schedules = [s.to_dict() for s in swipe_schedules]
 	
 	models = [s for s in list(session['MODELS'].values())]
-	print(task_status)
+	genders = app.config['GENDERS']
 	return render_template('create-accounts.html',
 						   schedules=account_schedules,
 						   swipe_schedules=swipe_schedules,
 						   running=task_status['running'],
 						   task_status=task_status,
 						   model=session['MODEL'],
-						   models=models)
+						   models=models,
+						   genders = genders)
 	
 @app.route('/create-accounts',methods=['POST'])
 @login_required
@@ -1198,7 +1199,25 @@ def create_accounts():
 		age_range_start = request.form.get('op-age-range-start')
 		age_range_end = request.form.get('op-age-range-end')
 
-		gender = request.form.get('op-gender')
+		op_gender = request.form.get('op-gender')
+		gender = {
+			'gender':op_gender
+		}
+		if gender['gender'] not in ['female','male']:
+			op_gender_other= request.form.get('op-gender-other')
+			op_gender_connections = request.form.get('op-gender-connections')
+			op_gender_show = request.form.get('op-gender-show')
+			op_gender_intersex = request.form.get('op-gender-intersex')
+
+			gender = {
+				'gender':op_gender_other,
+				'gender_data':{
+					'id': 'id_women' if op_gender_connections == 'men' else 'id_men',
+					'intersex-experience': op_gender_intersex if op_gender_intersex != 'cant-say' else '',
+					'show_gender': True if op_gender_show == 'yes' else False
+				}
+			}
+
 		if not check_values([op_count,age_range_start,age_range_end,gender]):raise ValueError(f'Empty values, fill in all inputs correctly')
 		
 		op_count = int(op_count)

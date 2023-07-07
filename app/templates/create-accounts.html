@@ -106,15 +106,87 @@
                                     </div>
                                 </div>
                             </div>
-                            <div>
-                                <label for="op-gender">Choose prefered gender</label>
-                                <select type="text" id="op-gender" name="op-gender" required> 
-                                    <option value="female" selected>Female</option>
-                                    <option value="male">Male</option>
-                                    <option value="nonbinary">Nonbinary</option>
-                                </select>
-                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the prefered gender e.g male, female or none</h5>
+                            <div class="gender-menu">
+                                <label>Choose preferred gender</label>
+                                <div>
+                                    <div class="radio-box">
+                                        <input type="radio" id="op-gender-female" name="op-gender" value="female" checked>
+                                        <label for="op-gender-female">Female</label>
+                                    </div>
+                                    <div class="radio-box">
+                                        <input type="radio" id="op-gender-male" name="op-gender" value="male">
+                                        <label for="op-gender-male">Male</label>
+                                    </div>
+                                    <div class="radio-box">
+                                        <input type="radio" id="op-gender-other" name="op-gender" value="other">
+                                        <label for="op-gender-other">Other</label>
+                                    </div>
+                                </div>
                             </div>
+
+                            <div id="op-gender-details" style="display: none;">
+                                <div class="gender-list gender-menu">
+                                    <label for="op-gender-other">I identify as</label>
+                                    <div>
+                                        <select id="op-gender-other" name="op-gender-other">
+                                            {%for gender in genders%}
+                                                <option value="{{gender}}" {%if gender == 'non-binary'%} selected {%endif%}>{{gender|capitalize}}</option>
+                                            {%endfor%}
+                                        </select>
+                                    </div>
+                                </div>
+                                <br>
+                                <div class="preferred-connections gender-menu">
+                                    <label>I want to connect with</label>
+                                    <div>
+                                        <div class="radio-box">
+                                            <input type="radio" id="op-gender-connections-men" name="op-gender-connections" value="men" checked>
+                                            <label for="op-gender-connections-men">Men</label>
+                                        </div>
+                                        <div class="radio-box">
+                                            <input type="radio" id="op-gender-connections-women" name="op-gender-connections" value="women">
+                                            <label for="op-gender-connections-women">Women</label>
+                                        </div>
+                                        <!-- <div class="radio-box">
+                                            <input type="radio" id="op-gender-connections-both" name="op-gender-connections" value="both">
+                                            <label for="op-gender-connections-both">Both</label>
+                                        </div> -->
+                                    </div>
+                                </div>
+                                <br>
+                                <div class="show-gender gender-menu">
+                                    <label>Display my gender?</label>
+                                    <div>
+                                        <div class="radio-box">
+                                            <input type="radio" id="op-gender-show-yes" name="op-gender-show" value="yes" checked>
+                                            <label for="op-gender-show-yes">Yes</label>
+                                        </div>
+                                        <div class="radio-box">
+                                            <input type="radio" id="op-gender-show-no" name="op-gender-show" value="no">
+                                            <label for="op-gender-show-no">No</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <br>
+                                <div class="intersex gender-menu">
+                                    <label>Had an intersex experience?</label>
+                                    <div>
+                                        <div class="radio-box">
+                                            <input type="radio" id="op-gender-intersex-yes" name="op-gender-intersex" value="yes">
+                                            <label for="op-gender-intersex-yes">Yes</label>
+                                        </div>
+                                        <div class="radio-box">
+                                            <input type="radio" id="op-gender-intersex-no" name="op-gender-intersex" value="no">
+                                            <label for="op-gender-intersex-no">No</label>
+                                        </div>
+                                        <div class="radio-box">
+                                            <input type="radio" id="op-gender-intersex-nocant-say" name="op-gender-intersex" value="cant-say" checked>
+                                            <label for="op-gender-intersex-cant-say">Don't want to say</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <br>                                   
                              {% if models%}
                                 <div>
                                     <label for="op-model">Pick a model</label>
@@ -142,18 +214,18 @@
                                     <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a schedule group defines your swipe operation strategy</h5>
                                 </div>
                             {%endif%} -->
-                            {%if swipe_schedules%}
                             <div>
                                 <label for="op-swipe-group">Pick a swipe schedule group</label>
                                 <select id="op-swipe-group" name="op-swipe-group">
                                     <option value="" disabled>select schedule group</option>
-                                    {%for s in swipe_schedules%}
-                                        <option value="{{s.id}}">{{s.name}}</option>
-                                    {%endfor%}
+                                    {%if swipe_schedules%}
+                                        {%for s in swipe_schedules%}
+                                            <option value="{{s.id}}">{{s.name}}</option>
+                                        {%endfor%}
+                                    {%endif%}
                                 </select>
                                 <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a swipe schedule group defines your swipe operation strategy</h5>
                             </div>
-                            {%endif%}
                             <!-- <div class="double-field"  style="position: relative;">
                                 <label for="">Select operation location</label>
                                 <div class="inputs">
@@ -186,4 +258,18 @@
                 {%endif%}
             </div>
         </div>
+        <script>
+            const opGender = document.getElementsByName('op-gender');
+            const opGenderDetails = document.getElementById('op-gender-details');
+
+            for (let i = 0; i < opGender.length; i++) {
+                opGender[i].addEventListener('change', function() {
+                    if (opGender[i].value === 'other') {
+                        opGenderDetails.style.display = 'block';
+                    } else {
+                        opGenderDetails.style.display = 'none';
+                    }
+                });
+            }
+        </script>
     {%endblock%}

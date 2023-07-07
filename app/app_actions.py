@@ -86,7 +86,7 @@ def create_accounts(
 			profile_images:list = None,
 			verification_images:dict = None,
 			age_range:str = '18-60',
-			gender:str = None,
+			gender:dict= None,
 			cities:list = None,
 			proxies:list = None,
 			user_agents:list = None,
@@ -148,7 +148,7 @@ def start_task(
 			images:list = None,
 			verification_images:dict = None,
 			age_range:str = None,
-			gender:str = None,
+			gender:dict = None,
 			cities:list = None,
 			proxies:list = None,
 			user_agents:list = None,
@@ -225,12 +225,13 @@ def start_task(
 						})
 					print(result[1])
 		task_status ='completed'
-		msg = f'account creation completed, {passes} accounts created'
+		msg = f'task completed, {passes} accounts created'
 	except Exception as error:
 		print(error)
 		task_status ='failed'
-		msg = f'account creation failed, no accounts created'
+		msg = f'task failed, no accounts created'
 	finally:
+		if completed < op_count//2:task_status ='failed'
 		tasks_ref.document(task_id).update({
 			'status':task_status,
 			'running':False,

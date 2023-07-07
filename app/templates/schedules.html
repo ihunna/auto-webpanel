@@ -171,18 +171,18 @@
                                     </div>
                                 </div>
                             </div>
-                            {%if swipe_schedules%}
-                                <div>
-                                    <label for="op-swipe-group">Update swipe schedule group</label>
-                                    <select id="op-swipe-group" name="op-swipe-group">
-                                        <option value="" disabled>select schedule group</option>
+                            <div>
+                                <label for="op-swipe-group">Update swipe schedule group</label>
+                                <select id="op-swipe-group" name="op-swipe-group">
+                                    <option value="" disabled>select schedule group</option>
+                                    {%if swipe_schedules%}
                                         {%for s in swipe_schedules%}
                                             <option value="{{s.id}}" {%if schedule.op_swipe_group == s.id%}selected{%endif%}>{{s.name}}</option>
                                         {%endfor%}
-                                    </select>
-                                    <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a swipe schedule group defines your swipe operation strategy</h5>
-                                </div>
-                            {%endif%}  
+                                    {%endif%}  
+                                </select>
+                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a swipe schedule group defines your swipe operation strategy</h5>
+                            </div>
                         {%endif%}
 
                         <div class="op-dates double-field">
@@ -397,18 +397,18 @@
                                         </div>
                                     </div>
                                 </div>
-                                {%if swipe_schedules%}
-                                    <div>
-                                        <label for="op-swipe-group">Pick a swipe schedule group</label>
-                                        <select id="op-swipe-group" name="op-swipe-group">
-                                            <option value="" disabled>select schedule group</option>
+                                <div>
+                                    <label for="op-swipe-group">Pick a swipe schedule group</label>
+                                    <select id="op-swipe-group" name="op-swipe-group">
+                                        <option value="" disabled>select schedule group</option>
+                                        {%if swipe_schedules%}
                                             {%for s in swipe_schedules%}
                                                 <option value="{{s.id}}">{{s.name}}</option>
                                             {%endfor%}
-                                        </select>
-                                        <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a swipe schedule group defines your swipe operation strategy</h5>
-                                    </div>
-                                {%endif%}
+                                        {%endif%}
+                                    </select>
+                                    <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a swipe schedule group defines your swipe operation strategy</h5>
+                                </div>
                             {%endif%}
                             <div class="op-dates double-field">
                                 <label for="">Operation dates configuration</label>

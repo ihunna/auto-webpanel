@@ -95,6 +95,7 @@ app.config['PASS_KEY'] = PASSKEY
 app.config['S_LINK'] = S_LINK
 app.config['GDRIVEAPI'] = GDRIVEAPI
 app.config['ENV_VALUES'] = dotenv_values(env_path)
+app.config['GENDERS'] = ["male","female","agender","androgyne","androgynous","bigender","cis","enby","f2m","ftm","female-to-male","female-to-male-trans-man","female-to-male-transgender-man","female-to-male-transsexual-man","gender-fluid","gender-nonconforming","gender-questioning","gender-variant","gender-neutral","genderqueer","m2f","mtf","male-to-female","male-to-female-trans-woman","male-to-female-transgender-woman","male-to-female-transsexual-woman","neither","neutrois","non-binary","other","pangender","polygender","trans","trans-female","trans-male","trans-man","trans-person","trans-woman","transexual","transexual-female","transexual-male","transexual-man","transexual-person","transexual-woman","transfeminine","transgender","transgender-female","transgender-male","transgender-man","transgender-person","transgender-woman","transmasculine","two-spirit"]
 
 app.config['PANEL_AUTH_CREDS'] = {
 	'badoo':{
