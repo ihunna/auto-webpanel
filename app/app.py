@@ -1014,9 +1014,8 @@ def account_page():
 
 
 		proxies  = configs_ref.document('Proxies').get().to_dict()
-		json_data = {'proxies':proxies['content'].split('\n')} if check_values([proxies['content']]) else {}
+		json_data = {'proxies':proxies['content']} if check_values([proxies['content']]) else {}
 		account_stats = api.get_stats(panel_creds['url'],account_id,TOKEN,json_data=json_data)
-		print(account_stats)
 		
 		account_snapshot = api.get_profile(panel_creds['url'],account_id,TOKEN)
 		if account_snapshot[0] and account_stats[0]:
