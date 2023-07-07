@@ -1017,6 +1017,7 @@ def account_page():
 		json_data = {'proxies':proxies['content']} if check_values([proxies['content']]) else {}
 		account_stats = api.get_stats(panel_creds['url'],account_id,TOKEN,json_data=json_data)
 		
+
 		account_snapshot = api.get_profile(panel_creds['url'],account_id,TOKEN)
 		if account_snapshot[0] and account_stats[0]:
 			account_data = account_snapshot[1]
@@ -1270,10 +1271,6 @@ def create_accounts():
 			swipe_duration_end = swipe_configs['swipe_duration'].split('-')[1]
 			swipe_configs['swipe_duration'] = random.randint(int(swipe_duration_start),int(swipe_duration_end))
 			swipe_configs['first_swipe'] = True
-
-			print(swipe_configs)
-
-		return jsonify({'msg': 'No tasks running'}), 200
 		
 		task_id = str(uuid.uuid4())
 		task_status = 'running'
