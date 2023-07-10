@@ -1405,21 +1405,12 @@ def swipe_page():
 	return render_template('swipe-page.html', schedules=schedules)
 	
 @app.route('/start-swipe', methods=['POST'])
-@login_required
-@blocked
-@check_platform
-@check_model
 def swipe_page_p():
 	try:
 		config = request.get_json()
 		job_path = config['job_path']
 		# Scheduler().delete(job_path)
 
-		panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
-		panel_email = panel_creds['email']
-		panel_pass = panel_creds['password']
-		panel_key = panel_creds['key']
-		panel_worker_key = panel_creds['worker_key']
 
 		s_sess = config['session']
 		admin_id,platform_id,model_id = s_sess['admin'],s_sess['platform'],s_sess['model']
@@ -1430,6 +1421,14 @@ def swipe_page_p():
 		tasks_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('tasks')
 		schedules_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('schedules')
 		schedule_ref = schedules_ref.document(s_id)
+
+		platform = platforms_ref.document(platform_id).get()
+
+		panel_creds = app.config['PANEL_AUTH_CREDS'][platform['name'].lower()]
+		panel_email = panel_creds['email']
+		panel_pass = panel_creds['password']
+		panel_key = panel_creds['key']
+		panel_worker_key = panel_creds['worker_key']
 
 		s_id = config['schedule']
 		s_name = config['schedule_name']
@@ -1492,7 +1491,8 @@ def swipe_page_p():
 		return jsonify({'msg': f'Swipe operation with schedule {s_name} failed, day {daily_percent["day"]}'}), 400
 	
 	except Exception as error:
-		return jsonify({'msg': error}), 500
+		print(error)
+		return jsonify({'msg': 'error creating scheduled task'}), 500
 
 
 @app.route('/send-msg', methods=['GET'])
