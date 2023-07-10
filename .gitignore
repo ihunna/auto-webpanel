@@ -12,3 +12,4 @@ app/data/proxies
 test.py
 BadooAPI.postman_collection.json
 postman-collection.json
+zyte-proxy-ca.crt

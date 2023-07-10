@@ -419,7 +419,7 @@ class API:
 					'Content-Type':'application/json',
 					'Authorization': f'Bearer {token}'}
 			data = requests.post(url,json=json_data,headers=headers,timeout=self.timeout)
-
+			print(data)
 			if data.status_code > 299:return False,data.text
 			return True,data.json()
 		except Exception as error:
