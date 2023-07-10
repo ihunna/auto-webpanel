@@ -1421,7 +1421,7 @@ def swipe_page_p():
 		tasks_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('tasks')
 		schedules_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('schedules')
 
-		platform = platforms_ref.document(platform_id).get()
+		platform = platforms_ref.document(platform_id).get().to_dict()
 
 		panel_creds = app.config['PANEL_AUTH_CREDS'][platform['name'].lower()]
 		panel_email = panel_creds['email']
@@ -1431,7 +1431,7 @@ def swipe_page_p():
 
 		s_id = config['schedule']
 		schedule_ref = schedules_ref.document(s_id)
-		
+
 		s_name = config['schedule_name']
 
 		data = config['data']
