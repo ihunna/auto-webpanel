@@ -1442,10 +1442,10 @@ def swipe_page_p():
 		max_wait = data['max_wait']
 		accounts = data['accounts']
 
-		if op_count < 1: jsonify({'msg':'Accounts must contain at least one item'}), 400
+		if op_count < 1: return jsonify({'msg':'Accounts must contain at least one item'}), 400
 		print(op_count)
 		daily_percent = config.get('daily_percent')
-		if daily_percent is None: jsonify({'msg':'No swipe percentage specified'}), 400
+		if daily_percent is None: return jsonify({'msg':'No swipe percentage specified'}), 400
 
 		swipe_percent = daily_percent['swipe_percent']
 
