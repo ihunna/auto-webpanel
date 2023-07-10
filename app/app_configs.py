@@ -414,7 +414,7 @@ class API:
 		
 	def send_swipes(self,host,token:str,json_data:dict={}):
 		try:
-			url = f'{host}/swipes'
+			url = f'{host}/swipe'
 			headers = {
 					'Content-Type':'application/json',
 					'Authorization': f'Bearer {token}'}
