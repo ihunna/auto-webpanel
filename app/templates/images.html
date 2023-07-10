@@ -26,7 +26,10 @@
                     <div class="holder image-holder scroll">
                         <ul class="images" id="images">
                             {%for img in images%}
-                                <li data-image-type="{{img.type}}" data-action="{{action}}" data-image-category="{{img.cat}}">
+                                <li data-image-type="{{img.type}}" data-action="{{action}}" data-image-category="{{img.cat}}"
+                                    data-action-message="deleting image..." 
+                                    data-action-prompt="do you want to delete this image?"
+                                    data-url="/delete-image">
                                     <img src="{{img.img}}" alt="" id="{{img.id}}">
                                 </li>
                             {%endfor%}

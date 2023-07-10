@@ -34,7 +34,7 @@ const showHide = (action='show',e=Array,text=String,styles=Array) =>{
   }
 }
 
-const createModal = (element=Element,type=String,items=Array,text=String,cat=String,action=String,route=String) => {
+const createModal = (element=Element,type=String,items=Array,text=String,action=String,route=String, actionText=String) => {
   element.innerHTML = ``;
   const m = doc.createElement('div'); 
   m.classList.remove('for-m-item-display');
@@ -67,12 +67,10 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
       yesLink.addEventListener('click',(e)=>{
         e.preventDefault();
         action = action === ''?action:`/${action}`
-        let url = route === 'delete'? `/delete-image`:`/${route}${action}`
-        text = cat !=='admin'?`Deleting ${cat}`:`Updating ${cat}`
-        text = cat === 'logout'?'logging out user':text
+        let url = `${route}${action}`;
         con.log(url)
         showHide('no-show',[overlay,modal]);
-        showHide('show',[alertBox],text,{'bg':colorSuccess,'color':colorLessWhite});
+        showHide('show',[alertBox],actionText,{'bg':colorSuccess,'color':colorLessWhite});
 
         sendRequest('POST',url,{'data':items})
         .then(response => {
@@ -186,7 +184,6 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
   }
 
   else if (type === 'sModalImg-upload' || type === 'sModalImg') {
-      let text;
       m.classList.remove('for-m-item-display');
       m.classList.add('modal', 'for-s-item-display');
       const imgDiv = doc.createElement('div'); 
@@ -223,11 +220,11 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
         actionLink.textContent = 'delete';
         actionLink.classList.remove('upload');
         actionLink.classList.add('delete');
-        text = 'Do you want to delete this image?';
-
+        
         actionLink.addEventListener('click',(e) => {
           e.preventDefault();
-          createModal(modal,'prompt',items,text,'image','','delete')
+          createModal(modal,'prompt',items,text,action,route,actionText);
+          
           showHide('show',[overlay,modal]);
         });
 
@@ -239,7 +236,7 @@ const createModal = (element=Element,type=String,items=Array,text=String,cat=Str
           actionLink.addEventListener('click',(e) => {
           e.preventDefault();
           if (items.length < 1){
-            text = 'No image to upload!';
+            const text = 'No image to upload!';
             showHide('show',[alertBox],text,{'bg':colorSec,'color':colorLessDark});
           }else{
             text = 'Image(s) uploading ...';

@@ -97,18 +97,24 @@
                                     <span class="op-spinner bg-warning">
                                         <i class="fa fa-spinner fa-spin"></i>
                                     </span>
+                                    <div>
+                                        <progress id="progressbar" class="warning" value="{{task.progress}}" max="100"></progress>
+                                    </div>
                                 {%elif task.status|lower == "completed"%}
                                     <span class="op-spinner bg-success">
                                         <i class="fa fa-check"></i>
                                     </span>
+                                    <div>
+                                        <progress id="progressbar" class="success" value="{{task.progress}}" max="100"></progress>
+                                    </div>
                                 {%elif task.status|lower == "failed"%}
                                 <span class="op-spinner bg-danger">
                                     <i class="fa fa-close"></i>
                                 </span>
-                                {%endif%}
                                 <div>
-                                    <progress id="progressbar" value="{{task.progress}}" max="100"></progress>
+                                    <progress id="progressbar" class="danger" value="{{task.progress}}" max="100"></progress>
                                 </div>
+                                {%endif%}
                             </a>
                         {%endfor%}
                     </div>

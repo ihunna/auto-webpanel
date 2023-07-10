@@ -235,49 +235,56 @@
             }
             </style>
        {%endif%}
-    <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAEvNick1R-fwUdIS5Gj9gwjUL_EUuZ-j0&callback=initMap&v=weekly"
-    defer>
-    </script>
-    <script>
-        window.onload = function() {
-            // This code will be executed when the window has finished loading
-            initMap();
-        };
+       <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAEvNick1R-fwUdIS5Gj9gwjUL_EUuZ-j0&callback=initMap" defer></script>
+        <script>
         function initMap() {
-            const myLatlng = { lat: 39.8283, lng: -98.5795 };
+            const usaBounds = new google.maps.LatLngBounds(
+                new google.maps.LatLng(24.396308, -125.000000), // Southwest corner
+                new google.maps.LatLng(49.384358, -66.934570) // Northeast corner
+            );
+
             const map = new google.maps.Map(document.getElementById("op-map"), {
                 zoom: 4,
-                center: myLatlng,
+                center: { lat: 39.8283, lng: -98.5795 },
+                restriction: {
+                    latLngBounds: usaBounds,
+                    strictBounds: true
+                }
             });
+
             // Create the initial InfoWindow.
             let infoWindow = new google.maps.InfoWindow({
                 content: "Click the map to get Lat/Lng!",
-                position: myLatlng,
+                position: { lat: 39.8283, lng: -98.5795 }
             });
 
             infoWindow.open(map);
+
             // Configure the click listener.
             map.addListener("click", (mapsMouseEvent) => {
                 // Close the current InfoWindow.
                 infoWindow.close();
+
                 // Create a new InfoWindow.
                 const latLng = mapsMouseEvent.latLng;
                 const latitude = latLng.lat();
                 const longitude = latLng.lng();
-                        
-                // Update the value of the input field
+
+                // Update the value of the input field.
                 document.getElementById("op-location").value = `${latitude}, ${longitude}`;
+
                 infoWindow = new google.maps.InfoWindow({
-                position: mapsMouseEvent.latLng,
+                    position: mapsMouseEvent.latLng
                 });
-                infoWindow.setContent(
-                JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2)
-                );
+
+                infoWindow.setContent(JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2));
                 infoWindow.open(map);
             });
         }
+
         window.initMap = initMap;
-    </script>
+        </script>
+
+       
     {%endif%}
 {% endblock%}

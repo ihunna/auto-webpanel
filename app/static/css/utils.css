@@ -90,8 +90,14 @@
   #progressbar::-moz-progress-bar{
     background: var(--soft-white);
   }
-  #progressbar::-webkit-progress-value {
+  #progressbar.success::-webkit-progress-value {
     background:var(--success);
+  }
+  #progressbar.warning::-webkit-progress-value {
+    background:var(--success);
+  }
+  #progressbar.danger::-webkit-progress-value {
+    background:var(--danger);
   }
   #progressbar::after {
     content: attr(value) '%';
@@ -147,7 +153,7 @@
     margin-bottom: 20px !important;
 }
 
-.double-field > .more-or-less{
+.more-or-less{
     display: grid;
     grid-template-columns: repeat(1,1fr);
     width: 100%;
@@ -155,11 +161,13 @@
     margin: 10px auto;
 }
 
-.double-field > .more-or-less > i{
-    font-size: 20px;
+.more-or-less > i{
+    font-size: 24px;
+    width: fit-content;
+    margin: auto;
 }
 
-.double-field > .more-or-less > i.no-show{
+.more-or-less > i.no-show{
     display: none;
 }
 
@@ -841,6 +849,7 @@ li >
     padding: 10px 16px;
     text-align: center;
     font-weight: 500;
+    max-width: 90%;
 }
 
 .op-holder > .op-card{

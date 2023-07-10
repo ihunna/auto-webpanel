@@ -35,4 +35,15 @@ def create_edit_menu(data):
         edit_menus += '</select>'
         edit_menus += '</div>'
     return edit_menus
+
+def share_daily_percent(day_specs:dict):
+    daily_swipe_percent = []
+    for day in day_specs:
+        range_parts = day['day'].split("-")
+        start_day = int(range_parts[0])
+        end_day = int(range_parts[1])
+        
+        for i in range(start_day, end_day + 1):
+            daily_swipe_percent.append({'day':i,'swipe_percent':day['swipe_percent']})
+    return daily_swipe_percent
 	

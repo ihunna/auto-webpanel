@@ -49,7 +49,7 @@
                                 </div>
                                 <span class="op-card-actions">
                                     <a href="/schedules?s={{s.id}}&action=edit-schedule&type={{s.type}}" class="bg-warning">Edit</a>
-                                    <a href="/schedules?s={{s.id}}&action=delete-schedule" class="bg-danger">Delete</a>
+                                    <a href="#" class="bg-danger action" data-action-id="{{s.id}}" data-action="delete-schedule" data-action-prompt="do you want to delete schedule?" data-action-message="deleting schedule..." data-url="/schedules">Delete</a>
                                 </span>
                         </div>
                         {%endfor%}
@@ -448,7 +448,7 @@
                                             <div class="inputs">
                                                 <div>
                                                     <label for="s-day-{{i}}">Days</label>
-                                                    <input type="text" id="s-day-{{i}}" name="s-day" value="{{day_specs[i].day}}">
+                                                    <input type="text" id="s-day-{{i}}" name="s-day" value="{{day_specs[i].day}}" readonly>
                                                     <h5 class="input-highlight"> 
                                                         <i class="fas fas fa-exclamation-circle"></i> 
                                                         enter a set of days e.g {{day_specs[i].day}}
@@ -466,30 +466,34 @@
                                         </div>
                                     {%endfor%}
                                 {%else%}
-                                    <div class="double-field">
-                                        <div class="inputs">
-                                            <div>
-                                                <label for="s-day-1">Days</label>
-                                                <input type="text" id="s-day-1" name="s-day" value="1-3" required>
-                                                <h5 class="input-highlight"> 
-                                                    <i class="fas fas fa-exclamation-circle"></i> 
-                                                    enter a set of days e.g 1-3
-                                                </h5>
-                                            </div>
-                                            <div>
-                                                <label for="s-swipe-percent">Swipe percentage</label>
-                                                <input type="text" id="s-swipe-percent" name="s-swipe-percent" value="40/60" required>
-                                                <h5 class="input-highlight"> 
-                                                    <i class="fas fas fa-exclamation-circle"></i> 
-                                                    enter the swipe percentage  e.g 40/60 
-                                                </h5>
-                                            </div>
+                                <div class="double-field">
+                                    <div class="inputs">
+                                        <div>
+                                            <label for="s-day-1">Days</label>
+                                            <input type="text" id="s-day-1" name="s-day" value="{%if interval / 2 > 1%}1 - 2{%else%}{{interval}}{%endif%}" required>
+                                            <h5 class="input-highlight"> 
+                                                <i class="fas fas fa-exclamation-circle"></i> 
+                                                enter a set of days e.g 1 - 2
+                                            </h5>
+                                        </div>
+                                        <div>
+                                            <label for="s-swipe-percent">Swipe percentage</label>
+                                            <input type="text" id="s-swipe-percent" name="s-swipe-percent" value="40/60" required>
+                                            <h5 class="input-highlight"> 
+                                                <i class="fas fas fa-exclamation-circle"></i> 
+                                                enter the swipe percentage  e.g {swipe_percent} 
+                                            </h5>
                                         </div>
                                     </div>
+                                </div>
                                 {%endif%}
-                                <i class="fas fa-plus-circle" id="add-more"></i>
+                                <div class="more-or-less" id="more-or-less" style="display: grid;grid-template-columns: repeat(1,1fr);"> 
+                                    <i class="fas fa-minus-square no-show" id="add-less"></i>
+                                    <i class="fas fa-plus-square" id="add-more"></i>
+                                </div>
                                 <input type="hidden" class="not-edit" id="action-type" name="action-type" value="{{action_type}}">
                                 <input type="hidden" class="not-edit" id="s-id" name="s-id" value="{{s_id}}">
+                                <input type="hidden" class="not-edit" id="interval" name="interval" value="{{interval}}">
                                 <input type="submit" value="Finish"> 
                             </form>
                         </div>
@@ -503,10 +507,10 @@
                                     <div class="inputs">
                                         <div>
                                             <label for="s-day-1">Days</label>
-                                            <input type="text" id="s-day-1" name="s-day" value="1-3" required>
+                                            <input type="text" id="s-day-1" name="s-day" value="{%if interval / 2 >= 1%}1 - 2{%else%}{{interval}}{%endif%}" required>
                                             <h5 class="input-highlight"> 
                                                 <i class="fas fas fa-exclamation-circle"></i> 
-                                                enter a set of days e.g 1-3
+                                                enter a set of days e.g 1 - 2
                                             </h5>
                                         </div>
                                         <div>
@@ -519,44 +523,101 @@
                                         </div>
                                     </div>
                                 </div>
-                                <i class="fas fa-plus-circle" id="add-more"></i>
+                                <div class="more-or-less" id="more-or-less" style="display: grid;grid-template-columns: repeat(1,1fr);"> 
+                                    <i class="fas fa-minus-square no-show" id="add-less"></i>
+                                    <i class="fas fa-plus-square" id="add-more"></i>
+                                </div>
                                 <input type="hidden" class="not-edit" id="s-id" name="s-id" value="{{s_id}}">
                                 <input type="hidden" class="not-edit" id="next" name="next" value="{%if next%}{{next}}{%else%}schedules{%endif%}">
+                                <input type="hidden" class="not-edit" id="interval" name="interval" value="{{interval}}">
                                 <input type="submit" value="Finish"> 
                             </form>
                         </div>
                     {%endif%}
                     <script>
-                        const addMoreIcon = document.getElementById('add-more');
-                        const form = document.getElementById('schedule-form');
-                        let scheduleCount = 1;
+                        const insertAfter = (referenceNode, newNode) => {
+                            referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+                        }
 
-                        addMoreIcon.addEventListener('click', () => {
-                        const newSchedule = document.createElement('div');
-                        newSchedule.className = 'double-field';
-                        newSchedule.innerHTML = `
-                            <div class="inputs">
-                            <div>
-                                <label for="s-day-${scheduleCount}">Days</label>
-                                <input type="text" id="s-day-${scheduleCount}" name="s-day" value="${(scheduleCount * 3) + 1}-${(scheduleCount * 3) + 3}" required>
-                                <h5 class="input-highlight">
-                                <i class="fas fas fa-exclamation-circle"></i>
-                                enter a set of days e.g 1-3
-                                </h5>
-                            </div>
-                            <div>
-                                <label for="s-swipe-percent-${scheduleCount}">Swipe percentage</label>
-                                <input type="text" id="s-swipe-percent-${scheduleCount}" name="s-swipe-percent" value="40/60" required>
-                                <h5 class="input-highlight">
-                                <i class="fas fas fa-exclamation-circle"></i>
-                                enter the swipe percentage  e.g 40/60
-                                </h5>
-                            </div>
-                            </div>
-                        `;
 
-                        form.insertBefore(newSchedule, addMoreIcon);
-                        scheduleCount++;
+
+                        const more_less = document.getElementById('more-or-less');
+                        const addMore = more_less.querySelector('#add-more');
+                        const addLess = more_less.querySelector('#add-less');
+                        const scheduleContainer = document.getElementById('schedule-form');
+                        const maxInterval = parseInt({{ interval }});
+                        let schedules = scheduleContainer.querySelectorAll('.double-field');
+                        
+                        let scheduleCount = schedules.length;
+                        let lastEndDate;
+
+                        {%if action_type and action_type=='edit'%}
+                            if(scheduleCount > 0){
+                                addLess.classList.remove('no-show');
+                                more_less.style.gridTemplateColumns ='repeat(2,1fr)';
+                            }
+                        {%endif%}
+                        
+                        addMore.addEventListener('click', () => {
+                            schedules = scheduleContainer.querySelectorAll('.double-field');
+                            const lastInput = schedules[schedules.length - 1].querySelector('.inputs:last-of-type input:last-of-type');
+                            const lastEndDate = parseInt(lastInput.value.split('-')[1]);
+                            console.log(lastEndDate)
+
+                            if (lastEndDate >= maxInterval) {
+                                console.log('Cannot exceed maximum date interval');
+                                return;
+                            }
+                            
+                            let days = lastEndDate + 1 < maxInterval?`${lastEndDate + 1} - ${lastEndDate + 2}`: `${maxInterval} - ${maxInterval}`;
+                            
+                            const newSchedule = document.createElement('div');
+                            newSchedule.className = 'double-field';
+                            newSchedule.innerHTML = `
+                                <div class="inputs">
+                                    <div>
+                                        <label for="s-day-${scheduleCount + 1}">Days</label>
+                                        <input type="text" id="s-day-${scheduleCount + 1}" name="s-day" value="${days}" required>
+                                        <h5 class="input-highlight">
+                                            <i class="fas fas fa-exclamation-circle"></i>
+                                            enter a set of days e.g ${days}
+                                        </h5>
+                                    </div>
+                                    <div>
+                                        <label for="s-swipe-percent-${scheduleCount + 1}">Swipe percentage</label>
+                                        <input type="text" id="s-swipe-percent-${scheduleCount + 1}" name="s-swipe-percent" value="40/60" required>
+                                        <h5 class="input-highlight">
+                                            <i class="fas fas fa-exclamation-circle"></i>
+                                            enter the swipe percentage e.g 40/60
+                                        </h5>
+                                    </div>
+                                </div>
+                            `;
+
+                            insertAfter(schedules[schedules.length - 1],newSchedule);
+                            scheduleCount++;
+
+                            more_less.style.gridTemplateColumns ='repeat(2,1fr)';
+                            addLess.classList.remove('no-show');
+
+                            lastInput.setAttribute('readonly','');
+                        });
+
+                        addLess.addEventListener('click', () => {
+                            schedules = scheduleContainer.querySelectorAll('.double-field');
+                            const lastInput = schedules[schedules.length - 2].querySelector('.inputs:last-of-type input:last-of-type');
+                            
+                            if (scheduleCount > 1) {
+                                const lastSchedule = schedules[schedules.length - 1];
+                                scheduleContainer.removeChild(lastSchedule);
+                                scheduleCount--;
+                            }
+
+                            if (scheduleCount < 2){
+                                addLess.classList.add('no-show');
+                                more_less.style.gridTemplateColumns ='repeat(1,1fr)';
+                            }
+                            lastInput.removeAttribute('readonly');
                         });
 
                     </script>
@@ -567,9 +628,9 @@
          
         <script>
             const action = "{{ action }}";
-            {%if schedule%}
+            {% if schedule %}
                 const schedule = JSON.parse({{ schedule|tojson|safe }}) || null;
-            {%endif%}
+            {% endif %}
             const sD = document.getElementById('s-start');
             const eD = document.getElementById('s-end');
             const sscStart = document.getElementById('s-session-count-start');
@@ -578,44 +639,52 @@
             const sdEnd = document.getElementById('s-swipe-delay-end');
             const sdurationStart = document.getElementById('s-duration-start');
             const sdurationEnd = document.getElementById('s-duration-end');
-          
-            let currentDate = new Date().toISOString().split('T')[0];
-            let currentTime = new Date().toISOString().slice(0, 16);
-            
-            sD.min = (action === 'add-schedule' || !schedule) ? currentDate + "T00:00":schedule.swipe_start_at;
-            sD.value =  (action === 'add-schedule' || !schedule) ?  currentDate + "T00:00":schedule.swipe_start_at;
-            
-            let startDate =  new Date(sD.value);
-            let nextDate =  new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
 
-            eD.min =  nextDate.toISOString().slice(0, 16);
-            eD.value = (action === 'add-schedule' || !schedule) ?  nextDate.toISOString().slice(0, 16):schedule.op_end_at;
-          
+            let currentDate = new Date().toISOString().slice(0,19);
+            let currentTime = new Date().toISOString().slice(0, 19);
+
+            sD.min = (action === 'add-schedule' || !schedule) ? currentDate: schedule.swipe_start_at;
+            sD.value = (action === 'add-schedule' || !schedule) ? currentDate: schedule.swipe_start_at;
+
+            let startDate = new Date(sD.value);
+            let nextDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+
+            eD.min = nextDate.toISOString().slice(0, 19);
+            eD.value = (action === 'add-schedule' || !schedule) ? nextDate.toISOString().slice(0, 19): schedule.op_end_at;
+
+            console.log(eD.value)
             sD.addEventListener('change', (e) => {
-              startDate = new Date(e.target.value);
-              nextDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
-              eD.min = nextDate.toISOString().slice(0, 16);
-              eD.value = nextDate.toISOString().slice(0, 16);
+                startDate = new Date(e.target.value);
+                nextDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+
+                eD.min = nextDate.toISOString().slice(0, 19);
+                eD.value = nextDate.toISOString().slice(0, 19);
+                
+                console.log(eD.value)
             });
-            try{
+
+            try {
                 sscStart.addEventListener('input', (e) => {
-                let fV = parseInt(e.target.value) + 1;
-                sscEnd.min = isNaN(fV) ? '1' : fV.toString();
-                sscEnd.value = parseInt(sscEnd.min);
+                    let fV = parseInt(e.target.value) + 1;
+                    sscEnd.min = isNaN(fV) ? '1' : fV.toString();
+                    sscEnd.value = parseInt(sscEnd.min);
                 });
 
                 sdStart.addEventListener('input', (e) => {
-                let fV = parseInt(e.target.value) + 1;
-                sdEnd.min = isNaN(fV) ? '1' : fV.toString();
-                sdEnd.value = parseInt(sdEnd.min);
+                    let fV = parseInt(e.target.value) + 1;
+                    sdEnd.min = isNaN(fV) ? '1' : fV.toString();
+                    sdEnd.value = parseInt(sdEnd.min);
                 });
 
                 sdurationStart.addEventListener('input', (e) => {
-                let fV = parseInt(e.target.value) + 1;
-                sdurationEnd.min = isNaN(fV) ? '10' : fV.toString();
-                sdurationEnd.value = parseInt(sdurationEnd.min);
+                    let fV = parseInt(e.target.value) + 1;
+                    sdurationEnd.min = isNaN(fV) ? '10' : fV.toString();
+                    sdurationEnd.value = parseInt(sdurationEnd.min);
                 });
-            }catch(error){console.log(error)}
+            } catch (error) {
+                console.log(error);
+            }
+
           </script>                  
         {%endif%}
     {% endblock%}

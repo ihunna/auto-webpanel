@@ -111,17 +111,21 @@
                                         <i class="fas fa-ellipsis-v"></i>
                                         <span class="action-btns {%if admin.role != 'admin' and admin.id != g.admin.id%}disabled{%endif%}">
                                             {%if g.admin.id != admin.id%}
-                                                <a href="" class="eleveted-a danger {%if admin.status == 'active'%}block{%else%}unblock{%endif%}-this-account?">
-                                                    {%if admin.status == 'active'%}
+                                                {%if admin.status == 'active'%}
+                                                    <a href="" class="eleveted-a danger action" data-action-id="{{admin.id}}" data-action="block" data-action-prompt="do you want to block {{admin.full_name}}?" 
+                                                    data-action-message="blocking {{admin.full_name}}..." data-url="/admins">
                                                         block 
-                                                    {%else%} 
+                                                    </a>
+                                                {%else%}
+                                                    <a href="" class="eleveted-a danger action" data-action-id="{{admin.id}}" data-action="unblock" data-action-prompt="do you want to unblock {{admin.full_name}}?" 
+                                                    data-action-message="unblocking {{admin.full_name}}..." data-url="/admins">
                                                         unblock 
-                                                    {%endif%}
-                                                </a>
+                                                    </a>
+                                                {%endif%}
                                                 {%if admin.role =='admin' and admin.status == 'active'%}
-                                                    <a href="" class="eleveted-a make-super?">make super</a>
-                                                    <a href="" class="eleveted-a login-as-user?">Login as this user</a>
-                                                    <a href="" class="eleveted-a delete-user?">delete this user</a>
+                                                    <a href="" class="eleveted-a action" data-action-id="{{admin.id}}" data-action="make-super" data-action-prompt="do you want to make user a super admin?" data-action-message="updating user..." data-url="/admins">make super</a>
+                                                    <a href="" class="eleveted-a action" data-action-id="{{admin.id}}" data-action="login-as-user" data-action-prompt="do you want to login as {{admin.full_name}}?" data-action-message="logging in as {{admin.full_name}}..." data-url="admins">Login as this user</a>
+                                                    <a href="" class="eleveted-a action" data-action-id="{{admin.id}}" data-action="delete-user" data-action-prompt="do you want to delete {{admin.full_name}}?" data-action-message="deleting {{admin.full_name}}..." data-url="/admins">delete this user</a>
                                                 {%endif%}
                                             {%else%}
                                             <a href="/admins?admin={{admin.id}}&action=admin-settings&page={{page}}" class="eleveted-a">edit</a>

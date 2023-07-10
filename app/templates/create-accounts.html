@@ -53,21 +53,27 @@
                             <span>{{task_status.start_time}}</span>
                         </div>
                         {% if task_status.status|lower == "running"%}
-                                <span class="op-spinner bg-warning">
-                                    <i class="fa fa-spinner fa-spin"></i>
-                                </span>
+                            <span class="op-spinner bg-warning">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </span>
+                            <div>
+                                <progress id="progressbar" class="warning" value="{{task_status.progress}}" max="100"></progress>
+                            </div>
                         {%elif task_status.status|lower == "completed"%}
                             <span class="op-spinner bg-success">
                                 <i class="fa fa-check"></i>
                             </span>
+                            <div>
+                                <progress id="progressbar" class="success" value="{{task_status.progress}}" max="100"></progress>
+                            </div>
                         {%elif task_status.status|lower == "failed"%}
-                        <span class="op-spinner bg-danger">
-                            <i class="fa fa-close"></i>
-                        </span>
+                            <span class="op-spinner bg-danger">
+                                <i class="fa fa-close"></i>
+                            </span>
+                            <div>
+                                <progress id="progressbar" class="danger" value="{{task_status.progress}}" max="100"></progress>
+                            </div>
                         {%endif%}
-                        <div>
-                            <progress id="progressbar" value="{{task_status.progress}}" max="100"></progress>
-                        </div>
                     </a>
                 </div>
                 {%else%}
@@ -180,7 +186,7 @@
                                             <label for="op-gender-intersex-no">No</label>
                                         </div>
                                         <div class="radio-box">
-                                            <input type="radio" id="op-gender-intersex-nocant-say" name="op-gender-intersex" value="cant-say" checked>
+                                            <input type="radio" id="op-gender-intersex-nocant-say" name="op-gender-intersex" value="not-say" checked>
                                             <label for="op-gender-intersex-cant-say">Don't want to say</label>
                                         </div>
                                     </div>

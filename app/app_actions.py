@@ -1,4 +1,5 @@
-from app_configs import httpx,SearchEngine,time,random,ThreadPoolExecutor,as_completed,json,firestore
+from app_configs import httpx,SearchEngine,time,random,ThreadPoolExecutor,as_completed,json,datetime
+from scheduler import Scheduler
 
 
 
@@ -75,6 +76,26 @@ def get_location(zipcode):
 	except Exception as error:
 		return False, error
 
+def create_scheduler(scheduler,host,swipe_configs,payload:dict={}):
+	try:
+		session_count = swipe_configs['swipe_session_count']
+		swipe_duration = swipe_configs['swipe_duration']
+		start_date = swipe_configs['op_start_at']
+		end_date = swipe_configs['op_end_at']
+
+		start_date = scheduler.get_date_format(start_date)
+		end_date = scheduler.get_date_format(end_date)
+		start_date,end_date = datetime(*start_date), datetime(*end_date)
+		cron_exp = scheduler.generate_cron_expression(start_date,
+						end_date,session_count=session_count,
+						operation_duration=swipe_duration,daily_percent=swipe_configs['daily_percent'])
+		
+		schedule = scheduler.create(cron_exp,host,payload=payload)
+		if not schedule[0]:return False,schedule[1]
+		return True, schedule[1]
+	except Exception as error:
+		return False,error
+
 def create_accounts(
 			account:int =None,
 			nb_of_images:int=5,
@@ -86,7 +107,8 @@ def create_accounts(
 			profile_images:list = None,
 			verification_images:dict = None,
 			age_range:str = '18-60',
-			gender:dict= None,
+			gender:str= None,
+			gender_data:dict = None,
 			cities:list = None,
 			proxies:list = None,
 			user_agents:list = None,
@@ -111,6 +133,7 @@ def create_accounts(
 				'verification_images':verification_images,
 				'age-range':age_range,
 				'gender':gender,
+				'gender_data':gender_data,
 				'cities':cities,
 				'proxies':proxies,
 				'user_agents':user_agents,
@@ -138,6 +161,9 @@ def create_accounts(
 def start_task(
 			accounts_ref=None,
 			tasks_ref=None,
+			swipe_configs:dict=None,
+			worker:str = None,
+			SERVER:str = None,
 			nb_of_images:int=None,
 			op_count:int = 1,
 			names:list=None,
@@ -148,17 +174,19 @@ def start_task(
 			images:list = None,
 			verification_images:dict = None,
 			age_range:str = None,
-			gender:dict = None,
+			gender:str = None,
+			gender_data:dict= None,
 			cities:list = None,
 			proxies:list = None,
 			user_agents:list = None,
 			accounts:list = None,
-			url:str=None,
-			token:str = None):
+			token:str = None,
+			url:str=None):
 	
 	print('\nACCOUNT CREATION STARTED \n')
 	success,msg,task_status = False,'',''
 	fails,passes,completed= 0,0,0
+	created_accounts = []
 
 	try:
 		kwargs=[{
@@ -173,6 +201,7 @@ def start_task(
 			'user_agents':user_agents[i],
 			'age_range':age_range,
 			'gender':gender,
+			'gender_data':gender_data,
 			'profile_images':images,
 			'nb_of_images':nb_of_images,
 			'verification_images':verification_images,
@@ -204,6 +233,7 @@ def start_task(
 						continue
 					account['profile'] = json.dumps(account['profile'])
 					accounts_ref.document(account['id']).set(account)
+					created_accounts.append(account['id'])
 					
 					passes += 1
 					msg = f'{passes} account of {op_count} created successfully and {op_count - (passes+fails)} waiting to be created'
@@ -225,13 +255,36 @@ def start_task(
 						})
 					print(result[1])
 		task_status ='completed'
-		msg = f'task completed, {passes} accounts created'
+		msg = f'Task completed, {passes} accounts created'
 	except Exception as error:
 		print(error)
 		task_status ='failed'
-		msg = f'task failed, no accounts created'
+		msg = f'Task failed, no accounts created'
+
 	finally:
-		if completed < op_count//2:task_status ='failed'
+
+		try:
+			if len(created_accounts) >= 1:
+				print('\nCREATING SCHEDULES\n')
+				scheduler = Scheduler()
+				url = f'https://{SERVER}/start-swipe'
+				payload = {'data':{
+						'accounts':created_accounts,
+						'min_wait':swipe_configs['min_wait'],
+						'max_wait':swipe_configs['max_wait'],
+						'duration':swipe_configs['swipe_duration'] * 60},
+						'schedule':swipe_configs['id'],
+						'schedule_name':swipe_configs['name'],
+						'session':swipe_configs['session']}
+				schedule = create_scheduler(scheduler,url,swipe_configs,payload=payload)
+				print(f'\n {schedule[1]} \n')
+				if schedule[0]:msg += '\n\nSchedule created for successful accounts'
+				else: print(schedule[1])
+		except Exception as error:
+			print(error)
+			msg += '\n\nError creating schedule.'
+
+		if passes <= (op_count//2) + 1:task_status ='failed'
 		tasks_ref.document(task_id).update({
 			'status':task_status,
 			'running':False,

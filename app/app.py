@@ -1,6 +1,7 @@
 from app_configs import *
-from app_utils import create_edit_menu
+from app_utils import create_edit_menu,share_daily_percent
 from app_actions import start_task
+from scheduler import Scheduler
 
 
 '''
@@ -116,7 +117,7 @@ def admin(action):
 			return jsonify({'msg': 'Admin updated successfully'}), 200
 
 		elif action == 'make-super':
-			op_admin_id = request.get_json()['data'][0]['admin_id']
+			op_admin_id = request.get_json()['data'][0]['id']
 			op_admin = app.config['ADMINS_REF'].document(op_admin_id).get().to_dict()
 			op_admin_status = op_admin.get('status')
 
@@ -130,7 +131,7 @@ def admin(action):
 			return jsonify({'msg': 'Unauthorized'}), 403
 
 		elif action == 'block':
-			op_admin_id = request.get_json()['data'][0]['admin_id']
+			op_admin_id = request.get_json()['data'][0]['id']
 			op_admin = app.config['ADMINS_REF'].document(op_admin_id).get().to_dict()
 			op_admin_status = op_admin.get('status')
 
@@ -145,7 +146,7 @@ def admin(action):
 			return jsonify({'msg': 'Unauthorized'}), 403
 
 		elif action == 'unblock':
-			op_admin_id = request.get_json()['data'][0]['admin_id']
+			op_admin_id = request.get_json()['data'][0]['id']
 			op_admin = app.config['ADMINS_REF'].document(op_admin_id).get().to_dict()
 			op_admin_status = op_admin.get('status')
 
@@ -159,7 +160,7 @@ def admin(action):
 			return jsonify({'msg': 'Unauthorized'}), 403
 		
 		elif action == 'login-as-user':
-			op_admin_id = request.get_json()['data'][0]['admin_id']
+			op_admin_id = request.get_json()['data'][0]['id']
 			op_admin = app.config['ADMINS_REF'].document(op_admin_id).get().to_dict()
 			op_admin_status = op_admin.get('status')
 			op_admin_role = op_admin.get('role')
@@ -176,7 +177,7 @@ def admin(action):
 			return jsonify({'msg': 'Unauthorized'}), 403 
 		
 		elif action == 'delete-user':
-			op_admin_id = request.get_json()['data'][0]['admin_id']
+			op_admin_id = request.get_json()['data'][0]['id']
 			op_admin = app.config['ADMINS_REF'].document(op_admin_id).get().to_dict()
 			op_admin_status = op_admin.get('status')
 			op_admin_role = op_admin.get('role')
@@ -330,54 +331,20 @@ def models():
 
 		if model_id in model_ids:
 			if action == 'set-model':
-				schedules_ref = models_ref.document(model_id).collection('schedules').order_by('added_at', direction='DESCENDING').get()
-				schedules = []
-				model_schedules = {}
-				for schedule in schedules_ref:
-					schedule_data = schedule.to_dict()
-					op_timer = schedule_data.get('op_timer','{"count":"0","time":"0 hour"}')
-					op_timer = json.loads(op_timer)
-					schedule = {
-						'id': schedule.id,
-						'model': session['MODELS'][schedule_data['model']]['full_name'],
-						'platform': session['PLATFORMS'][schedule_data['platform']]['name'],
-						'name': str(schedule_data['name']),
-						'type': schedule_data['type'],
-						'swipe_percent': schedule_data.get('swipe_percent'),
-						'op_start_at': schedule_data['op_start_at'],
-						'op_end_at': schedule_data['op_end_at'],
-						'op_max_workers': schedule_data.get('op_max_workers'),
-						'swipe_session_count': schedule_data.get('swipe_session_count'),
-						'op_count': schedule_data.get('op_count'),
-						'op_timer': op_timer,
-						'op_proxies': schedule_data.get('op_proxies'),
-						'op_location': schedule_data.get('op_location'),
-						'swipe_delay': schedule_data.get('swipe_delay'),
-						'op_swipe_group': schedule_data.get('op_swipe_group'),
-						'swipe_duration': schedule_data.get('swipe_duration'),
-						'day_specs': schedule_data.get('day_specs'),
-						'status': schedule_data.get('status'),
-						'added_at': schedule_data.get('added_at')
-					}
-					schedules.append(schedule)
-					model_schedules.update({schedule['id']: schedule})
+				schedules_ref = models_ref.document(model_id).collection('schedules')
+				model_swipe_schedules = schedules_ref.where(field_path='type',op_string='==',value='swiping').get()
+				model_swipe_schedules = [{'id':s.to_dict()['id'],'name':s.to_dict()['name']} for s in model_swipe_schedules]
 
-				configs_ref = models_ref.document(model_id).collection('configs')
+				configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
 				configs_snap = configs_ref.get()
-				model_configs = []
+				model_configs = {}
 				for config in configs_snap:
-					model_configs.append(config.to_dict())
+					model_configs.update({config.to_dict()['title']:config.to_dict()})
 				
-				# model_tasks = {
-				# 'account_task':{'status':'','running':False,'id':str(uuid.uuid4())},
-				# 'swiping_task':{'status':'','running':False,'id':str(uuid.uuid4())},
-				# 'msg_task':{'status':'','running':False,'id':str(uuid.uuid4())}
-				# }
 				
 				session['MODEL'] = session['MODELS'][model_id]
-				session['MODEL']['SCHEDULES'] = model_schedules
 				session['MODEL']['CONFIGS'] = model_configs
-				# session['MODEL']['TASKS'] = model_tasks
+				session['MODEL']['SCHEDULE'] = {}
 				g.model = session['MODEL']
 				current_url = session.get('CURRENT_URL')
 				url = str(current_url) if current_url is not None else '/models'
@@ -530,9 +497,9 @@ def model(action):
 		print(error)
 		return jsonify({'msg': 'error updating model'}), 500
 
-
 @app.route('/signup',methods=['POST','GET'])
 @login_required
+@check_super
 def signup():
 	if request.method == 'GET':
 		if session['ADMIN']['role'] == 'super-admin':
@@ -590,7 +557,6 @@ def signup_page(key):
 		if 'ADMIN' not in session:return render_template('signup.html')
 		else:return redirect(url_for('index'))
 	return abort(404)
-
 
 @app.route(f'/adminonlyallowedtosignup__________',methods=['POST'])
 def do_signup():
@@ -723,7 +689,6 @@ def do_logout():
 		print(error)
 		return jsonify({'msg':'logout unsuccessful'}), 500
 
-
 @app.route('/schedules',methods=['GET'])
 @login_required
 @blocked
@@ -735,6 +700,9 @@ def schedules():
 	action_type = request.args.get('type')
 	s_id = request.args.get('s')
 	next = request.args.get('next')
+	interval = request.args.get('interval',0)
+	interval = int(interval)
+	swipe_percent = request.args.get('swipe_percent')
 
 	platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 	platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
@@ -759,6 +727,7 @@ def schedules():
 	elif action == 'edit-schedule' and s_id:
 		schedule = schedules_ref.document(s_id).get()
 		if schedule.exists:
+			session['MODEL']['SCHEDULE'] = schedule.to_dict()
 			return render_template('schedules.html', action='edit-schedule',
 								schedule=schedule.to_dict(), swipe_schedules=swipe_schedules,
 								models=list(session['MODELS'].values()), action_type=action_type, next=next)
@@ -766,22 +735,13 @@ def schedules():
 		else:
 			return redirect(url_for('schedules'))
 
-	elif action == 'delete-schedule':
-		schedules_ref.document(s_id).delete()
-
-		session['MODEL']['SCHEDULE'].clear()
-		url = f'/{next}' if next else request.path
-		return redirect(url)
-
 	elif action == 'next':
 		if action_type == 'edit':
-			schedule_data = session['MODEL']['SCHEDULE']
-			day_specs = json.loads(schedule_data['day_specs']) if 'day_specs' in schedule_data else []
-
+			day_specs = session['MODEL']['SCHEDULE']['day_specs']
 			return render_template('schedules.html', action=action, s_id=s_id, action_type=action_type,
-								   day_specs=day_specs, next=next)
+								   day_specs=day_specs, next=next,interval=interval)
 
-		return render_template('schedules.html', action=action, s_id=s_id, next=next)
+		return render_template('schedules.html', action=action, s_id=s_id, next=next,interval=interval,swipe_percent=swipe_percent)
 
 	return render_template('schedules.html', action=action, action_type=action_type,
 						   models=list(session['MODELS'].values()), swipe_schedules=swipe_schedules, next=next)
@@ -819,7 +779,7 @@ def scheduler(action):
 
 			op_sleep_timer_count = request.form.get('s-tf-acc-count')
 			op_sleep_timer_time = request.form.get('s-tf-acc-time')
-			timer = {"count_": op_sleep_timer_count, "time": op_sleep_timer_time} if op_sleep_timer_count else {"count_": "0", "time": "0"}
+			timer = {"count_": op_sleep_timer_count, "time": op_sleep_timer_time} if op_sleep_timer_count else {"count_": 0, "time": 0}
 
 			op_proxies = request.form.get('op-proxies')
 			op_location = request.form.get('op-location')
@@ -832,7 +792,13 @@ def scheduler(action):
 			s_id = str(uuid.uuid4())
 			schedule_ref = schedules_ref.document(s_id)
 
+
 			if type.lower() in ['swiping', 'swipe']:
+				d1 = datetime.strptime(s_start, '%Y-%m-%dT%H:%M:%S')
+				d2= datetime.strptime(s_end, '%Y-%m-%dT%H:%M:%S')
+				date_interval = d2 - d1
+				date_interval = date_interval.days
+
 				session['MODEL']['SCHEDULE'] = {
 					'id': s_id,
 					'model': model,
@@ -845,8 +811,20 @@ def scheduler(action):
 					'swipe_session_count': s_session_count,
 					'swipe_delay': s_delay,
 					'swipe_duration': s_duration,
+					'running':False
 				}
-				return jsonify({'msg': 'schedule added, add date specs', 'schedule': s_id, 'action': 'finish-schedule', 'action_type': 'add', 'next': next}), 200
+
+				if date_interval <= 1:
+					schedule_ref = schedules_ref.document(s_id)
+					schedule = session['MODEL']['SCHEDULE']
+					schedule['added_at'] = firestore.SERVER_TIMESTAMP
+					schedule['current_day'] = 0
+					schedule['day_specs'] = json.dumps([])
+					schedule['daily_percent'] = json.dumps([{'day':1,'swipe_percent':swipe_percent}])
+					schedule_ref.set(schedule)
+					return jsonify({'msg': 'schedule added successfully', 'next': '/schedules'}), 200
+				
+				return jsonify({'msg': 'schedule added, add date specs', 'schedule': s_id, 'action': 'finish-schedule', 'action_type': 'add', 'next': next,'date_interval':date_interval,'swipe_percent':swipe_percent}), 200
 
 			elif type.lower() == 'account':
 				session['MODEL']['SCHEDULE'] = {
@@ -863,6 +841,7 @@ def scheduler(action):
 					'op_max_workers': max_workers,
 					'op_start_at': s_start,
 					'op_end_at': s_end,
+					'running':False
 				}
 			return jsonify({'msg': 'schedule added successfully', 'next': next}), 200
 
@@ -892,20 +871,37 @@ def scheduler(action):
 			
 			model = session['MODEL']['id']
 			platform = session['PLATFORM']['id']
-			schedule_ref = schedules_ref.document(s_id)
 
+			d1 = datetime.strptime(s_start, '%Y-%m-%dT%H:%M:%S')
+			d2= datetime.strptime(s_end, '%Y-%m-%dT%H:%M:%S')
+			date_interval = d2 - d1
+			date_interval = date_interval.days
+			schedule_ref = schedules_ref.document(s_id).get()
+
+			# if schedule_ref.to_dict()['running']:
+			# 	return jsonify({'msg': 'cannot edit a running schedule'}), 400
+			
 			if type.lower() in ['swiping', 'swipe']:
+				day_specs = json.loads(schedule_ref.to_dict().get('day_specs'))
 				session['MODEL']['SCHEDULE'] = {
+					'id':s_id,
 					'model': model,
 					'name': name,
 					'swipe_percent': swipe_percent,
-					'swipe_start_at': s_start,
-					'swipe_end_at': s_end,
+					'op_start_at': s_start,
+					'op_end_at': s_end,
 					'swipe_session_count': s_session_count,
 					'swipe_delay': s_delay,
-					'swipe_duration': s_duration
+					'swipe_duration': s_duration,
+					'day_specs':day_specs
 				}
-				return jsonify({'msg': 'schedule updated successfully, add date specs', 'schedule': s_id, 'action': 'finish-schedule', 'action_type': 'edit', 'next': next}), 200
+
+				if date_interval <= 1:
+					schedule_ref = schedules_ref.document(s_id)
+					schedule = session['MODEL']['SCHEDULE']
+					schedule['daily_percent'] = json.dumps([{'day':1,'swipe_percent':swipe_percent}])
+					schedule_ref.update(schedule)
+				return jsonify({'msg': 'schedule updated successfully, add date specs', 'schedule': s_id, 'action': 'finish-schedule', 'action_type': 'edit', 'next': next,'date_interval':date_interval}), 200
 
 			elif type.lower() == 'account':
 				session['MODEL']['SCHEDULE'] = {
@@ -926,29 +922,51 @@ def scheduler(action):
 			s_id = request.form.get('s-id')
 			days = request.form.getlist('s-day')
 			percents = request.form.getlist('s-swipe-percent')
-			day_specs = json.dumps([{"day": day, "swipe_percent": percent} for day, percent in zip(days, percents)])
+			interval = request.form.get('interval',0)
+			interval = int(interval)
+
+
+			day_specs = [{"day": day, "swipe_percent": percent} for day, percent in zip(days, percents)]
+			daily_percent = share_daily_percent(day_specs)
+
 			action_type = request.form.get('action-type')
 			next = request.form.get('next')
 
+			if len(daily_percent) < interval:
+				return jsonify({'msg': 'number of days sepcified cannot be less than the date interval', 'next': next}), 400
+			
 			if session['MODEL']['SCHEDULE']['id'] == s_id:
 				schedule_ref = schedules_ref.document(s_id)
 				schedule = session['MODEL']['SCHEDULE']
-				schedule['day_specs'] = day_specs
+				schedule['day_specs'] = json.dumps(day_specs)
+				schedule['daily_percent'] = json.dumps(daily_percent)
 
 				if action_type and action_type == 'edit':
 					schedule_ref.update(schedule)
 					return jsonify({'msg': 'schedule updated successfully', 'next': next}), 200
 				
 				schedule['added_at'] = firestore.SERVER_TIMESTAMP
+				schedule['current_day'] = 0
 				schedule_ref.set(schedule)
 
 				return jsonify({'msg': 'schedule added successfully', 'next': next}), 200
 
 			return jsonify({'msg':'schedule not in session'}), 404
 
+		elif action == 'delete-schedule':
+			s_id = request.get_json()['data'][0]['id']
+			schedule_ref = schedules_ref.document(s_id).get()
+			if schedule_ref.to_dict()['running']:
+				return jsonify({'msg': 'cannot edit a running schedule'}), 400
+			
+			schedules_ref.document(s_id).delete()
+
+			session['MODEL']['SCHEDULE'].clear()
+			return jsonify({'msg': 'schedule deleted successfully'}), 200
+		
 	except Exception as error:
 		print(error)
-		return jsonify({'msg':"couldn't update schedule"}), 400
+		return jsonify({'msg':f"couldn't {action.replace('-',' ')}"}), 400
 
 @app.route('/accounts',methods=['GET'])
 @login_required
@@ -1012,14 +1030,11 @@ def account_page():
 			return jsonify({'msg': TOKEN[1]}), 403
 		TOKEN = TOKEN[1]['idToken']
 
-
 		proxies  = configs_ref.document('Proxies').get().to_dict()
 		json_data = {'proxies':proxies['content']} if check_values([proxies['content']]) else {}
 		account_stats = api.get_stats(panel_creds['url'],account_id,TOKEN,json_data=json_data)
-		
-
 		account_snapshot = api.get_profile(panel_creds['url'],account_id,TOKEN)
-		if account_snapshot[0] and account_stats[0]:
+		if account_snapshot[0] and account_stats[0] and 'stats' in account_stats[0].keys():
 			account_data = account_snapshot[1]
 			account_stats = account_stats[1]
 
@@ -1102,8 +1117,10 @@ def account_action(action):
 				accounts_ref.document(account_id).update({'city':update_location[1]['location']})
 			else:raise ValueError('account does not exist')
 			return jsonify({'msg': 'location updated successfully'}), 200
+	
 	except ValueError as error:
 		return jsonify({'msg': f'account update unsuccessful. {error}'}), 400
+	
 	except Exception as error:
 		print(error)
 		return jsonify({'msg': 'account update unsuccessful'}), 500
@@ -1178,7 +1195,10 @@ def create_accounts():
 		panel_pass = panel_creds['password']
 		panel_key = panel_creds['key']
 		platform_host = panel_creds['url']
+		panel_worker_key = panel_creds['worker_key']
 		poses = panel_creds['poses']
+
+		SERVER = app.config['SERVER']
 		
 		TOKEN = api.get_token(panel_email, panel_pass, panel_key)
 		if not TOKEN[0]:
@@ -1186,7 +1206,6 @@ def create_accounts():
 		TOKEN = TOKEN[1]['idToken']
 
 		op_count = request.form.get('op-count',None)
-
 
 		bio = request.form.get('bio',None)
 
@@ -1200,22 +1219,24 @@ def create_accounts():
 		age_range_end = request.form.get('op-age-range-end')
 
 		op_gender = request.form.get('op-gender')
-		gender = {
-			'gender':op_gender
+		gender = op_gender
+		gender_data = {
+			'id': 'id_women' if gender == 'male' else 'id_men',
+			'intersex_experience': 'no',
+			'show_gender': True
 		}
-		if gender['gender'] not in ['female','male']:
+		
+		if gender not in ['female','male']:
 			op_gender_other= request.form.get('op-gender-other')
 			op_gender_connections = request.form.get('op-gender-connections')
 			op_gender_show = request.form.get('op-gender-show')
 			op_gender_intersex = request.form.get('op-gender-intersex')
+			gender = op_gender_other
 
-			gender = {
-				'gender':op_gender_other,
-				'gender_data':{
-					'id': 'id_women' if op_gender_connections == 'men' else 'id_men',
-					'intersex-experience': op_gender_intersex if op_gender_intersex != 'cant-say' else '',
-					'show_gender': True if op_gender_show == 'yes' else False
-				}
+			gender_data = {
+				'id': 'id_women' if op_gender_connections == 'men' else 'id_men',
+				'intersex_experience': op_gender_intersex,
+				'show_gender': True if op_gender_show == 'yes' else False
 			}
 
 		if not check_values([op_count,age_range_start,age_range_end,gender]):raise ValueError(f'Empty values, fill in all inputs correctly')
@@ -1263,14 +1284,31 @@ def create_accounts():
 			if not schedule.exists:raise ValueError('No swiping schedule for selected model')
 
 			swipe_configs = schedule.to_dict()
+			daily_percent = json.loads(swipe_configs['daily_percent'])
+			swipe_configs['daily_percent'] = daily_percent
+
 			swipe_delay_start = swipe_configs['swipe_delay'].split('-')[0]
 			swipe_delay_end = swipe_configs['swipe_delay'].split('-')[1]
 			swipe_configs['swipe_delay'] = random.randint(int(swipe_delay_start),int(swipe_delay_end))
+			swipe_configs['min_wait'] = int(swipe_delay_start)
+			swipe_configs['max_wait'] = int(swipe_delay_end)
+
 			
 			swipe_duration_start = swipe_configs['swipe_duration'].split('-')[0]
 			swipe_duration_end = swipe_configs['swipe_duration'].split('-')[1]
 			swipe_configs['swipe_duration'] = random.randint(int(swipe_duration_start),int(swipe_duration_end))
+
+			swipe_session_count_start = swipe_configs['swipe_session_count'].split('-')[0]
+			swipe_session_count_end= swipe_configs['swipe_session_count'].split('-')[1]
+			swipe_configs['swipe_session_count'] = random.randint(int(swipe_session_count_start),int(swipe_session_count_end))
+
 			swipe_configs['first_swipe'] = True
+
+			swipe_configs['session'] = {
+				'admin':session['ADMIN']['id'],
+				'platform':platform_id,
+				'model':model_id
+			}
 		
 		task_id = str(uuid.uuid4())
 		task_status = 'running'
@@ -1279,6 +1317,9 @@ def create_accounts():
 		kwargs = {
 			'accounts_ref':accounts_ref,
 			'tasks_ref':tasks_ref,
+			'swipe_configs':swipe_configs,
+			'worker':panel_worker_key,
+			'SERVER':SERVER,
 			'op_count': op_count,
 			'nb_of_images':profile_image_count,
 			'handles':[handles[:] for _ in range(op_count)],
@@ -1289,6 +1330,7 @@ def create_accounts():
 			'verification_images':verification_images,
 			'age_range':age_range,
 			'gender':gender,
+			'gender_data':gender_data,
 			'names':[names[:] for _ in range(op_count)],
 			'cities': [cities[:] for _ in range(op_count)],
 			'proxies':[proxies[:] for _ in range(op_count)],
@@ -1356,50 +1398,102 @@ def swipe_page():
 		schedule['model'] = session['MODELS'][schedule['model']]['full_name']
 		schedule['platform'] = session['PLATFORMS'][schedule['platform']]['name']
 		schedules.append(schedule)
-		session['MODEL']['SCHEDULES'][schedule['id']] = schedule
 	
 	if len(schedules) < 1:
 		return redirect(url_for('schedules', action='add-schedule', type='swiping', next='swipe'))
 	
 	return render_template('swipe-page.html', schedules=schedules)
 	
-@app.route('/swipe', methods=['POST'])
+@app.route('/start-swipe', methods=['POST'])
 @login_required
 @blocked
 @check_platform
 @check_model
 def swipe_page_p():
-	global swipe_task, swipe_task_id, swipe_task_start_time, swipe_task_status
+	try:
+		config = request.get_json()
+		job_path = config['job_path']
+		# Scheduler().delete(job_path)
 
-	platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
-	platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
-	accounts_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('accounts')
-	tasks_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('tasks')
-	schedules_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('schedules')
+		panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
+		panel_email = panel_creds['email']
+		panel_pass = panel_creds['password']
+		panel_key = panel_creds['key']
+		panel_worker_key = panel_creds['worker_key']
 
-	op_count = int(request.form.get('op-count'))
-	max_workers = request.form.get('max-workers')
-	max_workers = int(max_workers) if max_workers else 2
+		s_sess = config['session']
+		admin_id,platform_id,model_id = s_sess['admin'],s_sess['platform'],s_sess['model']
 
-	swipe_task_status = 'Running'
-	swipe_task_id = str(uuid.uuid4())
+		platforms_ref = app.config['ADMINS_REF'].document(admin_id).collection('platforms')
+		accounts_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('accounts')
+		configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
+		tasks_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('tasks')
+		schedules_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('schedules')
+		schedule_ref = schedules_ref.document(s_id)
 
-	# BOT LOGIC
-	tasks_ref.document(swipe_task_id).set({
-		'id': swipe_task_id,
-		'type': 'Swiping Operation',
-		'status': swipe_task_status,
-		'progress': 0,
-		'start_time':firestore.SERVER_TIMESTAMP
-	})
+		s_id = config['schedule']
+		s_name = config['schedule_name']
 
-	swipe_task = Thread(target=slp)
-	swipe_task.start()
+		data = config['data']
+		op_count = len(data['accounts'])
 
-	if swipe_task.is_alive():
-		return jsonify({'msg': 'Task started, please wait while it finishes'}), 200
-	else:
-		return jsonify({'msg': 'No tasks running'}), 200
+		duration = data['duration']
+		min_wait = data['min_wait']
+		max_wait = data['max_wait']
+		accounts = data['accounts']
+
+		if len(accounts) < 1: jsonify({'msg':'Accounts must contain at least one item'}), 400
+		
+		daily_percent = config.get('daily_percent')
+		if daily_percent is None: jsonify({'msg':'No swipe percentage specified'}), 400
+
+		swipe_percent = daily_percent['swipe_percent']
+
+		TOKEN = api.get_token(panel_email, panel_pass, panel_key)
+		if not TOKEN[0]:
+			return jsonify({'msg': TOKEN[1]}), 403
+		TOKEN = TOKEN[1]['idToken']
+
+		proxies  = configs_ref.document('Proxies').get().to_dict()
+		if not check_values([proxies['content']]): return jsonify({'msg':'No proxies for the model in schedule session'})
+		
+		task_id = str(uuid.uuid4())
+		payload = {
+			'duration':duration,
+			'swipe_right_percentage':swipe_percent,
+			'min_wait': min_wait,
+			'max_wait': max_wait,
+			'account_ids':accounts,
+			'task_id':task_id,
+			'session':s_sess,
+			'proxies':proxies['content']
+			}
+
+		swipe = api.send_swipes(panel_creds['url'],TOKEN,json_data=payload)
+		if swipe[0]:
+			tasks_ref.document(task_id).set({
+					'id':task_id,
+					'type': 'Swipe Operation',
+					'start_time':firestore.SERVER_TIMESTAMP,
+					'status': 'running',
+					'progress': 0,
+					'running':True,
+					'failed':0,
+					'successful':0,
+					'task_count':op_count,
+					'schedule':s_name,
+					'swipe_rights':0,
+					'swipe_lefts':0,
+					'message': f'Initiated a swipe operation for {s_name} day {daily_percent["day"]}'
+			})
+			return jsonify({'msg': f'Swipe operation with schedule {s_name} just started for day {daily_percent["day"]}'}), 200
+
+		print(swipe[1])
+		return jsonify({'msg': f'Swipe operation with schedule {s_name} failed, day {daily_percent["day"]}'}), 400
+	
+	except Exception as error:
+		return jsonify({'msg': error}), 500
+
 
 @app.route('/send-msg', methods=['GET'])
 @login_required
@@ -1478,6 +1572,36 @@ def show_tasks():
 		})
 	return render_template('tasks.html', tasks=tasks)
 
+@app.route('/update-schedule-task/<type>', methods=['POST'])
+def update_task(type):
+	try:
+		report = request.get_json()
+		s_sess = report['session']
+		admin_id,platform_id,model_id = s_sess['admin'],s_sess['platform'],s_sess['model']
+		platform_ref = app.config['ADMIN_REF'].document(admin_id).collection('platforms').document(platform_id)
+		tasks_ref = platform_ref.collection('models').document(model_id).collection('tasks')
+
+		task_id = report['task_id']
+		msg = report['result']
+		passes = report['success']
+		fails = report['failed']
+		swipe_rights = report['swipe_right']
+		swipe_lefts = report['swipe_left']
+
+		tasks_ref.document(task_id).update({
+					'status': 'Completed',
+					'progress': 100,
+					'running':False,
+					'failed':fails,
+					'successful':passes,
+					'swipe_rights':swipe_rights,
+					'swipe_lefts':swipe_lefts,
+					'message': f'Task completed with {passes} successful swipes'
+		})
+	except Exception as error:
+		print(error)
+		return jsonify({'msg':error}), 500
+
 @app.route('/account-configs',methods=['GET'])
 @login_required
 @blocked
@@ -1536,7 +1660,6 @@ def update_file_content():
 	except Exception as error:
 		print(error)
 		return jsonify({'message': 'File content update unsuccessful.'}), 500
-
 
 @app.route('/upload-images/<type>/<category>',methods=['POST'])
 @login_required

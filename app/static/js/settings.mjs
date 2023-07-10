@@ -34,28 +34,26 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         td.forEach(e =>{
             const aSpan = e.querySelector('.action-btns');
             const actionBtn = aSpan.querySelectorAll('a');
-            actionBtn.forEach(a=>{
-                if (a.classList.contains('block-this-account?') || 
-                    a.classList.contains('unblock-this-account?') ||
-                    a.classList.contains('make-super?') ||
-                    a.classList.contains('login-as-user?')||
-                    a.classList.contains('delete-user?'))
+            // actionBtn.forEach(a=>{
+            //     if (a.classList.contains('block-this-account?') || 
+            //         a.classList.contains('unblock-this-account?') ||
+            //         a.classList.contains('make-super?') ||
+            //         a.classList.contains('login-as-user?')||
+            //         a.classList.contains('delete-user?'))
 
-                a.addEventListener('click',(event) =>{
-                    event.preventDefault();
-                    const text = a.classList[a.classList.length - 1].replace(/-/g, ' ');
-                    let action;
-                    if (a.classList.contains('block-this-account?')){action = 'block'}
-                    else if (a.classList.contains('unblock-this-account?')){action='unblock'}
-                    else if (a.classList.contains('make-super?')){action='make-super'}
-                    else if (a.classList.contains('login-as-user?')){action='login-as-user'}
-                    else if (a.classList.contains('delete-user?')){action='delete-user'}
-                    createModal(modal,'prompt',[{'admin_id':e.id}],text,'admin',action,'admins')
-                    showHide('show',[overlay,modal]);
-                })
-            })
-
-
+            //     a.addEventListener('click',(event) =>{
+            //         event.preventDefault();
+            //         const text = a.classList[a.classList.length - 1].replace(/-/g, ' ');
+            //         let action;
+            //         if (a.classList.contains('block-this-account?')){action = 'block'}
+            //         else if (a.classList.contains('unblock-this-account?')){action='unblock'}
+            //         else if (a.classList.contains('make-super?')){action='make-super'}
+            //         else if (a.classList.contains('login-as-user?')){action='login-as-user'}
+            //         else if (a.classList.contains('delete-user?')){action='delete-user'}
+            //         createModal(modal,'prompt',[{'admin_id':e.id}],text,'admin',action,'admins')
+            //         showHide('show',[overlay,modal]);
+            //     })
+            // })
 
             const toolKit = e.querySelector('i');
             toolKit.addEventListener('click',()=>{
@@ -86,17 +84,22 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         })
     }catch(error){con.log(error)}
     try{
-        const dBtn = doc.querySelectorAll('.delete');
+        const dBtn = doc.querySelectorAll('.action');
         dBtn.forEach(e => {
             e.addEventListener('click',(event) => {
                 event.preventDefault();
-                const text = e.classList[e.classList.length - 1].replace(/-/g, ' ');
+                const actionText = e.getAttribute('data-action-message');
+                const text = e.getAttribute('data-action-prompt');
+                const action = e.getAttribute('data-action');
+                const route = e.getAttribute('data-url');
+                let data = [{'id':e.getAttribute('data-action-id')}]
+
                 if (e.classList.contains('Click-on-an-account-to-delete'.toLowerCase())
                 || e.classList.contains('Click-on-an-image-to-delete'.toLowerCase())){
                     showHide('show',[alertBox],text,{'bg':colorSec,'color':colorLessDark});
                     setTimeout(() => showHide('no-show',[alertBox]),5000)
                 }else{
-                    createModal(modal,'prompt',[],text,'','','delete')
+                    createModal(modal,'prompt',data,text,action,route,actionText)
                     showHide('show',[overlay,modal]);
                 }
             });
@@ -374,7 +377,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 scheduleForm.reset()
                 showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 if (response.action && response.action === 'finish-schedule'){
-                    window.location.href=`/schedules?action=next&s=${response.schedule}&type=${response.action_type}&next=${response.next}`
+                    window.location.href=`/schedules?action=next&s=${response.schedule}&type=${response.action_type}&next=${response.next}&interval=${response.date_interval}&swipe_percent=${response.swipe_percent}`
                 }else{
                 setTimeout(() => {
                     let next = response.next != null? `${response.next}`:`/schedules`
@@ -527,13 +530,18 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 const type = li.getAttribute('data-image-type');
                 const cat = li.getAttribute('data-image-category')
 
+                const actionText = li.getAttribute('data-action-message');
+                const text = li.getAttribute('data-action-prompt');
+                const action = li.getAttribute('data-action');
+                const route = li.getAttribute('data-url');
+
                 createModal(modal,'sModalImg',[
                     {'url':imgSrc,
                     'name':imgName[imgName.length - 1],
                     'type':type,
                     'id':imageId,
                     'upload_type':cat
-                    }]);
+                    }],text,action,route,actionText);
                 showHide('show',[overlay,modal]);
             })
         })

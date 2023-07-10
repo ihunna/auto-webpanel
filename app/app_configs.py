@@ -1,4 +1,4 @@
-import os, json, sys,uuid,sqlite3,base64,io,ast,httpx,time,re,shutil,random,requests
+import os, json, sys,uuid,sqlite3,base64,io,ast,httpx,time,re,shutil,random,requests,socket
 from os import listdir
 from os.path import isfile
 from datetime import datetime, timedelta
@@ -87,6 +87,7 @@ app.config["SECRET_KEY"] = session_key.encode()
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
 Session(app)
 
+app.config['SERVER'] = 'atowebpanel.com'
 app.config['DATABASE'] = database_file
 app.config['IMAGE_FOLDER'] = image_folder
 app.config['LANDER'] = os.path.join(lander_folder,'index.html')
@@ -287,7 +288,6 @@ def delete_document(collection_name, document_id):
 app.config['ADMINS_REF'] = db.collection('admins')
 
 
-
 def login_required(func):
 	@wraps(func)
 	def decorated_function(*args, **kwargs):
@@ -412,6 +412,19 @@ class API:
 		except Exception as error:
 			return False,error
 		
+	def send_swipes(self,host,token:str,json_data:dict={}):
+		try:
+			url = f'{host}/swipes'
+			headers = {
+					'Content-Type':'application/json',
+					'Authorization': f'Bearer {token}'}
+			data = requests.post(url,json=json_data,headers=headers,timeout=self.timeout)
+
+			if data.status_code > 299:return False,data.text
+			return True,data.json()
+		except Exception as error:
+			return False,error
+		
 	def update_profile(self,host,account_id:str,token:str,json_data:dict=None):
 		try:
 			url = f'{host}/account/{account_id}'
@@ -450,7 +463,3 @@ class API:
 			return False,error
 		
 api = API()
-
-
-
-
