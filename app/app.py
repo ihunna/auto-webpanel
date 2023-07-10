@@ -1601,7 +1601,7 @@ def update_task(type):
 		})
 	except Exception as error:
 		print(error)
-		return jsonify({'msg':error}), 500
+		return jsonify({'msg':'error updating task'}), 500
 
 @app.route('/account-configs',methods=['GET'])
 @login_required
