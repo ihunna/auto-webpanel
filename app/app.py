@@ -1420,7 +1420,6 @@ def swipe_page_p():
 		configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
 		tasks_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('tasks')
 		schedules_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('schedules')
-		schedule_ref = schedules_ref.document(s_id)
 
 		platform = platforms_ref.document(platform_id).get()
 
@@ -1431,6 +1430,8 @@ def swipe_page_p():
 		panel_worker_key = panel_creds['worker_key']
 
 		s_id = config['schedule']
+		schedule_ref = schedules_ref.document(s_id)
+		
 		s_name = config['schedule_name']
 
 		data = config['data']
