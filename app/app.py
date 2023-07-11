@@ -1,6 +1,6 @@
 from app_configs import *
 from app_utils import create_edit_menu
-from app_actions import start_task
+from app_actions import start_task, start_get_task
 
 
 '''
@@ -1332,6 +1332,96 @@ def create_accounts():
 		print(error)
 		return jsonify({'msg': 'error starting task'}), 500
 
+@app.route('/get-accounts',methods=['POST'])
+@login_required
+@blocked
+@check_platform
+@check_model
+def get_account():
+	try:
+		platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
+		platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
+		accounts_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('accounts')
+		tasks_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('tasks')
+		configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
+
+		configs_snap = configs_ref.get()
+		configs = {}
+		for config in configs_snap:
+			config = config.to_dict()
+			if config["title"]=='Proxies':
+				configs['Proxies']=config['content']
+
+		proxies = configs['Proxies'] 
+		
+		panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
+		panel_email = panel_creds['email']
+		panel_pass = panel_creds['password']
+		panel_key = panel_creds['key']
+		platform_host = panel_creds['url']
+		
+		TOKEN = api.get_token(panel_email, panel_pass, panel_key)
+		if not TOKEN[0]:
+			return jsonify({'msg': TOKEN[1]}), 403
+		TOKEN = TOKEN[1]['idToken']
+
+		email_password_pairs = request.form.get('email_password_pairs').replace('\r', '').split('\n')
+		email_password_pairs = [{'email': item.split(':')[0], 'password': item.split(':')[1]} for item in email_password_pairs if item != '']
+
+		op_count = len(email_password_pairs)
+		max_workers = request.form.get('max-workers',10)
+		max_workers = int(max_workers)
+		
+		task_id = str(uuid.uuid4())
+		task_status = 'running'
+		task_progress = 0
+
+		kwargs = {
+			'proxies':proxies,
+			'email_password_pairs': email_password_pairs,
+			'op_count': op_count,
+			'accounts_ref':accounts_ref,
+			'tasks_ref':tasks_ref,
+			'task_id':task_id,
+			'max_workers': max_workers,
+			'url':platform_host,
+			'token': TOKEN
+		}
+
+		account_task = Thread(target=start_get_task, kwargs=kwargs)
+		account_task.start()
+
+		if account_task.is_alive():
+			tasks_ref.document(task_id).set({
+				'id':task_id,
+				'type': 'Account Get Operation',
+				"start_time":firestore.SERVER_TIMESTAMP,
+				'status': task_status,
+				'progress': task_progress,
+				'running':True,
+				'banned':0,
+				'added':0,
+				'already_present': 0,
+				'task_count':op_count,
+				'message':'Account Get just started'
+			})
+
+			session['MODEL']['TASKS'] = {
+				'account_task':{
+					'id':task_id,
+					'task_status':task_status,
+					'running':True,
+				}
+			}
+			return jsonify({'msg': 'Task started, please wait while it finishes'}), 200
+		else:
+			return jsonify({'msg': 'No tasks running'}), 200
+	except ValueError as v_error:
+		print(v_error)
+		return jsonify({'msg': f'{v_error}'}), 400
+	except Exception as error:
+		print(error)
+		return jsonify({'msg': 'error starting task'}), 500
 
 ##SWIPE PAGE
 @app.route('/swipe', methods=['GET'])

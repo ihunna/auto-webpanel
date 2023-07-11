@@ -241,3 +241,135 @@ def start_task(
 			'failed':fails
 			})
 		return success,msg 
+	
+
+def get_account(
+			proxies:list = None,
+			email: str = None,
+			password: str= None,
+			url:str = None,
+			token:str = None):
+	URL = f'{url}/account/login_and_create_account'
+	try:
+		with httpx.Client(timeout=httpx.Timeout(200.0)) as session:
+			session.headers = {
+				'Content-Type':'application/json',
+				'Authorization': f'Bearer {token}'
+			}
+			
+			json_data = {
+				'email': email,
+				'password': password,
+				'proxies':proxies,
+			}
+
+			flow = session.put(URL,json=json_data)
+			if flow.status_code > 299:return False,flow.text
+			
+			print(flow.json())
+			account_id = flow.json()['id']
+			message = flow.json()['message']
+			if account_id is not None:
+				flow = session.get(f"{url}/account/{account_id}")
+				if flow.status_code  > 299:return False,flow.text,None
+				account_details = flow.json()
+				account_details['id'] = account_id
+				return True,message,account_details
+			return True,message,None
+	except Exception as error:
+		return False,'Adding account failed',error
+
+def start_get_task(
+			proxies: str= None,
+			accounts_ref=None,
+			op_count: int = None,
+			tasks_ref=None,
+			task_id:str = None,
+			max_workers:int = 10,
+			email_password_pairs: list = None,
+			url:str=None,
+			token:str = None):
+	
+	print('ACCOUNT GET STARTED')
+
+	already_present,passes,banned,completed,proxy_error= 0,0,0,0,0
+
+	try:
+		kwargs=[{
+			'proxies': proxies,
+			'email': i['email'],
+			'password':i['password'],
+			'url':url,
+			'token':token
+		}for i in email_password_pairs]
+
+		with ThreadPoolExecutor(max_workers=max_workers) as executor:
+			futures = []
+			for kwargs in kwargs:
+				future = executor.submit(get_account, **kwargs)
+				futures.append(future)
+
+			for future in as_completed(futures):
+				result = future.result()
+				if result[0]:
+					msg = result[1]
+					completed += 1
+					account = result[2]
+					if msg == 'already_present':
+						already_present+=1
+						tasks_ref.document(task_id).update({
+							'progress':(completed / op_count) * 100,
+							'successful':passes,
+							'failed':already_present+banned+proxy_error
+							})
+						continue
+					elif msg == 'banned':
+						banned+=1
+						tasks_ref.document(task_id).update({
+							'progress':(completed / op_count) * 100,
+							'successful':passes,
+							'failed':already_present+banned+proxy_error
+							})
+						continue
+					elif msg == 'proxy_error':
+						proxy_error+=1
+						tasks_ref.document(task_id).update({
+							'progress':(completed / op_count) * 100,
+							'successful':passes,
+							'failed':already_present+banned+proxy_error
+							})
+						continue
+					else:
+						passes += 1
+					account['profile'] = json.dumps(account['profile'])
+					accounts_ref.document(account['id']).set(account)
+					tasks_ref.document(task_id).update({
+						'progress':(completed / op_count) * 100,
+						'successful':passes,
+						})
+				else:
+					print(result[1])
+					print(result[2])
+		task_status ='completed'
+		msg = f'task completed, {passes} accounts added'
+	except Exception as error:
+		import traceback
+		print(traceback.format_exc())
+		task_status ='failed'
+		msg = f'task failed, no accounts added'
+	finally:
+		tasks_ref.document(task_id).update({
+			'status':task_status,
+			'running':False,
+			'message':msg,
+			'successful':passes,
+			'failed': already_present+banned+proxy_error
+			})
+		return msg 
+	
+#if __name__=='__main__':
+#	from app_configs import api
+#	TOKEN = api.get_token('badoo@atonline.com', 'jUX@5EH85kX0', 'AIzaSyAa5ssDQa-ONgBfqKJlebgB9dUQRkm_y_w')
+#	TOKEN = TOKEN[1]['idToken']
+#	a, b, c = get_account([] ,'bli.gh.tlan.tern@gmail.com', 'SkyrimEmilio11', 'http://45.35.13.211:5000', TOKEN)
+#	print(a, b, c)
