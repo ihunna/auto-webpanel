@@ -1579,6 +1579,7 @@ def show_tasks():
 def update_task(type):
 	try:
 		report = request.get_json()
+		print(report)
 		s_sess = report['session']
 		admin_id,platform_id,model_id = s_sess['admin'],s_sess['platform'],s_sess['model']
 		platform_ref = app.config['ADMIN_REF'].document(admin_id).collection('platforms').document(platform_id)
@@ -1620,7 +1621,6 @@ def get_configuration():
 	working_cities = ''
 	with open(panel_creds['cities_file'],'r') as f:
 		working_cities = f.read()
-	print(working_cities)
 
 	configs_snap = configs_ref.get()
 	model_configs = []
