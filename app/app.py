@@ -272,6 +272,7 @@ def index():
 @login_required
 @blocked
 def add_platform():
+	return jsonify({'msg':'not authorized'}),403
 	try:
 		platform_name = request.form.get('platform-name')
 		user_id = session.get('ADMIN')['id']
