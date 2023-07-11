@@ -976,8 +976,10 @@ def scheduler(action):
 def accounts():
 	g.page = 'accounts'
 	accounts = []
-	all_accounts = []
-	server = url_for('index', _external=True)
+	action = request.args.get('action')
+
+	if action and action == 'load-accounts':
+		return render_template("accounts.html",action=action)
 
 	platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 	platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
@@ -1613,7 +1615,13 @@ def get_configuration():
 	platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 	platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
 	configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
-	
+	panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
+
+	working_cities = ''
+	with open(panel_creds['cities_file'],'r') as f:
+		working_cities = f.read()
+	print(working_cities)
+
 	configs_snap = configs_ref.get()
 	model_configs = []
 	for config in configs_snap:
@@ -1624,8 +1632,7 @@ def get_configuration():
 		config['content'] = content
 		model_configs.append(config)
 	session['MODEL']['CONFIGS'] = model_configs
-	print(session['MODEL']['CONFIGS'])
-	return render_template('accounts-config.html',configs=session['MODEL']['CONFIGS'])
+	return render_template('accounts-config.html',configs=session['MODEL']['CONFIGS'],working_cities=working_cities)
 
 @app.route('/account-configs',methods=['POST'])
 @login_required

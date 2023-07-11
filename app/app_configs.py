@@ -45,6 +45,7 @@ email_password__file = os.path.join(data_folder, 'email_passwords.txt')
 user_agents_file = os.path.join(data_folder, 'user_agents.txt')
 biographies_file = os.path.join(data_folder, 'biographies.txt')
 zip_file = os.path.join(data_folder, 'zipcodes.txt')
+badoo_cities_file = os.path.join(data_folder,'cities.txt')
 
 
 
@@ -238,7 +239,8 @@ app.config['PANEL_AUTH_CREDS'] = {
 			{'title':'Email and Password','content':[]},
 			{'title':'User Agents','content':[]},
 			{'title':'Biographies','content':[]},
-			{'title':'Cities','content':[]},]
+			{'title':'Cities','content':[]}],
+		'cities_file':badoo_cities_file
 	},
 	'okcupid':{
 		'email':OKCUPID_EMAIL,
@@ -374,7 +376,7 @@ def check_values(values:list):
 	else:return True
 
 class API:
-	def __init__(self,timeout:int=30):
+	def __init__(self,timeout:int=40):
 		self.timeout = timeout
 	def get_token(self,email:str,password:str,key:str):
 		url = f'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={key}'
