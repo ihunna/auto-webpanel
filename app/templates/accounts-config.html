@@ -54,7 +54,7 @@
                     <div id="{{ config.title }}-container" class="content-holder" style="display: none;">
                         <p id="{{ config.title }}-message" class="message" style="display: none;"></p>
 
-                        <textarea id="{{ config.title }}-textarea" rows="10" cols="50" style="width: 100%;">{%if config.content|length > 0%}{{ config.content }}{%endif%}</textarea>
+                        <textarea id="{{ config.title }}-textarea" rows="10" cols="50" style="width: 100%;" {%if config.title|lower == 'cities'%}readonly{%endif%}>{%if config.content|length > 0%}{{ config.content }}{%endif%}</textarea>
                         {%if config.title|lower == 'biographies'%} 
                             <h5 class="input-highlight" style="padding: 5px 10px; font-size: 13px;"> <i class="fas fas fa-exclamation-circle"></i> 
                                 biographies must be seperated by double newlines (double enter key)
@@ -418,7 +418,9 @@
         const loadCitiesBtn = document.getElementById('load-cities');
         loadCitiesBtn.addEventListener('click',(e)=>{
             const citiesTextArea = document.getElementById('Cities-textarea');
+            citiesTextArea.removeAttribute('readonly');
             citiesTextArea.value = {{working_cities|tojson|safe}};
+            citiesTextArea.setAttribute('readonly','');
         })
 
         const enterCitiesBtn = document.getElementById('enter-cities');
@@ -450,7 +452,9 @@
             li.addEventListener("click", () => {
             const enteredCities = citiesTextArea.value.split("\n").map(city => city.trim());
             if (!enteredCities.includes(city)) {
+                citiesTextArea.removeAttribute('readonly');
                 citiesTextArea.value += city + "\n";
+                citiesTextArea.setAttribute('readonly','')
             }
             cityInput.value = "";
             matchedCitiesList.innerHTML = "";

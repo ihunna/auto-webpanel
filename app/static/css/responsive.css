@@ -671,6 +671,29 @@ td.actions{
 }
 
 @media screen  and (max-width:374.99px){
+    .minor-info-display{
+        right: 5px;
+        left: 5px;
+        height: auto;
+    }
+    
+    .minor-info-display > .desc{
+        font-size: 13px;
+    }
+    
+    .minor-info-display > .action{
+        margin: auto 0px auto auto;
+        padding: 2.5px 14px;
+        font-size: 14px;
+    }
+    
+    .minor-info-display > .close{
+        position: absolute;
+        top: 5px;
+        right: 8px;
+        font-size: 14px;
+    }
+
     .holder{
         width: 100%;
         height: 100%;

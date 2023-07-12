@@ -34,7 +34,7 @@
                         </thead>
                         <tbody>
                         {%for account in accounts%}
-                        <tr>
+                        <tr data-url="/account-page?account={{account.id}}">
                             <td>{{account.id}}</td>
                             <td>{{account.name}}</td>
                             <td>{{account.email}}</td>

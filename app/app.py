@@ -1017,41 +1017,27 @@ def account_page():
 	action = request.args.get('action')
 	images = []
 	matches = {}
-	
 	if account_id:
 		platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 		platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
 		accounts_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('accounts')
-		configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
+		
 		panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
-
-		panel_email = panel_creds['email']
-		panel_pass = panel_creds['password']
-		panel_key = panel_creds['key']
 		panel_edit_configs = panel_creds['edit_configs']
 
-		TOKEN = api.get_token(panel_email, panel_pass, panel_key)
-		if not TOKEN[0]:
-			return jsonify({'msg': TOKEN[1]}), 403
-		TOKEN = TOKEN[1]['idToken']
-
-		proxies  = configs_ref.document('Proxies').get().to_dict()
-		json_data = {'proxies':proxies['content']} if check_values([proxies['content']]) else {}
-		account_stats = api.get_stats(panel_creds['url'],account_id,TOKEN,json_data=json_data)
-		account_snapshot = api.get_profile(panel_creds['url'],account_id,TOKEN)
-		if account_snapshot[0] and account_stats[0] and 'stats' in account_stats[0].keys():
-			account_data = account_snapshot[1]
-			account_stats = account_stats[1]
-
-			created_at = account_data.get('created') if 'created_at' in account_data.keys() else str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-			account_data['created_at'] = created_at
-			account_data['stats'] = account_stats['stats']
-			account_data['stats']['swpies'] = 0
-			account_data['stats']['liked'] = 0
-			account_data['stats']['disliked'] = 0
-
-			account_data['status'] = account_stats['status']
+		account_snap = accounts_ref.document(account_id).get()
+		if account_snap.exists:
+			account_data = account_snap.to_dict()
+			account_data['profile'] = json.loads(account_data['profile']) if isinstance(account_data['profile'],str) else account_data['profile']
 			account_data['profile_image'] = account_data.get('images')[0] if 'images' in account_data.keys() else ''
+			
+			last_updated = account_data.get('last_updated')
+			if last_updated is not None:
+				last_updated = datetime.strptime(last_updated.split(".")[0], '%Y-%m-%d %H:%M:%S')
+				time_difference = datetime.now() - last_updated
+				account_data['time_ago'] = round(time_difference.total_seconds() / 3600)
+			else:
+				account_data['time_ago'] = 0
 			
 			if action and action == 'map':
 				return render_template('account-page.html', account=account_data, action=action)
@@ -1061,7 +1047,7 @@ def account_page():
 			elif action and action == 'view-details':
 				return render_template('account-page.html', account=account_data, action=action)
 			return render_template('account-page.html', account=account_data)
-	return redirect('/accounts')
+
 
 @app.route('/account-page/<action>',methods=['POST'])
 @login_required
@@ -1073,6 +1059,7 @@ def account_action(action):
 		platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 		platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
 		accounts_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('accounts')
+		configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
 		panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
 		
 		panel_edit_configs = panel_creds['edit_configs']
@@ -1097,15 +1084,13 @@ def account_action(action):
 			for key in panel_edit_configs.keys():
 				account_profile[key] = form_data.getlist(key) if key.lower() in ['languages','pets'] else form_data.get(key)
 
-			print(account_profile)
-
 			update_profile = api.update_profile(panel_creds['url'],account_id,TOKEN,json_data=account_profile)
 			if not update_profile[0]:raise ValueError("couldn't update account")
 			elif 'error_code' in update_profile[1]: raise ValueError(update_profile[1]['message'])
 			
 			account_data = accounts_ref.document(account_id).get()
 			if account_data.exists:
-				accounts_ref.document(account_id).update({'profile':json.dumps(account_profile)})
+				accounts_ref.document(account_id).update({'profile':account_profile})
 			else:raise ValueError('account does not exist')
 
 			return jsonify({'msg': 'account updated successfully'}), 200
@@ -1122,7 +1107,30 @@ def account_action(action):
 				accounts_ref.document(account_id).update({'city':update_location[1]['location']})
 			else:raise ValueError('account does not exist')
 			return jsonify({'msg': 'location updated successfully'}), 200
-	
+		elif action == 'update-account':
+			account_id = request.get_json()[0]['id']
+
+			proxies  = configs_ref.document('Proxies').get().to_dict()
+			json_data = {'proxies':proxies['content']} if check_values([proxies['content']]) else {}
+			account_stats = api.get_stats(panel_creds['url'],account_id,TOKEN,json_data=json_data)
+			account_snapshot = api.get_profile(panel_creds['url'],account_id,TOKEN)
+			
+			if account_snapshot[0] and account_stats[0] and 'stats' in account_stats[1].keys():
+				account_data = account_snapshot[1]
+				account_stats = account_stats[1]
+
+				account_data['last_updated'] = str(datetime.now())
+				account_data['stats'] = account_stats['stats']
+				account_data['stats']['swipes'] = 0
+				account_data['stats']['liked'] = 0
+				account_data['stats']['disliked'] = 0
+
+				account_data['status'] = account_stats['status']
+				accounts_ref.document(account_id).update(account_data)
+
+				return jsonify({'msg':'details updated successfully'}), 200
+			return jsonify({'msg': f'account update unsuccessful.'}), 400
+
 	except ValueError as error:
 		return jsonify({'msg': f'account update unsuccessful. {error}'}), 400
 	
@@ -1456,6 +1464,8 @@ def upload_accounts():
         'successful':0,
         'failed':0,
         'already_present': 0,
+		'banned':0,
+		'proxy_error':0,
         'task_count':op_count,
         'message':'Upload account operation just started'
       })
@@ -1745,7 +1755,8 @@ def update_file_content():
 		platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 		platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
 		configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
-		
+		panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
+
 		data = request.get_json()
 		title = data['title']
 		new_content = str(data['content']).strip()
@@ -1753,6 +1764,15 @@ def update_file_content():
 		if not check_values([new_content]): raise ValueError(f'{title} is empty')
 
 		new_content = new_content.split('\n') if title.lower() != 'biographies' else new_content.split('\n\n')
+		if title.lower() == 'cities':
+			working_cities = ''
+			with open(panel_creds['cities_file'],'r') as f:
+				working_cities = f.read()
+
+			for city in new_content:
+				if city.strip().replace('\n','') not in working_cities.split('\n'):
+					new_content.remove(city)
+
 		configs = {'title':title,'content':new_content}
 		configs_ref.document(title).set(configs)
 

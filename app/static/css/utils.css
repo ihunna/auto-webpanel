@@ -171,6 +171,47 @@
     display: none;
 }
 
+.minor-info-display{
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    background: #333;
+    color: var(--soft-white);
+    border-radius: 10px;
+    box-shadow: 1px 1px 10px #444;
+    padding: 20px 24px 20px 10px;
+    margin: auto;
+    max-width: 500px;
+    height: auto;
+    z-index: 111;
+}
+
+.minor-info-display.no-show{
+    display: none;
+}
+
+.minor-info-display > .desc{
+    margin: auto;
+    font-size: 14px;
+}
+
+.minor-info-display > .action{
+    margin: 8px 0px auto auto;
+    background: var(--secondary);
+    color: var(--soft-white);
+    border-radius: 20px;
+    padding: 2.5px 14px;
+}
+
+.minor-info-display > .close{
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    font-size: 14px;
+}
+
 .side-filter-holder{
     position: absolute;
     top: 20px;

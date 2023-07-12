@@ -42,6 +42,7 @@ const createModal = (element=Element,type=String,items=Array,text=String,action=
   
   const closeBtn = doc.createElement('span');
   closeBtn.classList.add('close');
+  closeBtn.setAttribute('data-action','close-modal')
   const closeIcon = doc.createElement('i');
   closeIcon.classList.add('fa', 'fa-close');
   closeBtn.appendChild(closeIcon);

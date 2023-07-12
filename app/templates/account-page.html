@@ -37,6 +37,24 @@
                 </div>
 
                 <div class="main-container">
+                    <div class="minor-info-display">
+                        <div class="desc">
+                            <span>
+                                <i class="fas fa-exclamation-circle"></i>
+                            </span>
+                            &nbsp;
+                                the details shown is last updated {{account.time_ago}} hours ago
+                        </div>
+                        <div class="action" data-action="update-account" 
+                            data-url="/account-page/update-account"
+                            data-action-message="Getting latest details"
+                            data-action-id="{{account.id}}">
+                            update
+                        </div>
+                        <span class="close" data-action="close-parent">
+                            <i class="fas fa-times"></i>
+                        </span>
+                    </div>
                     {%if action not in ['edit-account','view-details']%}
                         <div class="holder profile-holder scroll">
                             <div class="profile-card">
@@ -63,20 +81,22 @@
                                             <p class="bg-warning">needs attention</p>
                                         {%endif%}
                                     </div>
-                                    <div class="d-items">
-                                        <p>
-                                            {{account.stats.matches}} matches
-                                        </p>
-                                        <p>
-                                            {{account.stats.liked}} liked
-                                        </p>
-                                        <p>
-                                            {{account.stats.likes}} likes
-                                        </p>
-                                        <p>
-                                            {{account.stats.messages}} messages
-                                        </p>
-                                    </div>
+                                    {%if account.stats%}
+                                        <div class="d-items">
+                                            <p>
+                                                {{account.stats.matches}} matches
+                                            </p>
+                                            <p>
+                                                {{account.stats.liked}} liked
+                                            </p>
+                                            <p>
+                                                {{account.stats.likes}} likes
+                                            </p>
+                                            <p>
+                                                {{account.stats.messages}} messages
+                                            </p>
+                                        </div>
+                                    {%endif%}
                                 </div>
                             </div>
                             <div class="profile-details scroll">
@@ -282,33 +302,35 @@
                                             <div class="header">
                                                 statistics
                                             </div>
-                                            <div class="body" id="metrics">
-                                                <div class="stat">
-                                                    <span><i class="fas fa-handshake"></i> matches</span>
-                                                    <div class="count">{{account.stats.matches}}</div>
-                                                    <div class="metric plus" data-stat="matches">+0%</div>
+                                            {%if account.stats%}
+                                                <div class="body" id="metrics">
+                                                    <div class="stat">
+                                                        <span><i class="fas fa-handshake"></i> matches</span>
+                                                        <div class="count">{{account.stats.matches}}</div>
+                                                        <div class="metric plus" data-stat="matches">+0%</div>
+                                                    </div>
+                                                    <div class="stat">
+                                                        <span><i class="fas fa-heart"></i> likes</span>
+                                                        <div class="count">{{account.stats.likes}}</div>
+                                                        <div class="metric" data-stat="likes">+0%</div>
+                                                    </div>
+                                                    <div class="stat">
+                                                        <span><i class="fas fa-thumbs-up"></i> swipe rights</span>
+                                                        <div class="count">{{account.stats.liked}}</div>
+                                                        <div class="metric" data-stat="liked">+0%</div>
+                                                    </div>
+                                                    <div class="stat">
+                                                        <span><i class="fas fa-thumbs-down"></i> swipe left</span>
+                                                        <div class="count">{{account.stats.disliked}}</div>
+                                                        <div class="metric" data-stat="disliked">+0%</div>
+                                                    </div>
+                                                    <div class="stat">
+                                                        <span><i class="fas fa-paper-plane"></i> messages</span>
+                                                        <div class="count">{{account.stats.messages}}</div>
+                                                        <div class="metric" data-stat="messages">+0%</div>
+                                                    </div>
                                                 </div>
-                                                <div class="stat">
-                                                    <span><i class="fas fa-heart"></i> likes</span>
-                                                    <div class="count">{{account.stats.likes}}</div>
-                                                    <div class="metric" data-stat="likes">+0%</div>
-                                                </div>
-                                                <div class="stat">
-                                                    <span><i class="fas fa-thumbs-up"></i> swipe rights</span>
-                                                    <div class="count">{{account.stats.liked}}</div>
-                                                    <div class="metric" data-stat="liked">+0%</div>
-                                                </div>
-                                                <div class="stat">
-                                                    <span><i class="fas fa-thumbs-down"></i> swipe left</span>
-                                                    <div class="count">{{account.stats.disliked}}</div>
-                                                    <div class="metric" data-stat="disliked">+0%</div>
-                                                </div>
-                                                <div class="stat">
-                                                    <span><i class="fas fa-paper-plane"></i> messages</span>
-                                                    <div class="count">{{account.stats.messages}}</div>
-                                                    <div class="metric" data-stat="messages">+0%</div>
-                                                </div>
-                                            </div>
+                                            {%endif%}
                                         </div>
                                     </div>
                                 </div>
@@ -418,49 +440,51 @@
                 const _matches ='{{matches|tojson|safe}}';
             </script>
         {%endif%}
-        <script>
-            const storedStatsString = localStorage.getItem("{{account.id}}_{{stats}}");
-            let storedStats = JSON.parse(storedStatsString);
-            const _stats = {{account.stats|tojson|safe}} || {"disliked": 0, "liked": 0, "likes": 0, "matches": 0, "messages": 0, "swipes": 0}
-            const newStats = JSON.parse(JSON.stringify(_stats));
+        {%if account.stats%}
+            <script>
+                const storedStatsString = localStorage.getItem("{{account.id}}_{{stats}}");
+                let storedStats = JSON.parse(storedStatsString);
+                const _stats = {{account.stats|tojson|safe}} || {"disliked": 0, "liked": 0, "likes": 0, "matches": 0, "messages": 0, "swipes": 0}
+                const newStats = JSON.parse(JSON.stringify(_stats));
 
-            function calculateIncrementPercentage(statName) {
-                let result;
-                if (!storedStats) {
-                    localStorage.setItem("{{account.id}}_{{stats}}", JSON.stringify(newStats));
-                    storedStats = newStats;
-                }
-                if(newStats[statName] == 0 && storedStats[statName] == 0){
-                    result = 0;
-                }else if(newStats[statName] == 0){
-                    result = -100;
-                }else if (storedStats[statName] == 0){
-                    result = 100;
-                }
-                else{
-                    const incrementPercentage = (newStats[statName] - newStats[statName]) / (storedStats[statName] || 1) * 100;
-                    result =  incrementPercentage;
-                }
-                return result;
-                }
+                function calculateIncrementPercentage(statName) {
+                    let result;
+                    if (!storedStats) {
+                        localStorage.setItem("{{account.id}}_{{stats}}", JSON.stringify(newStats));
+                        storedStats = newStats;
+                    }
+                    if(newStats[statName] == 0 && storedStats[statName] == 0){
+                        result = 0;
+                    }else if(newStats[statName] == 0){
+                        result = -100;
+                    }else if (storedStats[statName] == 0){
+                        result = 100;
+                    }
+                    else{
+                        const incrementPercentage = (newStats[statName] - newStats[statName]) / (storedStats[statName] || 1) * 100;
+                        result =  incrementPercentage;
+                    }
+                    return result;
+                    }
 
-            const stats = document.querySelectorAll('#metrics .stat .metric');
-            Array.from(stats).forEach(stat=>{
-                const result = calculateIncrementPercentage(stat.getAttribute('data-stat'));
-                if (result > 0){
-                    stat.classList.add('plus');
-                    stat.classList.remove('minus');
-                    stat.textContent = `+${result}%`;
-                }else if (result == 0){
-                    stat.classList.remove('plus');
-                    stat.classList.remove('minus');
-                    stat.textContent = `+${result}%`;
-                }else{
-                    stat.classList.remove('plus');
-                    stat.classList.add('minus');
-                    stat.textContent = `${result}%`;
-                }
-            })
-            localStorage.setItem("{{account.id}}_{{stats}}", JSON.stringify(newStats));
-        </script>
+                const stats = document.querySelectorAll('#metrics .stat .metric');
+                Array.from(stats).forEach(stat=>{
+                    const result = calculateIncrementPercentage(stat.getAttribute('data-stat'));
+                    if (result > 0){
+                        stat.classList.add('plus');
+                        stat.classList.remove('minus');
+                        stat.textContent = `+${result}%`;
+                    }else if (result == 0){
+                        stat.classList.remove('plus');
+                        stat.classList.remove('minus');
+                        stat.textContent = `+${result}%`;
+                    }else{
+                        stat.classList.remove('plus');
+                        stat.classList.add('minus');
+                        stat.textContent = `${result}%`;
+                    }
+                })
+                localStorage.setItem("{{account.id}}_{{stats}}", JSON.stringify(newStats));
+            </script>
+        {%endif%}
     {%endblock%}

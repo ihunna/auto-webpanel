@@ -233,7 +233,7 @@ class TASKS:
 								'failed':fails
 								})
 							continue
-						account['profile'] = json.dumps(account['profile'])
+						account['last_updated'] = str(datetime.now())
 						accounts_ref.document(account['id']).set(account)
 						created_accounts.append(account['id'])
 						
@@ -372,7 +372,8 @@ class TASKS:
 							tasks_ref.document(task_id).update({
 							'progress':(completed / op_count) * 100,
 							'successful':passes,
-							'failed':already_present+banned+proxy_error
+							'failed':already_present+banned+proxy_error,
+							'already_present':already_present
 							})
 							continue
 						elif msg == 'banned':
@@ -380,7 +381,8 @@ class TASKS:
 							tasks_ref.document(task_id).update({
 							'progress':(completed / op_count) * 100,
 							'successful':passes,
-							'failed':already_present+banned+proxy_error
+							'failed':already_present+banned+proxy_error,
+							'banned':banned
 							})
 							continue
 						elif msg == 'proxy_error':
@@ -388,12 +390,13 @@ class TASKS:
 							tasks_ref.document(task_id).update({
 							'progress':(completed / op_count) * 100,
 							'successful':passes,
-							'failed':already_present+banned+proxy_error
+							'failed':already_present+banned+proxy_error,
+							'proxy_error':proxy_error
 							})
 							continue
 						else:
 							passes += 1
-						account['profile'] = json.dumps(account['profile'])
+						account['last_updated'] = str(datetime.now())
 						accounts_ref.document(account['id']).set(account)
 						tasks_ref.document(task_id).update({
 							'progress':(completed / op_count) * 100,

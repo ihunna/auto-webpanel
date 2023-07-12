@@ -3,7 +3,11 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
 
 (() =>{
     closeBtn.forEach(e =>{
-        e.addEventListener('click',() => showHide('no-show',[overlay,modal]));
+        e.addEventListener('click',() => {
+            const action = e.getAttribute('data-action');
+            let target = action =='close-modal'?[overlay,modal]:[e.parentNode];
+            showHide('no-show',target);
+        })
     });
     try{
         const toggleMap = doc.querySelector('#toggle-map');
@@ -34,27 +38,6 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         td.forEach(e =>{
             const aSpan = e.querySelector('.action-btns');
             const actionBtn = aSpan.querySelectorAll('a');
-            // actionBtn.forEach(a=>{
-            //     if (a.classList.contains('block-this-account?') || 
-            //         a.classList.contains('unblock-this-account?') ||
-            //         a.classList.contains('make-super?') ||
-            //         a.classList.contains('login-as-user?')||
-            //         a.classList.contains('delete-user?'))
-
-            //     a.addEventListener('click',(event) =>{
-            //         event.preventDefault();
-            //         const text = a.classList[a.classList.length - 1].replace(/-/g, ' ');
-            //         let action;
-            //         if (a.classList.contains('block-this-account?')){action = 'block'}
-            //         else if (a.classList.contains('unblock-this-account?')){action='unblock'}
-            //         else if (a.classList.contains('make-super?')){action='make-super'}
-            //         else if (a.classList.contains('login-as-user?')){action='login-as-user'}
-            //         else if (a.classList.contains('delete-user?')){action='delete-user'}
-            //         createModal(modal,'prompt',[{'admin_id':e.id}],text,'admin',action,'admins')
-            //         showHide('show',[overlay,modal]);
-            //     })
-            // })
-
             const toolKit = e.querySelector('i');
             toolKit.addEventListener('click',()=>{
                 td.forEach(a =>{
@@ -69,6 +52,14 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                     showHide('show',[aSpan]);
                     aSpan.classList.add('shown');
                 }
+            })
+        })
+
+        const trs = table.querySelectorAll('body tr');
+        trs.forEach(e =>{
+            e.addEventListener('click',()=>{
+                const url = e.getAttribute('data-url');
+                window.location.href = url;
             })
         })
 
@@ -93,14 +84,25 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 const action = e.getAttribute('data-action');
                 const route = e.getAttribute('data-url');
                 let data = [{'id':e.getAttribute('data-action-id')}]
-
-                if (e.classList.contains('Click-on-an-account-to-delete'.toLowerCase())
-                || e.classList.contains('Click-on-an-image-to-delete'.toLowerCase())){
-                    showHide('show',[alertBox],text,{'bg':colorSec,'color':colorLessDark});
-                    setTimeout(() => showHide('no-show',[alertBox]),5000)
-                }else{
+                if (action !== 'update-account'){
                     createModal(modal,'prompt',data,text,action,route,actionText)
                     showHide('show',[overlay,modal]);
+                }else{
+                    // showHide('no-show',[e.parentNode]);
+                    showHide('show',[alertBox],actionText,{'bg':colorSuccess,'color':colorLessWhite});
+                    sendRequest('POST',route,data)
+                    .then(response => {
+                        showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
+                        setTimeout(() => showHide('no-show',[alertBox]), 3000)
+                    })
+                    .then(()=>{
+                        window.location.reload();
+                    })
+                    .catch(error => {
+                        showHide('show',[alertBox],error,{'bg':colorDanger,'color':colorLessWhite});
+                        setTimeout(() => showHide('no-show',[alertBox]), 5000)
+                        con.error(error);
+                    });
                 }
             });
         });

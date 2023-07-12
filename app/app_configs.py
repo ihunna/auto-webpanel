@@ -376,7 +376,7 @@ def check_values(values:list):
 	else:return True
 
 class API:
-	def __init__(self,timeout:int=40):
+	def __init__(self,timeout:int=60):
 		self.timeout = timeout
 	def get_token(self,email:str,password:str,key:str):
 		url = f'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={key}'
