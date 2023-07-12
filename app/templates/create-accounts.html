@@ -16,8 +16,8 @@
                     <a href="/schedules?action=add-schedule&type=account&next=create-accounts" class="eleveted-a">
                         add schedule
                     </a>
-                    <a href="/schedules" class="eleveted-a">
-                        schedules
+                    <a href="/create-accounts?action=upload-accounts" class="eleveted-a">
+                        upload accounts
                      </a>
                 </div>
             </div>
@@ -77,190 +77,215 @@
                     </a>
                 </div>
                 {%else%}
+                    {%if action and action == 'upload-accounts'%}
                     <div class="holder scroll form-holder">
                         <h2>
                             Fill the form with the required details
                         </h2>
-                        <form action="" class="op-form" id="account-op-form">
+                        <form action="" class="op-form" id="account-op-form" data-action-url="/upload-accounts" data-action-message="Starting upload accounts, please wait...">
                             <div>
-                                <label for="op-count">No. of accounts</label>
-                                <input type="number" id="op-count" name="op-count" required>
-                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the number of accounts to create</h5>
+                                <label for="email_password_pairs">Enter accounts as in email and password</label>
+                                <textarea type="number" id="email_password_pairs" name="email_password_pairs" required></textarea>
+                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> 
+                                    the email and password you created the accounts with followed by a newline (enter key) 
+                                    <br>
+                                    e.g myexampleemail@gmail.com:myexamplepassword
+                                </h5>
                             </div>
                             <div>
                                 <label for="max-workers">No. of concurrent actions (optional)</label>
                                 <input type="number" id="max-workers" name="max-workers">
                                 <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> number of threads to run</h5>
                             </div>
-                            <div>
-                                <label for="image-count">No. of profile images</label>
-                                <input type="number" id="image-count" name="image-count" min="1" required>
-                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> number of threads to run</h5>
-                            </div>
-                            <div class="double-field"  style="position: relative;">
-                                <label for="">Select age range</label>
-                                <div class="inputs">
-                                    <div>
-                                        <label for="op-age-range-start">From</label>
-                                        <input type="number" id="op-age-range-start" name="op-age-range-start" required min="18">
-                                        <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the starting age range. minimum 18</h5>
-                                    </div>
-                                    <div>
-                                        <label for="op-age-range-end">To</label>
-                                        <input type="number" id="op-age-range-end" name="op-age-range-end" required min="19">
-                                        <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the ending age range. minimum 19</h5>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="gender-menu">
-                                <label>Choose preferred gender</label>
-                                <div>
-                                    <div class="radio-box">
-                                        <input type="radio" id="op-gender-female" name="op-gender" value="female" checked>
-                                        <label for="op-gender-female">Female</label>
-                                    </div>
-                                    <div class="radio-box">
-                                        <input type="radio" id="op-gender-male" name="op-gender" value="male">
-                                        <label for="op-gender-male">Male</label>
-                                    </div>
-                                    <div class="radio-box">
-                                        <input type="radio" id="op-gender-other" name="op-gender" value="other">
-                                        <label for="op-gender-other">Other</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="op-gender-details" style="display: none;">
-                                <div class="gender-list gender-menu">
-                                    <label for="op-gender-other">I identify as</label>
-                                    <div>
-                                        <select id="op-gender-other" name="op-gender-other">
-                                            {%for gender in genders%}
-                                                <option value="{{gender}}" {%if gender == 'non-binary'%} selected {%endif%}>{{gender|capitalize}}</option>
-                                            {%endfor%}
-                                        </select>
-                                    </div>
-                                </div>
-                                <br>
-                                <div class="preferred-connections gender-menu">
-                                    <label>I want to connect with</label>
-                                    <div>
-                                        <div class="radio-box">
-                                            <input type="radio" id="op-gender-connections-men" name="op-gender-connections" value="men" checked>
-                                            <label for="op-gender-connections-men">Men</label>
-                                        </div>
-                                        <div class="radio-box">
-                                            <input type="radio" id="op-gender-connections-women" name="op-gender-connections" value="women">
-                                            <label for="op-gender-connections-women">Women</label>
-                                        </div>
-                                        <!-- <div class="radio-box">
-                                            <input type="radio" id="op-gender-connections-both" name="op-gender-connections" value="both">
-                                            <label for="op-gender-connections-both">Both</label>
-                                        </div> -->
-                                    </div>
-                                </div>
-                                <br>
-                                <div class="show-gender gender-menu">
-                                    <label>Display my gender?</label>
-                                    <div>
-                                        <div class="radio-box">
-                                            <input type="radio" id="op-gender-show-yes" name="op-gender-show" value="yes" checked>
-                                            <label for="op-gender-show-yes">Yes</label>
-                                        </div>
-                                        <div class="radio-box">
-                                            <input type="radio" id="op-gender-show-no" name="op-gender-show" value="no">
-                                            <label for="op-gender-show-no">No</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <br>
-                                <div class="intersex gender-menu">
-                                    <label>Had an intersex experience?</label>
-                                    <div>
-                                        <div class="radio-box">
-                                            <input type="radio" id="op-gender-intersex-yes" name="op-gender-intersex" value="yes">
-                                            <label for="op-gender-intersex-yes">Yes</label>
-                                        </div>
-                                        <div class="radio-box">
-                                            <input type="radio" id="op-gender-intersex-no" name="op-gender-intersex" value="no">
-                                            <label for="op-gender-intersex-no">No</label>
-                                        </div>
-                                        <div class="radio-box">
-                                            <input type="radio" id="op-gender-intersex-nocant-say" name="op-gender-intersex" value="not-say" checked>
-                                            <label for="op-gender-intersex-cant-say">Don't want to say</label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <br>                                   
-                             {% if models%}
-                                <div>
-                                    <label for="op-model">Pick a model</label>
-                                    <select id="op-model" class="op-model" name="op-model">
-                                        <option value="" disabled>select a model</option>
-                                        {%for m in models%}
-                                            <option value="{{m.id}}" {%if m == g.model%} selected {%endif%}>{{m.full_name}}</option>
-                                        {%endfor%}
-                                    </select>
-                                    <h5 class="input-highlight"> 
-                                        <i class="fas fas fa-exclamation-circle"></i> 
-                                        for which model do you want to run this operation, if not selected the action is for the already set model <span id="current-model" style="color: #111;">({{g.model.full_name}}) </span>
-                                    </h5>
-                                </div>
-                            {%endif%}
-                            <!-- {% if schedules%}
-                                <div>
-                                    <label for="op-group">Pick a swipe schedule group</label>
-                                    <select id="op-group" name="op-group">
-                                        <option value="" disabled>select schedule group</option>
-                                        {%for s in schedules%}
-                                            <option value="{{s.id}}">{{s.name}}</option>
-                                        {%endfor%}
-                                    </select>
-                                    <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a schedule group defines your swipe operation strategy</h5>
-                                </div>
-                            {%endif%} -->
-                            <div>
-                                <label for="op-swipe-group">Pick a swipe schedule group</label>
-                                <select id="op-swipe-group" name="op-swipe-group">
-                                    <option value="" disabled>select schedule group</option>
-                                    {%if swipe_schedules%}
-                                        {%for s in swipe_schedules%}
-                                            <option value="{{s.id}}">{{s.name}}</option>
-                                        {%endfor%}
-                                    {%endif%}
-                                </select>
-                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a swipe schedule group defines your swipe operation strategy</h5>
-                            </div>
-                            <!-- <div class="double-field"  style="position: relative;">
-                                <label for="">Select operation location</label>
-                                <div class="inputs">
-                                    <div>
-                                        <label for="op-location">Proxy location</label>
-                                        <input type="text" id="op-location" name="op-location">
-                                        <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the latitude and longitude for the proxy settings. not required</h5>
-                                        <div id="op-map" class="map no-show"></div>
-                                    </div>
-                                    <div class="map-btn">
-                                        <a href="" id="toggle-map">
-                                            open map &nbsp;
-                                            <i class="fas fa-map-marked"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div> -->
-                            <!-- <div>
-                                <label for="img-count">No. of images to upload</label>
-                                <input type="number" id="img-count" name="img-count" required>
-                            </div> -->
-                            <!-- <div>
-                                <label for="bio">Enter bio (enter multiple sep. by newline "enter key")</label>
-                                <textarea type="text" id="bio" name="bio"></textarea>
-                                <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the biography for the account(s), not required</h5>
-                            </div> -->
                             <input type="submit" value="Submit">
                         </form>
                     </div>
+                    {%else%}
+                        <div class="holder scroll form-holder">
+                            <h2>
+                                Fill the form with the required details
+                            </h2>
+                            <form action="" class="op-form" id="account-op-form" data-action-url="/create-accounts" data-action-message="Starting account creation, please wait...">
+                                <div>
+                                    <label for="op-count">No. of accounts</label>
+                                    <input type="number" id="op-count" name="op-count" required>
+                                    <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the number of accounts to create</h5>
+                                </div>
+                                <div>
+                                    <label for="max-workers">No. of concurrent actions (optional)</label>
+                                    <input type="number" id="max-workers" name="max-workers">
+                                    <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> number of threads to run</h5>
+                                </div>
+                                <div>
+                                    <label for="image-count">No. of profile images</label>
+                                    <input type="number" id="image-count" name="image-count" min="1" required>
+                                    <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> number of threads to run</h5>
+                                </div>
+                                <div class="double-field"  style="position: relative;">
+                                    <label for="">Select age range</label>
+                                    <div class="inputs">
+                                        <div>
+                                            <label for="op-age-range-start">From</label>
+                                            <input type="number" id="op-age-range-start" name="op-age-range-start" required min="18">
+                                            <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the starting age range. minimum 18</h5>
+                                        </div>
+                                        <div>
+                                            <label for="op-age-range-end">To</label>
+                                            <input type="number" id="op-age-range-end" name="op-age-range-end" required min="19">
+                                            <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the ending age range. minimum 19</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="gender-menu">
+                                    <label>Choose preferred gender</label>
+                                    <div>
+                                        <div class="radio-box">
+                                            <input type="radio" id="op-gender-female" name="op-gender" value="female" checked>
+                                            <label for="op-gender-female">Female</label>
+                                        </div>
+                                        <div class="radio-box">
+                                            <input type="radio" id="op-gender-male" name="op-gender" value="male">
+                                            <label for="op-gender-male">Male</label>
+                                        </div>
+                                        <div class="radio-box">
+                                            <input type="radio" id="op-gender-other" name="op-gender" value="other">
+                                            <label for="op-gender-other">Other</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="op-gender-details" style="display: none;">
+                                    <div class="gender-list gender-menu">
+                                        <label for="op-gender-other">I identify as</label>
+                                        <div>
+                                            <select id="op-gender-other" name="op-gender-other">
+                                                {%for gender in genders%}
+                                                    <option value="{{gender}}" {%if gender == 'non-binary'%} selected {%endif%}>{{gender|capitalize}}</option>
+                                                {%endfor%}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <div class="preferred-connections gender-menu">
+                                        <label>I want to connect with</label>
+                                        <div>
+                                            <div class="radio-box">
+                                                <input type="radio" id="op-gender-connections-men" name="op-gender-connections" value="men" checked>
+                                                <label for="op-gender-connections-men">Men</label>
+                                            </div>
+                                            <div class="radio-box">
+                                                <input type="radio" id="op-gender-connections-women" name="op-gender-connections" value="women">
+                                                <label for="op-gender-connections-women">Women</label>
+                                            </div>
+                                            <!-- <div class="radio-box">
+                                                <input type="radio" id="op-gender-connections-both" name="op-gender-connections" value="both">
+                                                <label for="op-gender-connections-both">Both</label>
+                                            </div> -->
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <div class="show-gender gender-menu">
+                                        <label>Display my gender?</label>
+                                        <div>
+                                            <div class="radio-box">
+                                                <input type="radio" id="op-gender-show-yes" name="op-gender-show" value="yes" checked>
+                                                <label for="op-gender-show-yes">Yes</label>
+                                            </div>
+                                            <div class="radio-box">
+                                                <input type="radio" id="op-gender-show-no" name="op-gender-show" value="no">
+                                                <label for="op-gender-show-no">No</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <div class="intersex gender-menu">
+                                        <label>Had an intersex experience?</label>
+                                        <div>
+                                            <div class="radio-box">
+                                                <input type="radio" id="op-gender-intersex-yes" name="op-gender-intersex" value="yes">
+                                                <label for="op-gender-intersex-yes">Yes</label>
+                                            </div>
+                                            <div class="radio-box">
+                                                <input type="radio" id="op-gender-intersex-no" name="op-gender-intersex" value="no">
+                                                <label for="op-gender-intersex-no">No</label>
+                                            </div>
+                                            <div class="radio-box">
+                                                <input type="radio" id="op-gender-intersex-nocant-say" name="op-gender-intersex" value="not-say" checked>
+                                                <label for="op-gender-intersex-cant-say">Don't want to say</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <br>                                   
+                                {% if models%}
+                                    <div>
+                                        <label for="op-model">Pick a model</label>
+                                        <select id="op-model" class="op-model" name="op-model">
+                                            <option value="" disabled>select a model</option>
+                                            {%for m in models%}
+                                                <option value="{{m.id}}" {%if m == g.model%} selected {%endif%}>{{m.full_name}}</option>
+                                            {%endfor%}
+                                        </select>
+                                        <h5 class="input-highlight"> 
+                                            <i class="fas fas fa-exclamation-circle"></i> 
+                                            for which model do you want to run this operation, if not selected the action is for the already set model <span id="current-model" style="color: #111;">({{g.model.full_name}}) </span>
+                                        </h5>
+                                    </div>
+                                {%endif%}
+                                <!-- {% if schedules%}
+                                    <div>
+                                        <label for="op-group">Pick a swipe schedule group</label>
+                                        <select id="op-group" name="op-group">
+                                            <option value="" disabled>select schedule group</option>
+                                            {%for s in schedules%}
+                                                <option value="{{s.id}}">{{s.name}}</option>
+                                            {%endfor%}
+                                        </select>
+                                        <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a schedule group defines your swipe operation strategy</h5>
+                                    </div>
+                                {%endif%} -->
+                                <div>
+                                    <label for="op-swipe-group">Pick a swipe schedule group</label>
+                                    <select id="op-swipe-group" name="op-swipe-group">
+                                        <option value="" disabled>select schedule group</option>
+                                        {%if swipe_schedules%}
+                                            {%for s in swipe_schedules%}
+                                                <option value="{{s.id}}">{{s.name}}</option>
+                                            {%endfor%}
+                                        {%endif%}
+                                    </select>
+                                    <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> a swipe schedule group defines your swipe operation strategy</h5>
+                                </div>
+                                <!-- <div class="double-field"  style="position: relative;">
+                                    <label for="">Select operation location</label>
+                                    <div class="inputs">
+                                        <div>
+                                            <label for="op-location">Proxy location</label>
+                                            <input type="text" id="op-location" name="op-location">
+                                            <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the latitude and longitude for the proxy settings. not required</h5>
+                                            <div id="op-map" class="map no-show"></div>
+                                        </div>
+                                        <div class="map-btn">
+                                            <a href="" id="toggle-map">
+                                                open map &nbsp;
+                                                <i class="fas fa-map-marked"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div> -->
+                                <!-- <div>
+                                    <label for="img-count">No. of images to upload</label>
+                                    <input type="number" id="img-count" name="img-count" required>
+                                </div> -->
+                                <!-- <div>
+                                    <label for="bio">Enter bio (enter multiple sep. by newline "enter key")</label>
+                                    <textarea type="text" id="bio" name="bio"></textarea>
+                                    <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the biography for the account(s), not required</h5>
+                                </div> -->
+                                <input type="submit" value="Submit">
+                            </form>
+                        </div>
+                    {%endif%}
                 {%endif%}
             </div>
         </div>

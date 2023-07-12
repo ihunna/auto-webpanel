@@ -2,7 +2,7 @@ from google.auth import default
 from google.cloud import scheduler_v1
 from app_configs import cred, cred_file
 from app_utils import generate_uuid
-import json,uuid
+import json,uuid,random
 from datetime import datetime, timedelta
 
 class Scheduler:
@@ -82,10 +82,18 @@ class Scheduler:
         res = []
         date_interval = end_date - start_date
         if date_interval.days <= 1:
-            start_time = start_date.strftime('%M %H')
-            res.append({'day':1,'cron':f'{start_time} {start_date.day} {start_date.month} *','daily_percent':daily_percent[0]})
+            session_start_time = start_date
+            for session in range(session_count):
+                d_gap = random.randint(1,3)
+                session_start_time_str = session_start_time.strftime('%M %H')
+                res.append({
+                    'day':1,
+                    'cron':f'{session_start_time_str} {start_date.day} {start_date.month} *',
+                    'daily_percent':daily_percent[0],
+                    'session':session+1
+                    }) 
+                session_start_time += timedelta(minutes=(operation_duration + d_gap))
         else:
-            start_time = start_date.strftime('%M %H')
             date_range = end_date - start_date
             for i in range(date_range.days + 1):
                 current_date = start_date + timedelta(days=i)
@@ -96,9 +104,15 @@ class Scheduler:
 
                 session_start_time = start_date
                 for session in range(session_count):
+                    d_gap = random.randint(1,3)
                     session_start_time_str = session_start_time.strftime('%M %H')
-                    res.append({'day':i+1,'cron':f'{session_start_time_str} {day} {month} *','daily_percent':daily_percent[i]}) 
-                    session_start_time += timedelta(minutes=operation_duration)
+                    res.append({
+                        'day':i+1,
+                        'cron':f'{session_start_time_str} {day} {month} *',
+                        'daily_percent':daily_percent[i],
+                        'session':session+1
+                        }) 
+                    session_start_time += timedelta(minutes=(operation_duration + d_gap))
 
         return res
 

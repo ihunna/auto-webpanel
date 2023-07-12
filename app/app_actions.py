@@ -89,7 +89,8 @@ class TASKS:
 			start_date,end_date = datetime(*start_date), datetime(*end_date)
 			cron_exp = scheduler.generate_cron_expression(start_date,
 							end_date,session_count=session_count,
-							operation_duration=swipe_duration,daily_percent=swipe_configs['daily_percent'])
+							operation_duration=swipe_duration,
+							daily_percent=swipe_configs['daily_percent'])
 			
 			schedule = scheduler.create(cron_exp,host,payload=payload)
 			if not schedule[0]:return False,schedule[1]
@@ -283,7 +284,7 @@ class TASKS:
 				print(error)
 				msg += '\n\nError creating schedule.'
 
-			if passes <= (op_count//2) + 1:task_status ='failed'
+			if passes == 0:task_status ='failed'
 			tasks_ref.document(task_id).update({
 				'status':task_status,
 				'running':False,
@@ -341,7 +342,7 @@ class TASKS:
       url:str=None,
       token:str = None):
   
-		print('ACCOUNT GET STARTED')
+		print('ACCOUNT UPLOAD STARTED')
 
 		already_present,passes,banned,completed,proxy_error= 0,0,0,0,0
 
@@ -409,6 +410,7 @@ class TASKS:
 			task_status ='failed'
 			msg = f'task failed, no accounts added'
 		finally:
+			if passes == 0: task_status = 'failed'
 			tasks_ref.document(task_id).update({
 			'status':task_status,
 			'running':False,

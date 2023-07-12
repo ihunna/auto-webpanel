@@ -94,7 +94,7 @@
     background:var(--success);
   }
   #progressbar.warning::-webkit-progress-value {
-    background:var(--success);
+    background:var(--secondary);
   }
   #progressbar.danger::-webkit-progress-value {
     background:var(--danger);

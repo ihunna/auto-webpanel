@@ -238,9 +238,10 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         accOpForm.addEventListener('submit',(e)=>{
             e.preventDefault();
             const formData = new FormData(accOpForm);
-            
-            showHide('show',[alertBox],'Starting account creation operation...',{'bg':colorSuccess,'color':colorLessWhite});
-            sendRequest('POST', '/create-accounts', null, formData)
+            const url = accOpForm.getAttribute('data-action-url');
+            const text = accOpForm.getAttribute('data-action-message');
+            showHide('show',[alertBox],text,{'bg':colorSuccess,'color':colorLessWhite});
+            sendRequest('POST', url, null, formData)
             .then(response => {
                 showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 accOpForm.reset();

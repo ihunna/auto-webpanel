@@ -16,9 +16,15 @@
                     <a href="/create-accounts" class="eleveted-a">
                         create accounts
                     </a>
-                    <a href="" class="eleveted-a">
-                        sort by
-                    </a>
+                    {%if action and action == 'view-task'%}
+                        <a href="/tasks" class="eleveted-a">
+                            tasks
+                        </a>
+                    {%else%}
+                        <a href="#" class="eleveted-a">
+                            sort by
+                        </a>
+                    {%endif%}
                 </div>
             </div>
 

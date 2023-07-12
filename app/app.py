@@ -930,6 +930,8 @@ def scheduler(action):
 			day_specs = [{"day": day, "swipe_percent": percent} for day, percent in zip(days, percents)]
 			daily_percent = share_daily_percent(day_specs)
 
+			if len(daily_percent) < interval:return jsonify({'msg':'swipe percentage not properly shared amongst days'}),400
+
 			action_type = request.form.get('action-type')
 			next = request.form.get('next')
 
@@ -1135,6 +1137,7 @@ def account_action(action):
 @check_model
 def show_create_accounts():
 	g.page = 'create-accounts'
+	action = request.args.get('action')
 	platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 	platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
 	accounts_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('accounts')
@@ -1161,6 +1164,9 @@ def show_create_accounts():
 		else:task_status = {'status':'','running':False,'id':str(uuid.uuid4())}
 	else:task_status = {'status':'','running':False,'id':str(uuid.uuid4())}
 	
+	if action and action == 'upload-accounts':
+		return render_template('create-accounts.html',running=task_status['running'],task_status=task_status,action=action)
+
 	account_schedules= schedules_ref.where(field_path='type',op_string='==',value='account').order_by('added_at', direction='DESCENDING').get()
 	swipe_schedules= schedules_ref.where(field_path='type',op_string='==',value='swiping').order_by('added_at', direction='DESCENDING').get()
 	
@@ -1213,7 +1219,7 @@ def create_accounts():
 		bio = request.form.get('bio',None)
 
 		max_workers = request.form.get('max-workers',10)
-		max_workers = int(max_workers)
+		max_workers = int(max_workers) if max_workers != '' else 10
 
 		profile_image_count = request.form.get('image-count',5)
 		profile_image_count = int(profile_image_count)
@@ -1285,8 +1291,11 @@ def create_accounts():
 		if check_values([swipe_schedule]):
 			schedule = schedules_ref.document(swipe_schedule).get()
 			if not schedule.exists:raise ValueError('No swiping schedule for selected model')
-
 			swipe_configs = schedule.to_dict()
+
+			start_date = swipe_configs['op_start_at']
+			if datetime.fromisoformat(start_date) < datetime.now():
+				return jsonify({'msg':'scheduled date is passed, please update!'}),400
 			daily_percent = json.loads(swipe_configs['daily_percent'])
 			swipe_configs['daily_percent'] = daily_percent
 
@@ -1377,6 +1386,96 @@ def create_accounts():
 		print(error)
 		return jsonify({'msg': 'error starting task'}), 500
 
+@app.route('/upload-accounts',methods=['POST'])
+@login_required
+@blocked
+@check_platform
+@check_model
+def upload_accounts():
+  try:
+    platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
+    platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
+    accounts_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('accounts')
+    tasks_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('tasks')
+    configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
+
+    configs_snap = configs_ref.get()
+    configs = {}
+    for config in configs_snap:
+      config = config.to_dict()
+      if config["title"]=='Proxies':
+        configs['Proxies']=config['content']
+
+    proxies = configs['Proxies'] 
+    
+    panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
+    panel_email = panel_creds['email']
+    panel_pass = panel_creds['password']
+    panel_key = panel_creds['key']
+    platform_host = panel_creds['url']
+    
+    TOKEN = api.get_token(panel_email, panel_pass, panel_key)
+    if not TOKEN[0]:
+      return jsonify({'msg': TOKEN[1]}), 403
+    TOKEN = TOKEN[1]['idToken']
+
+    email_password_pairs = request.form.get('email_password_pairs').replace('\r', '').split('\n')
+    email_password_pairs = [{'email': item.split(':')[0], 'password': item.split(':')[1]} for item in email_password_pairs if item != '']
+
+    op_count = len(email_password_pairs)
+    max_workers = request.form.get('max-workers',None)
+    max_workers = int(max_workers) if max_workers != '' else 10
+    
+    task_id = str(uuid.uuid4())
+    task_status = 'running'
+    task_progress = 0
+
+    kwargs = {
+      'proxies':proxies,
+      'email_password_pairs': email_password_pairs,
+      'op_count': op_count,
+      'accounts_ref':accounts_ref,
+      'tasks_ref':tasks_ref,
+      'task_id':task_id,
+      'max_workers': max_workers,
+      'url':platform_host,
+      'token': TOKEN
+    }
+
+    account_task = Thread(target=TASKS().start_add_acccounts, kwargs=kwargs)
+    account_task.start()
+
+    if account_task.is_alive():
+      tasks_ref.document(task_id).set({
+        'id':task_id,
+        'type': 'Upload Account Operation',
+        "start_time":firestore.SERVER_TIMESTAMP,
+        'status': task_status,
+        'progress': task_progress,
+        'running':True,
+        'successful':0,
+        'failed':0,
+        'already_present': 0,
+        'task_count':op_count,
+        'message':'Upload account operation just started'
+      })
+
+      session['MODEL']['TASKS'] = {
+        'account_task':{
+          'id':task_id,
+          'task_status':task_status,
+          'running':True,
+        }
+      }
+      return jsonify({'msg': 'Task started, please wait while it finishes'}), 200
+    else:
+      return jsonify({'msg': 'No tasks running'}), 200
+  except ValueError as v_error:
+    print(v_error)
+    return jsonify({'msg': f'{v_error}'}), 400
+  except Exception as error:
+    print(error)
+    return jsonify({'msg': 'error starting task'}), 500
 
 ##SWIPE PAGE
 @app.route('/swipe', methods=['GET'])
@@ -1592,9 +1691,9 @@ def update_task(type):
 		fails = report['failed']
 		swipe_rights = report['swipe_right']
 		swipe_lefts = report['swipe_left']
-
+		task_status = 'Failed' if passes == 0 else 'Completed'
 		tasks_ref.document(task_id).update({
-					'status': 'Completed',
+					'status': task_status,
 					'progress': 100,
 					'running':False,
 					'failed':fails,
@@ -1603,6 +1702,7 @@ def update_task(type):
 					'swipe_lefts':swipe_lefts,
 					'message': f'Task completed with {passes} successful swipes'
 		})
+		return jsonify({'msg':'task updated successfully'})
 	except Exception as error:
 		print(error)
 		return jsonify({'msg':'error updating task'}), 500
