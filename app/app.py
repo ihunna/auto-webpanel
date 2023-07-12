@@ -1,6 +1,6 @@
 from app_configs import *
 from app_utils import create_edit_menu,share_daily_percent
-from app_actions import start_task
+from app_actions import TASKS
 from scheduler import Scheduler
 
 
@@ -1343,7 +1343,7 @@ def create_accounts():
 			'token': TOKEN
 		}
 
-		account_task = Thread(target=start_task, kwargs=kwargs)
+		account_task = Thread(target=TASKS().start_account_creation, kwargs=kwargs)
 		account_task.start()
 
 		if account_task.is_alive():
@@ -1583,7 +1583,7 @@ def update_task(type):
 		print(report)
 		s_sess = report['session']
 		admin_id,platform_id,model_id = s_sess['admin'],s_sess['platform'],s_sess['model']
-		platform_ref = app.config['ADMIN_REF'].document(admin_id).collection('platforms').document(platform_id)
+		platform_ref = app.config['ADMINS_REF'].document(admin_id).collection('platforms').document(platform_id)
 		tasks_ref = platform_ref.collection('models').document(model_id).collection('tasks')
 
 		task_id = report['task_id']
@@ -1648,7 +1648,7 @@ def update_file_content():
 		
 		data = request.get_json()
 		title = data['title']
-		new_content = str(data['content'])
+		new_content = str(data['content']).strip()
 
 		if not check_values([new_content]): raise ValueError(f'{title} is empty')
 
