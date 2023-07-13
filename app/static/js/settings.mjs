@@ -471,6 +471,10 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                 setTimeout(() => showHide('no-show',[alertBox]), 5000)
             })
+            .then(()=>{
+                accountId = accountForm.querySelector('#account-id').value;
+                window.location.href = `/account-page?account=${accountId}&action=view-details#preferences`
+            })
             .catch(error => {
                 showHide('show',[alertBox],error,{'bg':colorDanger,'color':colorLessWhite});
                 setTimeout(() => showHide('no-show',[alertBox]), 5000)

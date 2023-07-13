@@ -1047,8 +1047,8 @@ def account_page():
 			elif action and action == 'view-details':
 				return render_template('account-page.html', account=account_data, action=action)
 			return render_template('account-page.html', account=account_data)
-
 	return redirect(url_for('accounts'))
+
 @app.route('/account-page/<action>',methods=['POST'])
 @login_required
 @blocked
@@ -1082,14 +1082,17 @@ def account_action(action):
 				'height':form_data.get('height')
 			}
 			for key in panel_edit_configs.keys():
-				account_profile[key] = form_data.getlist(key) if key.lower() in ['languages','pets'] else form_data.get(key)
+				account_profile[key] = form_data.getlist(key) if key.lower() in ['languages'] else form_data.get(key)
 
 			update_profile = api.update_profile(panel_creds['url'],account_id,TOKEN,json_data=account_profile)
 			if  update_profile[0]:
 				if  update_profile[1].status_code == 200:
 					account_data = accounts_ref.document(account_id).get()
 					if account_data.exists:
-						accounts_ref.document(account_id).update({'profile':account_profile})
+						updated = {}
+						for key,value in update_profile[1].json()['success'].items():
+							if value:updated[key] = account_profile[key]
+						accounts_ref.document(account_id).update({'profile':updated})
 						return jsonify({'msg': 'account updated successfully'}), 200
 					else:raise ValueError('account does not exist')
 				elif update_profile[1].status_code <= 400:

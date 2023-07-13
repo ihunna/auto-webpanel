@@ -225,10 +225,7 @@
                                 {% for key, options in edit_data.items() %}
                                     <div>
                                         <label for="{{ key }}">{{ key|capitalize }}:</label>
-                                        <select name="{{key}}" id="{{ key }}" {%if key|lower in ['languages','pets']%}multiple{%endif%}>
-                                            {%if account.profile[key] != ''%}
-                                                <option value="{{account.profile[key]}}">{{account.profile[key]}}</option>
-                                            {%endif%}
+                                        <select name="{{key}}" id="{{ key }}" {%if key|lower in ['languages']%}multiple{%endif%}>
                                             {% for option in options %}
                                             <option value="{{ option }}">{{ option }}</option>
                                             {% endfor %}
@@ -381,7 +378,7 @@
                                     </div>
                                 </div>
 
-                                <div class="configs">
+                                <div class="configs" id="preferences">
                                     <div class="header">
                                         Preferences
                                     </div>
