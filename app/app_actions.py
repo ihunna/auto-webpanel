@@ -100,6 +100,7 @@ class TASKS:
 
 	def create_accounts(self,
 			account:int =None,
+			server_option:str = None,
 			nb_of_images:int=5,
 			nb_of_accounts:int = 1,
 			names:list=None,
@@ -126,6 +127,7 @@ class TASKS:
 				}
 
 				json_data = {
+					'server_option':server_option,
 					'nb_of_accounts':nb_of_accounts,
 					'names':names,
 					'bios':bios,
@@ -145,7 +147,7 @@ class TASKS:
 				flow = session.put(URL,json=json_data)
 				if flow.status_code > 299:return False,flow.text
 				
-				print(f'\nWaiting for account to be created for: {account + 1}')
+				print(f'\nWaiting for account to be created for: {account}')
 				status = 'PENDING_CREATION'
 				account_id = flow.json()['accounts'][0].get('id')
 				while status == 'PENDING_CREATION':
@@ -166,6 +168,7 @@ class TASKS:
 			swipe_configs:dict=None,
 			worker:str = None,
 			SERVER:str = None,
+			server_option:str ='webapi',
 			nb_of_images:int=None,
 			op_count:int = 1,
 			names:list=None,
@@ -192,7 +195,8 @@ class TASKS:
 
 		try:
 			kwargs=[{
-				'account':i,
+				'account':f'account {i + 1}',
+				'server_option':server_option,
 				'nb_of_accounts':1,
 				'names':names[i],
 				'accounts':accounts[i],

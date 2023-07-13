@@ -118,7 +118,7 @@
                                 </div>
                                 <div>
                                     <label for="image-count">No. of profile images</label>
-                                    <input type="number" id="image-count" name="image-count" min="1" required>
+                                    <input type="number" id="image-count" name="image-count" min="1" max="6" required>
                                     <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> number of threads to run</h5>
                                 </div>
                                 <div class="double-field"  style="position: relative;">
@@ -136,7 +136,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="gender-menu">
+                                <div class="radio-check-menu">
                                     <label>Choose preferred gender</label>
                                     <div>
                                         <div class="radio-box">
@@ -155,7 +155,7 @@
                                 </div>
 
                                 <div id="op-gender-details" style="display: none;">
-                                    <div class="gender-list gender-menu">
+                                    <div class="gender-list radio-check-menu">
                                         <label for="op-gender-other">I identify as</label>
                                         <div>
                                             <select id="op-gender-other" name="op-gender-other">
@@ -166,7 +166,7 @@
                                         </div>
                                     </div>
                                     <br>
-                                    <div class="preferred-connections gender-menu">
+                                    <div class="preferred-connections radio-check-menu">
                                         <label>I want to connect with</label>
                                         <div>
                                             <div class="radio-box">
@@ -184,7 +184,7 @@
                                         </div>
                                     </div>
                                     <br>
-                                    <div class="show-gender gender-menu">
+                                    <div class="show-gender radio-check-menu">
                                         <label>Display my gender?</label>
                                         <div>
                                             <div class="radio-box">
@@ -198,7 +198,7 @@
                                         </div>
                                     </div>
                                     <br>
-                                    <div class="intersex gender-menu">
+                                    <div class="intersex radio-check-menu">
                                         <label>Had an intersex experience?</label>
                                         <div>
                                             <div class="radio-box">
@@ -282,6 +282,19 @@
                                     <textarea type="text" id="bio" name="bio"></textarea>
                                     <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the biography for the account(s), not required</h5>
                                 </div> -->
+                                <div class="radio-check-menu">
+                                    <label>Select server option</label>
+                                    <div>
+                                        <div class="radio-box">
+                                            <input type="radio" id="op-server-webapi" name="op-server-option" value="webapi" checked>
+                                            <label for="op-server-webapi">Web API</label>
+                                        </div>
+                                        <div class="radio-box">
+                                            <input type="radio" id="op-server-docker" name="op-server-option" value="emulator">
+                                            <label for="op-server-docker">Docker Emulator</label>
+                                        </div>
+                                    </div>
+                                </div>
                                 <input type="submit" value="Submit">
                             </form>
                         </div>

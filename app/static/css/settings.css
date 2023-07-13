@@ -151,6 +151,11 @@ table {
   thead,
   tbody tr {
     width: 100%;
+    font-size: 14px;
+}
+
+tbody tr{
+    cursor: pointer;
   }
 
   tbody td,
@@ -159,6 +164,11 @@ table {
     width: auto;
     word-wrap:break-word;
   }
+
+  /* tbody td:nth-child(2),
+  thead th:nth-child(2){
+    text-align: left;
+  } */
 
  thead th, tbody td{
     white-space: nowrap;
@@ -169,7 +179,6 @@ table {
   td.actions > i{
     font-size: 18px;
     padding: 5px 20px;
-   cursor: pointer;
   }
 
   td.actions > .action-btns{

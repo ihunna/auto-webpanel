@@ -27,11 +27,19 @@
                         <a href="/accounts" class="eleveted-a">
                             accounts
                         </a>
-                        <a href="" class="eleveted-a delete Do-you-want-to-delete-this-account?">
-                            delete this account
+                        <a href="" class="eleveted-a action"
+                            data-action-id="{{account.id}}" 
+                            data-action="delete-account" 
+                            data-action-prompt="do you want to delete account?" 
+                            data-action-message="deleting account..." 
+                            data-url="/account-page">
+                            delete account
                         </a>
-                        <a href="" class="eleveted-a upload-image">
-                            add images
+                        <a href="" class="action eleveted-a" data-action="update-account" 
+                            data-url="/account-page/update-account"
+                            data-action-message="Getting latest details"
+                            data-action-id="{{account.id}}">
+                            update details
                         </a>
                     </div>
                 </div>
@@ -152,10 +160,12 @@
                                     </div>
                                     {%if account.images%}
                                         <ul class="p-details-images" id="profile-images">
-                                            {%for image in account.images%}
-                                            <li>
-                                                <img src="{{image}}" class="clickable-image" accountId="{{account.id}}" alt="">
-                                            </li>
+                                            {%for i in range(account.images|length)%}
+                                                {%if i < 3%}
+                                                    <li>
+                                                        <img src="{{account.images[i]}}" class="clickable-image" accountId="{{account.id}}" alt="">
+                                                    </li>
+                                                {%endif%}
                                             {%endfor%}
                                             {%if account.images|length > 3%}
                                             <span>
@@ -485,6 +495,11 @@
                     }
                 })
                 localStorage.setItem("{{account.id}}_{{stats}}", JSON.stringify(newStats));
+            </script>
+        {%endif%}
+        {%if account.images%}
+            <script>
+                const profileImages = {{account.images|tojson|safe}}
             </script>
         {%endif%}
     {%endblock%}

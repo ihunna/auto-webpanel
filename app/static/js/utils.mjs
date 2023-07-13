@@ -212,68 +212,69 @@ const createModal = (element=Element,type=String,items=Array,text=String,action=
       });
       const actionsElement = doc.createElement('div');
       actionsElement.classList.add('s-item-actions');
-
-      const actionLink = doc.createElement('a');
-      actionLink.href = '';
-      actionLink.classList.add('eleveted-a');
-
-      if (type === 'sModalImg'){
-        actionLink.textContent = 'delete';
-        actionLink.classList.remove('upload');
-        actionLink.classList.add('delete');
-        
-        actionLink.addEventListener('click',(e) => {
-          e.preventDefault();
-          createModal(modal,'prompt',items,text,action,route,actionText);
+      if (action != 'profile-images'){
+        const actionLink = doc.createElement('a');
+        actionLink.href = '';
+        actionLink.classList.add('eleveted-a');
+  
+        if (type === 'sModalImg'){
+          actionLink.textContent = 'delete';
+          actionLink.classList.remove('upload');
+          actionLink.classList.add('delete');
           
-          showHide('show',[overlay,modal]);
-        });
-
-      }else{
-        actionLink.textContent = 'upload';
-        actionLink.classList.remove('delete');
-        actionLink.classList.add('upload');
-
           actionLink.addEventListener('click',(e) => {
-          e.preventDefault();
-          if (items.length < 1){
-            const text = 'No image to upload!';
-            showHide('show',[alertBox],text,{'bg':colorSec,'color':colorLessDark});
-          }else{
-            text = 'Image(s) uploading ...';
-            showHide('no-show',[overlay,modal]);
-            showHide('show',[alertBox],text,{'bg':colorSuccess,'color':colorLessWhite});
-            const url = window.location.href;
-            const urlParts = url.split("/");
-
-            const profileIndex = 4;
-            const myprofile = urlParts[profileIndex];
-
-            sendRequest('POST',`/upload-images/${myprofile.split("?")[0]}/upload`,{'data':items})
-            .then(response => {
-              showHide('no-show',[alertBox]);
-              con.log(response)
-              showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
-            })
-            .then(()=>{
-              setTimeout(() => {
-                showHide('no-show',[alertBox])
-                window.location.replace('/images/'+myprofile)
-              },
-              3000);
-            })
-            .catch(error => {
-              showHide('no-show',[alertBox]);
-              showHide('show',[alertBox],response.msg,{'bg':colorDanger,'color':colorLessWhite});
-              setTimeout(() => showHide('no-show',[alertBox]), 5000);
-              con.error(error);
-            });
-          }
-        });
-        
+            e.preventDefault();
+            createModal(modal,'prompt',items,text,action,route,actionText);
+            
+            showHide('show',[overlay,modal]);
+          });
+  
+        }else{
+          actionLink.textContent = 'upload';
+          actionLink.classList.remove('delete');
+          actionLink.classList.add('upload');
+  
+            actionLink.addEventListener('click',(e) => {
+            e.preventDefault();
+            if (items.length < 1){
+              const text = 'No image to upload!';
+              showHide('show',[alertBox],text,{'bg':colorSec,'color':colorLessDark});
+            }else{
+              text = 'Image(s) uploading ...';
+              showHide('no-show',[overlay,modal]);
+              showHide('show',[alertBox],text,{'bg':colorSuccess,'color':colorLessWhite});
+              const url = window.location.href;
+              const urlParts = url.split("/");
+  
+              const profileIndex = 4;
+              const myprofile = urlParts[profileIndex];
+  
+              sendRequest('POST',`/upload-images/${myprofile.split("?")[0]}/upload`,{'data':items})
+              .then(response => {
+                showHide('no-show',[alertBox]);
+                con.log(response)
+                showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
+              })
+              .then(()=>{
+                setTimeout(() => {
+                  showHide('no-show',[alertBox])
+                  window.location.replace('/images/'+myprofile)
+                },
+                3000);
+              })
+              .catch(error => {
+                showHide('no-show',[alertBox]);
+                showHide('show',[alertBox],response.msg,{'bg':colorDanger,'color':colorLessWhite});
+                setTimeout(() => showHide('no-show',[alertBox]), 5000);
+                con.error(error);
+              });
+            }
+          });
+          
+        }
+        actionsElement.appendChild(actionLink);
       }
 
-      actionsElement.appendChild(actionLink);
       m.appendChild(actionsElement);
   }
 

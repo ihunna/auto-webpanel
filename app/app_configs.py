@@ -396,8 +396,18 @@ class API:
 					'content-type':'application/json',
 					'authorization': f'Bearer {token}'}
 			data = httpx.get(url,headers=headers,timeout=self.timeout)
-			if data.status_code > 299:return False,data.text
-			return True,data.json()
+			return True, data
+		except Exception as error:
+			return False,error
+		
+	def delete_account(self,host,account_id:str,token:str):
+		try:
+			url = f'{host}/account/{account_id}'
+			headers = {
+					'content-type':'application/json',
+					'authorization': f'Bearer {token}'}
+			data = httpx.delete(url,headers=headers,timeout=self.timeout)
+			return True, data
 		except Exception as error:
 			return False,error
 	
@@ -409,8 +419,7 @@ class API:
 					'Authorization': f'Bearer {token}'}
 			data = requests.get(url,json=json_data,headers=headers,timeout=self.timeout)
 
-			if data.status_code > 299:return False,data.text
-			return True,data.json()
+			return True, data
 		except Exception as error:
 			return False,error
 		
@@ -421,9 +430,8 @@ class API:
 					'Content-Type':'application/json',
 					'Authorization': f'Bearer {token}'}
 			data = requests.post(url,json=json_data,headers=headers,timeout=self.timeout)
-			print(data)
-			if data.status_code > 299:return False,data.text
-			return True,data.json()
+			
+			return True, data
 		except Exception as error:
 			return False,error
 		
@@ -445,8 +453,7 @@ class API:
 					'Content-Type':'application/json',
 					'Authorization': f'Bearer {token}'}
 			data = httpx.patch(url,json=payload,headers=headers,timeout=self.timeout)
-			if data.status_code > 299:return False,data.text
-			return True,data.json()
+			return True, data
 		except Exception as error:
 			print(error)
 			return False,error
@@ -458,8 +465,7 @@ class API:
 					'Content-Type':'application/json',
 					'Authorization': f'Bearer {token}'}
 			data = httpx.patch(url,json=json_data,headers=headers,timeout=self.timeout)
-			if data.status_code > 299:return False,data.text
-			return True,data.json()
+			return True, data
 		except Exception as error:
 			print(error)
 			return False,error

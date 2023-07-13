@@ -86,6 +86,9 @@
                     <table  class="scroll">
                         <thead>
                             <tr>
+                                <th class="check-all">
+                                    <input type="checkbox" id="check-all">
+                                </th>
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Role</th>
@@ -95,10 +98,13 @@
                         </thead>
                         <tbody>
                             {%for admin in admins%}
-                                <tr>
-                                    <td>{{admin.full_name}}</td>
-                                    <td>{{admin.email}}</td>
-                                    <td >
+                                <tr data-category="admins">
+                                    <td  class="checkbox-item">
+                                        <input type="checkbox" class="check-input">
+                                    </td>
+                                    <td class="clickable">{{admin.full_name}}</td>
+                                    <td class="clickable">{{admin.email}}</td>
+                                    <td class="clickable">
                                         <span class="admin-badge 
                                         {% if admin.role == 'super-admin' %}super-admin
                                         {%else%}admin
@@ -106,7 +112,7 @@
                                             {{admin.role}}
                                         </span>
                                     </td>
-                                    <td>{{admin.status}}</td>
+                                    <td class="clickable">{{admin.status}}</td>
                                     <td class="actions" id="{{admin.id}}">
                                         <i class="fas fa-ellipsis-v"></i>
                                         <span class="action-btns {%if admin.role != 'admin' and admin.id != g.admin.id%}disabled{%endif%}">

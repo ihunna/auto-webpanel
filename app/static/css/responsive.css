@@ -83,6 +83,8 @@ td.actions{
     bottom: 30px;
 }
 
+
+
 .bottom-grid-nav{
     bottom: 30px;
     width: 80%;
@@ -455,6 +457,27 @@ td.actions{
     .main-container > .image-holder > .images > li{
         height: 150px;
     }
+}
+
+@media screen and (max-width:472.99px){
+    .table-bottom > div, .table-bottom > div:last-child > a > i{
+        font-size: 13px;
+      }
+      .table-bottom.add-more > div{
+        width: fit-content;
+      }
+      .table-bottom.add-more > div:nth-child(2) > span{
+        display: none;
+      }
+      .table-bottom.add-more > div:nth-child(2)::after{
+        content: 'delete';
+      }
+      .table-bottom.add-more > div:first-child{
+        margin: auto auto auto 0;
+      }
+      .table-bottom.add-more > div:last-child{
+        margin: auto 0 auto auto;
+      }
 }
 
 @media screen and (max-width:425.99px) {

@@ -22,9 +22,12 @@
 
             <div class="main-container">
                 <div class="holder table-holder scroll">
-                    <table class="scroll">
+                    <table class="">
                         <thead>
                         <tr>
+                            <th class="check-all">
+                                <input type="checkbox" id="check-all">
+                            </th>
                             <th>ID</th>
                             <th>Name</th>
                             <th>Email</th>
@@ -33,27 +36,46 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {%for account in accounts%}
-                        <tr data-url="/account-page?account={{account.id}}">
-                            <td>{{account.id}}</td>
-                            <td>{{account.name}}</td>
-                            <td>{{account.email}}</td>
-                            <td>{{account.created_at}}</td>
+                        {% for account in accounts %}
+                        <tr data-url="/account-page?account={{ account.id }}" data-category="accounts">
+                            <td  class="checkbox-item">
+                                <input type="checkbox" class="check-input" value="{{account.id}}">
+                            </td>
+                            <td class="clickable">{{ account.id }}</td>
+                            <td class="clickable">{{ account.name }}</td>
+                            <td class="clickable">{{ account.email }}</td>
+                            <td class="clickable">{{ account.created_at }}</td>
                             <td class="actions">
                                 <i class="fas fa-ellipsis-v"></i>
                                 <span class="action-btns no-show">
-                                    <a href="" class="eleveted-a delete danger" data-action="delete account" data-action-message="delete this account?">delete</a>
-                                    <a href="/account-page?account={{account.id}}" class="eleveted-a">view</a>
+                                    <a href="" class="eleveted-a delete danger action" 
+                                        data-action-id="{{account.id}}" 
+                                        data-action="delete-account" 
+                                        data-action-prompt="do you want to delete account?" 
+                                        data-action-message="deleting account..." 
+                                        data-url="/account-page">delete</a>
+                                    <a href="/account-page?account={{ account.id }}" class="eleveted-a">view</a>
                                 </span>
                             </td>
                         </tr>
-                        {%endfor%}
+                        {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 <div class="table-bottom">
                     <div class="table-sum">
                         {{sum}} / {{ total}}
+                    </div>
+                    <div class="eleveted-a delete-all bg-danger action no-show"  
+                        data-action="delete-accounts" 
+                        data-action-category="do-multiple"
+                        data-action-data=""
+                        data-action-prompt="do you want to delete selected accounts" 
+                        data-action-message="deleting account..." 
+                        data-url="/accounts" id="delete-all">
+                        <span>
+                            delete selected
+                        </span>
                     </div>
                     <div class="table-nav">
                         <a href="/accounts?page={% if page > 1%}{{ page-1}} {%else%}1 {%endif%}" class="prev">

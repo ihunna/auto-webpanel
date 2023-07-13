@@ -1048,7 +1048,7 @@ def account_page():
 				return render_template('account-page.html', account=account_data, action=action)
 			return render_template('account-page.html', account=account_data)
 
-
+	return redirect(url_for('accounts'))
 @app.route('/account-page/<action>',methods=['POST'])
 @login_required
 @blocked
@@ -1085,40 +1085,54 @@ def account_action(action):
 				account_profile[key] = form_data.getlist(key) if key.lower() in ['languages','pets'] else form_data.get(key)
 
 			update_profile = api.update_profile(panel_creds['url'],account_id,TOKEN,json_data=account_profile)
-			if not update_profile[0]:raise ValueError("couldn't update account")
-			elif 'error_code' in update_profile[1]: raise ValueError(update_profile[1]['message'])
-			
-			account_data = accounts_ref.document(account_id).get()
-			if account_data.exists:
-				accounts_ref.document(account_id).update({'profile':account_profile})
-			else:raise ValueError('account does not exist')
-
-			return jsonify({'msg': 'account updated successfully'}), 200
+			if  update_profile[0]:
+				if  update_profile[1].status_code == 200:
+					account_data = accounts_ref.document(account_id).get()
+					if account_data.exists:
+						accounts_ref.document(account_id).update({'profile':account_profile})
+						return jsonify({'msg': 'account updated successfully'}), 200
+					else:raise ValueError('account does not exist')
+				elif update_profile[1].status_code <= 400:
+					return jsonify({'msg':update_profile[1].json()['message']})
+			return jsonify({'msg': f'account update unsuccessful'}), 400
+		
 		elif action == 'map':
 			account_id = request.get_json()['account_id']
 			location = request.get_json()['data']
 
 			update_location = api.update_location(panel_creds['url'],account_id,TOKEN,json_data=location)
-			if not update_location[0]:raise ValueError(f"couldn't update account {update_location[1]}")
-			elif 'error_code' in update_location[1]: raise ValueError(update_location[1]['message'])
-
-			account_data = accounts_ref.document(account_id).get()
-			if account_data.exists:
-				accounts_ref.document(account_id).update({'city':update_location[1]['location']})
-			else:raise ValueError('account does not exist')
-			return jsonify({'msg': 'location updated successfully'}), 200
+			if update_location[0]:
+				update_location = update_location[1]
+				if update_location.status_code == 200:
+					account_data = accounts_ref.document(account_id).get()
+					if account_data.exists:
+						accounts_ref.document(account_id).update({'city':update_location.json()['location']})
+						return jsonify({'msg': 'location updated successfully'}), 200
+					else:raise ValueError('account does not exist')
+				elif update_location.status_code <= 400: 
+					return jsonify({'msg':update_location.json()['message']}), update_location.status_code
+			return jsonify({'msg': f'location update unsuccessful'}), 400
+		
 		elif action == 'update-account':
-			account_id = request.get_json()[0]['id']
+			account_id = request.get_json()['data'][0]['id']
 
 			proxies  = configs_ref.document('Proxies').get().to_dict()
 			json_data = {'proxies':proxies['content']} if check_values([proxies['content']]) else {}
 			account_stats = api.get_stats(panel_creds['url'],account_id,TOKEN,json_data=json_data)
 			account_snapshot = api.get_profile(panel_creds['url'],account_id,TOKEN)
 			
-			if account_snapshot[0] and account_stats[0] and 'stats' in account_stats[1].keys():
+			if account_snapshot[0] and account_stats[0]:
 				account_data = account_snapshot[1]
 				account_stats = account_stats[1]
 
+				if account_data.status_code > 200 and account_data.status_code <= 400:
+					return jsonify('msg',account_data.json()['message']), account_data.status_code
+				
+				elif account_stats.status_code > 200 and account_stats.status_code <= 400:
+					return jsonify('msg',account_stats.json()['message']), account_stats.status_code
+
+				account_data = account_data.json()
+				account_stats = account_stats.json()
 				account_data['last_updated'] = str(datetime.now())
 				account_data['stats'] = account_stats['stats']
 				account_data['stats']['swipes'] = 0
@@ -1129,14 +1143,28 @@ def account_action(action):
 				accounts_ref.document(account_id).update(account_data)
 
 				return jsonify({'msg':'details updated successfully'}), 200
+			
 			return jsonify({'msg': f'account update unsuccessful.'}), 400
-
+		
+		elif action == 'delete-account':
+			account_id = request.get_json()['data'][0]['id']
+			account_snapshot = api.delete_account(panel_creds['url'],account_id,TOKEN)
+			
+			if account_snapshot[0]:
+				account_snap = account_snapshot[1]
+				if account_snap.status_code == 200:
+					accounts_ref.document(account_id).delete()
+					return jsonify({'msg':'account deleted successfully'}), 200
+				elif account_snap.status_code <= 400:
+					return jsonify({'msg':account_snap.json()['message']}), account_snap.status_code
+			return jsonify({'msg': f'account delete unsuccessful'}),400
+			
 	except ValueError as error:
-		return jsonify({'msg': f'account update unsuccessful. {error}'}), 400
+		return jsonify({'msg': f'account {action.split("-")[0]} unsuccessful. {error}'}), 400
 	
 	except Exception as error:
 		print(error)
-		return jsonify({'msg': 'account update unsuccessful'}), 500
+		return jsonify({'msg': f'account {action.split("-")[0]} unsuccessful'}), 500
 	
 @app.route('/create-accounts',methods=['GET'])
 @login_required
@@ -1216,18 +1244,12 @@ def create_accounts():
 		poses = panel_creds['poses']
 
 		SERVER = app.config['SERVER']
-		
-		TOKEN = api.get_token(panel_email, panel_pass, panel_key)
-		if not TOKEN[0]:
-			return jsonify({'msg': TOKEN[1]}), 403
-		TOKEN = TOKEN[1]['idToken']
 
 		op_count = request.form.get('op-count',None)
-
 		bio = request.form.get('bio',None)
-
 		max_workers = request.form.get('max-workers',10)
 		max_workers = int(max_workers) if max_workers != '' else 10
+		op_server_option = request.form.get('op-server-option')
 
 		profile_image_count = request.form.get('image-count',5)
 		profile_image_count = int(profile_image_count)
@@ -1330,6 +1352,11 @@ def create_accounts():
 				'model':model_id
 			}
 		
+		TOKEN = api.get_token(panel_email, panel_pass, panel_key)
+		if not TOKEN[0]:
+			return jsonify({'msg': TOKEN[1]}), 403
+		TOKEN = TOKEN[1]['idToken']
+		
 		task_id = str(uuid.uuid4())
 		task_status = 'running'
 		task_progress = 0
@@ -1340,6 +1367,7 @@ def create_accounts():
 			'swipe_configs':swipe_configs,
 			'worker':panel_worker_key,
 			'SERVER':SERVER,
+			'server_option':op_server_option,
 			'op_count': op_count,
 			'nb_of_images':profile_image_count,
 			'handles':[handles[:] for _ in range(op_count)],
@@ -1582,7 +1610,7 @@ def swipe_page_p():
 			}
 
 		swipe = api.send_swipes(panel_creds['url'],TOKEN,json_data=payload)
-		if swipe[0]:
+		if swipe[0] and swipe[1].status_code == 200:
 			tasks_ref.document(task_id).set({
 					'id':task_id,
 					'type': 'Swipe Operation',
@@ -1596,9 +1624,9 @@ def swipe_page_p():
 					'schedule':s_name,
 					'swipe_rights':0,
 					'swipe_lefts':0,
-					'message': f'Initiated a swipe operation for {s_name} day {daily_percent["day"]}'
+					'message': f'Initiated a swipe operation for {s_name} day {daily_percent["day"]} and session {daily_percent["session"]}'
 			})
-			return jsonify({'msg': f'Swipe operation with schedule {s_name} just started for day {daily_percent["day"]}'}), 200
+			return jsonify({'msg': f'Swipe operation with schedule {s_name} just started for day {daily_percent["day"]} and session {daily_percent["session"]}'}), 200
 
 		print(swipe[1])
 		return jsonify({'msg': f'Swipe operation with schedule {s_name} failed, day {daily_percent["day"]}'}), 400

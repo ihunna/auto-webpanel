@@ -55,11 +55,47 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             })
         })
 
-        const trs = table.querySelectorAll('body tr');
-        trs.forEach(e =>{
+        const checkBtn = table.querySelector('th.check-all #check-all')
+        const checkBoxes = table.querySelectorAll('td .check-input');
+        checkBtn.addEventListener('click',()=>{
+            for (const checkbox of checkBoxes) {
+                checkbox.checked = checkBtn.checked;
+            }
+            showDeleteBtn(checkBoxes);
+        });
+        checkBoxes.forEach(e =>{
+           e.addEventListener('change',()=>{ 
+            showDeleteBtn([e]);
+            })
+        })
+
+        const showDeleteBtn = (elements,data='') =>{
+            const deleteAll = doc.getElementById('delete-all');
+            let checked = 0;
+            elements.forEach(e=>{
+                if (e.checked){
+                    data += e.value + '\n';
+                    deleteAll.setAttribute('data-action-data',data.trim());
+                    checked++
+                }
+            });
+            if (checked > 0){
+                deleteAll.parentNode.classList.add('add-more');
+                deleteAll.classList.remove('no-show');
+            }else{
+                deleteAll.parentNode.classList.remove('add-more');
+                deleteAll.classList.add('no-show');
+            }
+        }
+
+        const clickables = table.querySelectorAll('tbody tr td.clickable');
+        clickables.forEach(e =>{
             e.addEventListener('click',()=>{
-                const url = e.getAttribute('data-url');
-                window.location.href = url;
+                const category = e.parentNode.getAttribute('data-category');
+                if(category != 'admins'){
+                    const url = e.parentNode.getAttribute('data-url');
+                    window.location.href = url;
+                }
             })
         })
 
@@ -83,14 +119,19 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 const text = e.getAttribute('data-action-prompt');
                 const action = e.getAttribute('data-action');
                 const route = e.getAttribute('data-url');
-                let data = [{'id':e.getAttribute('data-action-id')}]
+                const cat = e.getAttribute('data-action-category');
+                let data = cat=='do-multiple'?[
+                    {'data':e.getAttribute('data-action-data').split('\n')}
+                    ]:[{'id':e.getAttribute('data-action-id')}]
+
                 if (action !== 'update-account'){
+                    con.log(data)
                     createModal(modal,'prompt',data,text,action,route,actionText)
                     showHide('show',[overlay,modal]);
                 }else{
                     // showHide('no-show',[e.parentNode]);
                     showHide('show',[alertBox],actionText,{'bg':colorSuccess,'color':colorLessWhite});
-                    sendRequest('POST',route,data)
+                    sendRequest('POST',route,{'data':data})
                     .then(response => {
                         showHide('show',[alertBox],response.msg,{'bg':colorSuccess,'color':colorLessWhite});
                         setTimeout(() => showHide('no-show',[alertBox]), 3000)
@@ -123,9 +164,9 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         const viewAll = doc.querySelector('.view-all');
         viewAll.addEventListener('click',(e) => {
             e.preventDefault();
-            const imageList = doc.querySelectorAll('#profile-images li img')
+            const imageList = profileImages;
             const images = Array.from(imageList).map((img) => {
-                const url = img.getAttribute('src');
+                const url = img;
                 let name = url.split('/')
                 name = name[name.length-1]
                 return {
@@ -134,7 +175,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                   'id':null,
                 };
               });
-            createModal(modal,'sModalImg',images);
+            createModal(modal,'sModalImg',images,null,'profile-images');
             showHide('show',[overlay,modal]);
         });
     }catch(error){con.log(error)}
