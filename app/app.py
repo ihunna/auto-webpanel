@@ -1089,10 +1089,10 @@ def account_action(action):
 				if  update_profile[1].status_code == 200:
 					account_data = accounts_ref.document(account_id).get()
 					if account_data.exists:
-						updated = {}
+						account_data = account_data.to_dict()
 						for key,value in update_profile[1].json()['success'].items():
-							if value:updated[key] = account_profile[key]
-						accounts_ref.document(account_id).update({'profile':updated})
+							if value:account_data['profile'][key] = account_profile[key]
+						accounts_ref.document(account_id).update(account_data)
 						return jsonify({'msg': 'account updated successfully'}), 200
 					else:raise ValueError('account does not exist')
 				elif update_profile[1].status_code <= 400:

@@ -472,7 +472,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 setTimeout(() => showHide('no-show',[alertBox]), 5000)
             })
             .then(()=>{
-                accountId = accountForm.querySelector('#account-id').value;
+                const accountId = accountForm.querySelector('#account-id').value;
                 window.location.href = `/account-page?account=${accountId}&action=view-details#preferences`
             })
             .catch(error => {

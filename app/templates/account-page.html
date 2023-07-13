@@ -35,12 +35,18 @@
                             data-url="/account-page">
                             delete account
                         </a>
-                        <a href="" class="action eleveted-a" data-action="update-account" 
-                            data-url="/account-page/update-account"
-                            data-action-message="Getting latest details"
-                            data-action-id="{{account.id}}">
-                            update details
-                        </a>
+                        {%if action == 'view-details'%}
+                            <a href="/account-page?account={{account.id}}&action=edit-account" class="eleveted-a">
+                                edit details
+                            </a>
+                        {%else%}
+                            <a href="" class="action eleveted-a" data-action="update-account" 
+                                data-url="/account-page/update-account"
+                                data-action-message="Getting latest details"
+                                data-action-id="{{account.id}}">
+                                update details
+                            </a>
+                        {%endif%}
                     </div>
                 </div>
 
