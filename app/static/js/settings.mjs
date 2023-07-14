@@ -204,7 +204,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
           } else {
             const urlParts = gdriveLink.split('/');
             const folderId = urlParts[urlParts.length - 1];
-            const apiUrl = `https://www.googleapis.com/drive/v3/files?q='${encodeURIComponent(folderId)}'+in+parents&key=${driveKey}`;
+            const apiUrl = `https://www.googleapis.com/drive/v3/files?q='${encodeURIComponent(folderId)}'+in+parents&key=${gcloudkey}`;
             showHide('show',[alertBox],'Fetching images...',{'bg':colorSuccess,'color':colorLessWhite});
             fetch(apiUrl)
               .then(response => {
@@ -214,7 +214,7 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 return response.json();
               })
               .then(response => {
-                const imageLinks = response.files.map(file => `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${driveKey}`);
+                const imageLinks = response.files.map(file => `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${gcloudkey}`);
                 doc.querySelector('#data').value = imageLinks;
                 showHide('show', [gdriveInfo], `${imageLinks.length} images to upload`);
                 showHide('show', [gdriveBtnUpload]);

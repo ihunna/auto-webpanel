@@ -21,6 +21,7 @@ def before_request():
 	g.platform = session.get('PLATFORM')
 	g.passkey = app.config['PASS_KEY']
 	g.secret_link = app.config['S_LINK']
+	g.gcloudkey = app.config['GCLOUDKEY']
 
 @app.after_request
 def after_request(response):
@@ -1915,7 +1916,6 @@ def upload_image(type, category):
 
 			for chunk in sub_list:
 				for image in chunk:
-					print(image)
 					image_id = str(uuid.uuid4())
 					filename = f"{session['ADMIN']['id']}/{session['PLATFORM']['id']}/{session['MODEL']['id']}/{image_id}.jpeg"
 					image_data = get_image_from_gdrive(image)
@@ -1968,7 +1968,7 @@ def images(type):
 		images_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('images')
 		
 		if action == 'add-drive':
-			return render_template('images.html', type=type, action=action, drive_key=app.config['GDRIVEAPI'])
+			return render_template('images.html', type=type, action=action)
 		
 		page = int(request.args.get('page', 1))
 		limit = int(request.args.get('limit', 10))

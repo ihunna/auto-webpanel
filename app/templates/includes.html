@@ -17,6 +17,7 @@
         <div class="alert">
         </div>
         <script>
+            const gcloudkey = "{{g.gcloudkey}}";
             const signup_url = "{%if g.page and g.page == 'signup-hidden'%}adminonlyallowedtosignup__________{%else%}signup{%endif%}"
         </script>
         <script src="{{ url_for('static', filename='js/configs.js') }}"></script>
