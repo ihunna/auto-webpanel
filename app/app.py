@@ -1,5 +1,5 @@
 from app_configs import *
-from app_utils import create_edit_menu,share_daily_percent
+from app_utils import create_edit_menu,share_daily_percent,get_image_from_gdrive
 from app_actions import TASKS
 from scheduler import Scheduler
 
@@ -1243,7 +1243,6 @@ def create_accounts():
 	try:
 		platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
 		platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms').document(platform_id)
-		files_ref = platforms_ref.collection('files')
 		models_ref = platforms_ref.collection('models').document(model_id)
 		accounts_ref = models_ref.collection('accounts')
 		images_ref = models_ref.collection('images')
@@ -1330,8 +1329,6 @@ def create_accounts():
 		cities = configs['Cities']
 
 		creds = configs['Email and Password']
-		used_emails = files_ref.document('Used Emails').get().to_dict()['content']
-		creds = [cred for cred in creds if cred not in used_emails]
 		if not check_values([creds]):
 			raise ValueError(f'email:password is empty for selected model')
 		
@@ -1379,7 +1376,14 @@ def create_accounts():
 		if not TOKEN[0]:
 			return jsonify({'msg': TOKEN[1]}), 403
 		TOKEN = TOKEN[1]['idToken']
-		
+
+		used_emails = api.get_used_emails(panel_creds['url',TOKEN])
+		if used_emails[0]:
+			used_emails = used_emails[1]
+			if used_emails.status_code < 400:
+				creds = [cred for cred in creds if cred not in used_emails.json()['accounts']]
+			else:raise ValueError(f'{used_emails.json()["message"]}')
+		else:raise Exception('error with getting used emails')
 		task_id = str(uuid.uuid4())
 		task_status = 'running'
 		task_progress = 0
@@ -1387,8 +1391,6 @@ def create_accounts():
 		kwargs = {
 			'accounts_ref':accounts_ref,
 			'tasks_ref':tasks_ref,
-			'files_ref':files_ref,
-			'used_emails':used_emails,
 			'swipe_configs':swipe_configs,
 			'worker':panel_worker_key,
 			'SERVER':SERVER,
@@ -1897,20 +1899,33 @@ def upload_image(type, category):
 			type = request.form.get('image-type')
 			image_pose = request.form.get('pose')
 
-			def _upload(image,image_pose):
-				image_data = {'image':image,'type':'profile','category':category}
-				if type=='verification':
-					image_data['pose']:image_pose
-
-				images_ref.document(image_id).set(image_data)
-				uploaded.append(image)
-
+			def _upload(bucket, filename, image,image_type,image_id,image_pose,_bucket_name):
+				blob = bucket.blob(filename)
+				blob.metadata = {
+					"used": "0"
+				}
+				blob.upload_from_string(image,content_type=image_type)
+				image_url = f'https://storage.googleapis.com/{_bucket_name}/{filename}'
+				images_ref.document(image_id).set({'image':image_url,'type':type,'category':category,'pose':image_pose})
+				uploaded.append(image_url)
 			threads = []
+			_bucket_name = platform_creds['images_bucket'] if type != 'verification' else platform_creds['v_images_bucket']
+			bucket = Storage.bucket(_bucket_name)
 			sub_list = sublist(image_list, 20)
+
 			for chunk in sub_list:
 				for image in chunk:
+					print(image)
 					image_id = str(uuid.uuid4())
-					thread = Thread(target=_upload, args=(image,image_pose))
+					filename = f"{session['ADMIN']['id']}/{session['PLATFORM']['id']}/{session['MODEL']['id']}/{image_id}.jpeg"
+					image_data = get_image_from_gdrive(image)
+					if not image_data[0]:
+						print(image_data[1])
+						continue
+					image_byte = image_data[1]
+					xtension = '.jpeg'
+					image_type = f'image/jpg'
+					thread = Thread(target=_upload, args=(bucket, filename, image_byte,image_type,image_id,image_pose,_bucket_name))
 					threads.append(thread)
 					thread.start()
 				for thread in threads:
@@ -1922,7 +1937,7 @@ def upload_image(type, category):
 		return jsonify({'msg': msg, 'data':uploaded}), 200
 	
 	except ValueError as v_error:
-		return jsonify({'msg':v_error}),400
+		return jsonify({'msg':f'{v_error}'}),400
 	except Exception as error:
 		print(error)
 		return jsonify({'msg': 'Image upload unsuccessful'}), 500
@@ -2000,10 +2015,9 @@ def delete_item():
 			image_id = image['id']
 			image_upload_type = image['upload_type']
 			images_ref.document(image_id).delete()
-			if image_upload_type == 'upload':
-				image_name = image['name']
-				image_blob = bucket.blob(image_name)
-				image_blob.delete()
+			image_name = image['name']
+			image_blob = bucket.blob(image_name)
+			image_blob.delete()
 		for chunk in sub_list:
 			for image in chunk:
 				if not check_values([image.get('upload_type'),image.get('id')]):

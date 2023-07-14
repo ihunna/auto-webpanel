@@ -1,5 +1,5 @@
 from PIL import Image
-import io,httpx
+import io,requests
 from uuid import uuid5, UUID
 
 
@@ -46,4 +46,10 @@ def share_daily_percent(day_specs:dict):
         for i in range(start_day, end_day + 1):
             daily_swipe_percent.append({'day':i,'swipe_percent':day['swipe_percent']})
     return daily_swipe_percent
-	
+
+def get_image_from_gdrive(url):
+    image_data = requests.get(url)
+    print(image_data.status_code)
+    if image_data.status_code < 400:
+        return True, image_data.content
+    else: return False, 'error with getting google drive images'

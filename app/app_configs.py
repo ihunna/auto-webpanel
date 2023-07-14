@@ -479,4 +479,15 @@ class API:
 			print(error)
 			return False,error
 		
+	def get_used_emails(self,host,token:str):
+		try:
+			url = f'{host}/configs/used_accounts'
+			headers = {
+					'content-type':'application/json',
+					'authorization': f'Bearer {token}'}
+			data = httpx.get(url,headers=headers,timeout=self.timeout)
+			return True, data
+		except Exception as error:
+			return False,error
+		
 api = API()

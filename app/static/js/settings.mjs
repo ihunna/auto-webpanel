@@ -205,7 +205,6 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
             const urlParts = gdriveLink.split('/');
             const folderId = urlParts[urlParts.length - 1];
             const apiUrl = `https://www.googleapis.com/drive/v3/files?q='${encodeURIComponent(folderId)}'+in+parents&key=${driveKey}`;
-            // showHide('show', [alertBox], 'getting images', { 'bg': colorSuccess, 'color': colorLessWhite });
             showHide('show',[alertBox],'Fetching images...',{'bg':colorSuccess,'color':colorLessWhite});
             fetch(apiUrl)
               .then(response => {
@@ -215,23 +214,11 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
                 return response.json();
               })
               .then(response => {
-                const imageLinks = response.files.map(file => `https://drive.google.com/uc?export=download&id=${file.id}`);
+                const imageLinks = response.files.map(file => `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${driveKey}`);
                 doc.querySelector('#data').value = imageLinks;
                 showHide('show', [gdriveInfo], `${imageLinks.length} images to upload`);
                 showHide('show', [gdriveBtnUpload]);
-                // gdriveBtn.id = '';
-                // gdriveBtn.type = 'submit';
-                // gdriveBtn.value = 'Upload';
                 console.log(imageLinks);
-                // showHide('show', [alertBox], 'Operation successful', { 'bg': colorSuccess, 'color': colorLessWhite });
-                // const removeListenerPromise = new Promise((resolve) => {
-                //   setTimeout(() => {
-                //     gdriveBtn.removeEventListener('click', getGdriveImages);
-                //     resolve();
-                //   }, 0);
-                // });
-      
-                // return removeListenerPromise;
               })
               .catch(error => {
                 if (error instanceof Promise) {

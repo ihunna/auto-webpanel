@@ -165,8 +165,6 @@ class TASKS:
 	def start_account_creation(self,
 			accounts_ref=None,
 			tasks_ref=None,
-			files_ref=None,
-			used_emails:list=None,
 			swipe_configs:dict=None,
 			worker:str = None,
 			SERVER:str = None,
@@ -251,9 +249,6 @@ class TASKS:
 							'successful':passes,
 							'failed':fails
 							})
-						
-						used_emails.append(f"{account['email']}:{account['password']}")
-						files_ref.document('Used Emails').update({'content':used_emails})
 						
 					else:
 						fails += 1
