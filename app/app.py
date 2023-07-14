@@ -2002,7 +2002,7 @@ def delete_item():
 	try:
 		platform_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
 		platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
-		platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
+		admin_id,platform_id,model_id = session['ADMIN']['id'],session['PLATFORM']['id'],session['MODEL']['id']
 		images_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('images')
 		
 		image_list = request.get_json()['data']
@@ -2014,17 +2014,21 @@ def delete_item():
 		def _delete(image):
 			image_id = image['id']
 			image_upload_type = image['upload_type']
-			image_name = image['url']
+			image_name = f'{admin_id}/{platform_id}/{model_id}/{image["name"]}'
 			image_blob = bucket.blob(image_name)
 			image_blob.delete()
 			images_ref.document(image_id).delete()
 		for chunk in sub_list:
 			for image in chunk:
-				if not check_values([image.get('upload_type'),image.get('id')]):
-					raise ValueError('Image does not exist or is not of supported type')
-				thread = Thread(target=_delete, args=(image,))
-				threads.append(thread)
-				thread.start()
+				try:
+					if not check_values([image.get('upload_type'),image.get('id')]):
+						raise ValueError('Image does not exist or is not of supported type')
+					thread = Thread(target=_delete, args=(image,))
+					threads.append(thread)
+					thread.start()
+				except Exception as error:
+					print(error)
+					return jsonify({'msg':"couldn't delete image"}), 400
 			for thread in threads:
 				thread.join()
 
