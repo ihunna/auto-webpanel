@@ -2014,10 +2014,10 @@ def delete_item():
 		def _delete(image):
 			image_id = image['id']
 			image_upload_type = image['upload_type']
-			images_ref.document(image_id).delete()
-			image_name = image['name']
+			image_name = image['url']
 			image_blob = bucket.blob(image_name)
 			image_blob.delete()
+			images_ref.document(image_id).delete()
 		for chunk in sub_list:
 			for image in chunk:
 				if not check_values([image.get('upload_type'),image.get('id')]):
