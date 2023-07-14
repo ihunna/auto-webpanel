@@ -728,9 +728,12 @@ def schedules():
 	elif action == 'edit-schedule' and s_id:
 		schedule = schedules_ref.document(s_id).get()
 		if schedule.exists:
-			session['MODEL']['SCHEDULE'] = schedule.to_dict()
+			schedule = schedule.to_dict()
+			schedule['daily_percent'] = json.loads(schedule['daily_percent'])
+			schedule['day_specs'] = json.loads(schedule['day_specs'])
+			session['MODEL']['SCHEDULE'] = schedule
 			return render_template('schedules.html', action='edit-schedule',
-								schedule=schedule.to_dict(), swipe_schedules=swipe_schedules,
+								schedule=schedule, swipe_schedules=swipe_schedules,
 								models=list(session['MODELS'].values()), action_type=action_type, next=next)
 		
 		else:
@@ -771,6 +774,9 @@ def scheduler(action):
 			s_start = request.form.get('s-start')
 			s_end = request.form.get('s-end')
 
+			s_start = s_start + ':00' if len(s_start.split('T')[1].split(':')) == 2 else s_start
+			s_end = s_end + ':00' if len(s_end.split('T')[1].split(':')) == 2 else s_end
+
 			s_session_count = f'{s_session_count_start}-{s_session_count_end}'
 			s_delay = f'{s_delay_start}-{s_delay_end}'
 			s_duration = f'{s_duration_start}-{s_duration_end}'
@@ -799,7 +805,6 @@ def scheduler(action):
 				d2= datetime.strptime(s_end, '%Y-%m-%dT%H:%M:%S')
 				date_interval = d2 - d1
 				date_interval = date_interval.days
-
 				session['MODEL']['SCHEDULE'] = {
 					'id': s_id,
 					'model': model,
@@ -857,6 +862,9 @@ def scheduler(action):
 			s_end = request.form.get('s-end')
 			s_id = request.form.get('s-id')
 
+			s_start = s_start + ':00' if len(s_start.split('T')[1].split(':')) == 2 else s_start
+			s_end = s_end + ':00' if len(s_end.split('T')[1].split(':')) == 2 else s_end
+			
 			op_count = request.form.get('op-count')
 			max_workers = request.form.get('max-workers')
 
@@ -877,6 +885,7 @@ def scheduler(action):
 			d2= datetime.strptime(s_end, '%Y-%m-%dT%H:%M:%S')
 			date_interval = d2 - d1
 			date_interval = date_interval.days
+			
 			schedule_ref = schedules_ref.document(s_id).get()
 
 			# if schedule_ref.to_dict()['running']:
@@ -900,6 +909,7 @@ def scheduler(action):
 				if date_interval <= 1:
 					schedule_ref = schedules_ref.document(s_id)
 					schedule = session['MODEL']['SCHEDULE']
+					schedule['day_specs'] = json.dumps(day_specs)
 					schedule['daily_percent'] = json.dumps([{'day':1,'swipe_percent':swipe_percent}])
 					schedule_ref.update(schedule)
 				return jsonify({'msg': 'schedule updated successfully, add date specs', 'schedule': s_id, 'action': 'finish-schedule', 'action_type': 'edit', 'next': next,'date_interval':date_interval}), 200
@@ -1177,11 +1187,12 @@ def account_action(action):
 def show_create_accounts():
 	g.page = 'create-accounts'
 	action = request.args.get('action')
-	platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 	platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
-	accounts_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('accounts')
-	schedules_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('schedules')
-	tasks_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('tasks')
+	platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms').document(platform_id)
+	models_ref = platforms_ref.collection('models').document(model_id)
+	accounts_ref = models_ref.collection('accounts')
+	schedules_ref = models_ref.collection('schedules')
+	tasks_ref = models_ref.collection('tasks')
 
 	task_status = session['MODEL'].get('TASKS')
 	if check_values([task_status]):
@@ -1230,14 +1241,16 @@ def show_create_accounts():
 @check_model
 def create_accounts():
 	try:
-		platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 		platform_id,model_id = session['PLATFORM']['id'],session['MODEL']['id']
-		accounts_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('accounts')
-		images_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('images')
-		tasks_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('tasks')
-		configs_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('configs')
-		schedules_ref = platforms_ref.document(platform_id).collection('models').document(model_id).collection('schedules')
-		
+		platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms').document(platform_id)
+		files_ref = platforms_ref.collection('files')
+		models_ref = platforms_ref.collection('models').document(model_id)
+		accounts_ref = models_ref.collection('accounts')
+		images_ref = models_ref.collection('images')
+		tasks_ref = models_ref.collection('tasks')
+		configs_ref = models_ref.collection('configs')
+		schedules_ref = models_ref.collection('schedules')
+
 		panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
 		panel_email = panel_creds['email']
 		panel_pass = panel_creds['password']
@@ -1315,11 +1328,18 @@ def create_accounts():
 		proxies = configs['Proxies'] 
 		user_agents = configs['User Agents']
 		cities = configs['Cities']
+
 		creds = configs['Email and Password']
+		used_emails = files_ref.document('Used Emails').get().to_dict()['content']
+		creds = [cred for cred in creds if cred not in used_emails]
+		if not check_values([creds]):
+			raise ValueError(f'email:password is empty for selected model')
+		
 		handles = session['MODEL']['socials']
 		handles = [h.replace('\r','') for handle in handles 
 	     if handle['platform'].lower() in ['instagram','ig','insta'] 
 		 for h in handle['handles']]
+		
 		
 		if check_values([swipe_schedule]):
 			schedule = schedules_ref.document(swipe_schedule).get()
@@ -1367,6 +1387,8 @@ def create_accounts():
 		kwargs = {
 			'accounts_ref':accounts_ref,
 			'tasks_ref':tasks_ref,
+			'files_ref':files_ref,
+			'used_emails':used_emails,
 			'swipe_configs':swipe_configs,
 			'worker':panel_worker_key,
 			'SERVER':SERVER,

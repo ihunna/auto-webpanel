@@ -45,7 +45,7 @@ email_password__file = os.path.join(data_folder, 'email_passwords.txt')
 user_agents_file = os.path.join(data_folder, 'user_agents.txt')
 biographies_file = os.path.join(data_folder, 'biographies.txt')
 zip_file = os.path.join(data_folder, 'zipcodes.txt')
-badoo_cities_file = os.path.join(data_folder,'cities.txt')
+badoo_cities_file = os.path.join(data_folder,'badoo_working_cities.txt')
 
 
 
@@ -118,7 +118,7 @@ app.config['PANEL_AUTH_CREDS'] = {
 			'five_up_sign', 
 			'pinky_sign'],
 		'edit_configs':{
-			"relationship": ["Single", "Taken", "ExperimentComplicated", "ExperimentOpen", "None"],
+			"relationship": [ "None","Single", "Taken", "ExperimentComplicated", "ExperimentOpen"],
 			"sexuality": ["None", "Questioning", "Queer", "Pansexual", "Demisexual", "Asexual", "Bi", "ExperimentLesbian", "ExperimentGay", "Straight"],
 			"kids": ["None", "HavePlenty", "Never", "Want", "Someday"],
 			"smoking": ["None", "Social", "No", "Yes"],
@@ -250,6 +250,7 @@ app.config['PANEL_AUTH_CREDS'] = {
 		'poses':[]
 	}
 	}
+app.config['PLATFORMS'] = ['Badoo']
 
 def conn():
 	db = getattr(g, '_database', None)
@@ -321,6 +322,14 @@ def check_platform(func):
 				return redirect(url_for('index'))
 			elif request.method in ['POST','DELETE','PUT','PATCH']:
 				return jsonify({'msg':'no platfrom chosen'}),403
+		elif session['PLATFORM']['name'].capitalize() not in app.config['PLATFORMS']:
+			print(session['PLATFORM']['name'])
+			session['CURRENT_URL'] = request.path
+			if request.method == 'GET':
+				return redirect(url_for('index'))
+			elif request.method in ['POST','DELETE','PUT','PATCH']:
+				return jsonify({'msg':'platform is not functional yet'}),403
+			
 		return func(*args, **kwargs)
 	return wrapper
 
@@ -376,7 +385,7 @@ def check_values(values:list):
 	else:return True
 
 class API:
-	def __init__(self,timeout:int=60):
+	def __init__(self,timeout:int=120):
 		self.timeout = timeout
 	def get_token(self,email:str,password:str,key:str):
 		url = f'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={key}'

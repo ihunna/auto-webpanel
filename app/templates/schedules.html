@@ -629,7 +629,7 @@
         <script>
             const action = "{{ action }}";
             {% if schedule %}
-                const schedule = JSON.parse({{ schedule|tojson|safe }}) || null;
+                const schedule = JSON.parse(JSON.stringify({{ schedule|tojson|safe }})) || null;
             {% endif %}
             const sD = document.getElementById('s-start');
             const eD = document.getElementById('s-end');
@@ -640,27 +640,28 @@
             const sdurationStart = document.getElementById('s-duration-start');
             const sdurationEnd = document.getElementById('s-duration-end');
 
-            let currentDate = new Date().toISOString().slice(0,19);
+            let currentDate = new Date().toISOString().slice(0, 19);
             let currentTime = new Date().toISOString().slice(0, 19);
 
-            sD.min = (action === 'add-schedule' || !schedule) ? currentDate: schedule.swipe_start_at;
-            sD.value = (action === 'add-schedule' || !schedule) ? currentDate: schedule.swipe_start_at;
+            sD.min = (action === 'add-schedule' || !schedule) ? currentDate : schedule.op_start_at;
+            sD.value = (action === 'add-schedule' || !schedule) ? currentDate : schedule.op_start_at;
 
             let startDate = new Date(sD.value);
             let nextDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
 
-            eD.min = nextDate.toISOString().slice(0, 19);
-            eD.value = (action === 'add-schedule' || !schedule) ? nextDate.toISOString().slice(0, 19): schedule.op_end_at;
+            eD.min = (action === 'add-schedule' || !schedule) ? nextDate.toISOString().slice(0, 19) : schedule.op_end_at;
+            eD.value = (action === 'add-schedule' || !schedule) ? nextDate.toISOString().slice(0, 19) : schedule.op_end_at;
 
-            console.log(eD.value)
+            console.log(eD.value);
             sD.addEventListener('change', (e) => {
                 startDate = new Date(e.target.value);
+                e.target.min = startDate;
+                
                 nextDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
-
                 eD.min = nextDate.toISOString().slice(0, 19);
                 eD.value = nextDate.toISOString().slice(0, 19);
-                
-                console.log(eD.value)
+                console.log(sD.value)
+                console.log(eD.value);
             });
 
             try {
@@ -684,7 +685,6 @@
             } catch (error) {
                 console.log(error);
             }
-
-          </script>                  
+        </script>                  
         {%endif%}
     {% endblock%}

@@ -337,7 +337,9 @@
             allLiElements.forEach(function(li) {
             li.classList.remove('activated');
             });
-            
+            if(element.id !== 'cities-btn'){
+                const citiesModal = document.querySelector('.cities-modal').classList.add('no-show');
+            }
             element.classList.add('activated');
         }
 

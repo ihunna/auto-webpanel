@@ -154,7 +154,7 @@
                                     <div class="p-details-bio has-map">
                                         <div class="p-details-bio-item">
                                             <i class="fa fa-map-marker"></i> &nbsp;
-                                            {{account.city}}, {{account.country_code}}
+                                            {{account.city}}, {%if account.country_code%}{{account.country_code}}{%else%}US{%endif%}
                                         </div>
                                         <a href="/account-page?account={{account.id}}&action=map" class="">map</a>
                                     </div>
@@ -221,7 +221,7 @@
                                 <div>
                                     <label for="height">Height</label>
                                     <input type="number" name="height" id="height" 
-                                        value="{%if account.profile.height != ''%}{{account.profile.height}}{%else%}91{%endif%}" 
+                                        value="{{account.profile.height}}" 
                                         min="91" max="220">
                                     <h5 class="input-highlight"> 
                                         <i class="fas fas fa-exclamation-circle"></i> 
@@ -231,11 +231,23 @@
                                 {% for key, options in edit_data.items() %}
                                     <div>
                                         <label for="{{ key }}">{{ key|capitalize }}:</label>
-                                        <select name="{{key}}" id="{{ key }}" {%if key|lower in ['languages']%}multiple{%endif%}>
-                                            {% for option in options %}
-                                            <option value="{{ option }}">{{ option }}</option>
-                                            {% endfor %}
-                                        </select>
+                                        {%if key|lower in ['languages']%}
+                                            <select name="{{key}}" id="{{ key }}" multiple>
+                                                {% for option in options %}
+                                                    <option value="{{ option }}"
+                                                        {%if option in account.profile.languages%}selected{%endif%}>
+                                                        {{ option }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        {%else%}
+                                            <select name="{{key}}" id="{{ key }}">
+                                                {% for option in options %}
+                                                <option value="{{ option }}"
+                                                {%if account.profile[key] == option%}selected{%endif%}>{{ option }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        {%endif%}
                                     </div>
                                 {% endfor %}
                                 <input type="submit" name="Submit">
@@ -300,7 +312,7 @@
                                         </div>
                                         <div class="detail">
                                             <span><i class="fas fa-map-marker"></i> location</span>
-                                            <div>{{account.city|capitalize}}, {{account.country_code}}</div>
+                                            <div>{{account.city|capitalize}}, {%if account.country_code%}{{account.country_code}}{%else%}US{%endif%}</div>
                                         </div>
                                         <div class="detail">
                                             <span><i class="fas fa-history"></i> created at</span>
@@ -355,6 +367,9 @@
                                     </div>
                                     <div class="body">
                                         <div class="detail">
+                                            <Strong>Account ID</Strong>: {{account.id}}
+                                        </div>
+                                        <div class="detail">
                                             <strong>Email</strong>: {{account.email}}
                                         </div>
                                         <div class="detail">
@@ -367,10 +382,13 @@
                                             <strong>User Agent</strong>: {%if account.user_agent%}{{account.user_agent}}{%else%}None{%endif%}
                                         </div>
                                         <div class="detail">
-                                            <Strong>Account ID</Strong>: {{account.id}}
+                                            <strong>User ID</strong>: <span style="font-size: 13px;">{{account.user_id}}</span>
                                         </div>
                                         <div class="detail">
-                                            <strong>User ID</strong>: {{account.user_id}}
+                                            <strong>Hot Panel ID</strong>: {{account.hotpanel_session_id}}
+                                        </div>
+                                        <div class="detail">
+                                            <strong>Cookies</strong>: {{account.cookies}}
                                         </div>
                                     </div>
                                 </div>
