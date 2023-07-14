@@ -1338,7 +1338,7 @@ def create_accounts():
 	     if handle['platform'].lower() in ['instagram','ig','insta'] 
 		 for h in handle['handles']]
 		
-		
+
 		if check_values([swipe_schedule]):
 			schedule = schedules_ref.document(swipe_schedule).get()
 			if not schedule.exists:raise ValueError('No swiping schedule for selected model')
@@ -1378,7 +1378,7 @@ def create_accounts():
 			return jsonify({'msg': TOKEN[1]}), 403
 		TOKEN = TOKEN[1]['idToken']
 
-		used_emails = api.get_used_emails(panel_creds['url',TOKEN])
+		used_emails = api.get_used_emails(panel_creds['url'],TOKEN)
 		if used_emails[0]:
 			used_emails = used_emails[1]
 			if used_emails.status_code < 400:
