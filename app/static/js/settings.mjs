@@ -194,7 +194,6 @@ import { showHide, createModal, sendRequest} from "./utils.mjs";
         const getGdriveImages = () => {
           const gdriveBtn = document.getElementById('gdrive-btn');
           const gdriveBtnUpload = document.getElementById('gdrive-btn-upload');
-          const driveKey = document.getElementById('drive_key').value;
           const gdriveLink = document.getElementById('gdrive-link').value;
           const gdriveInfo = document.getElementById('gdrive-display');
       
