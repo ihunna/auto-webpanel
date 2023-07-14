@@ -31,6 +31,7 @@ class Scheduler:
 
                 payload['job_path'] = job_path
                 payload['daily_percent'] = day['daily_percent']
+                payload['daily_percent']['session'] = day['session']
                 body_bytes = json.dumps(payload).encode('utf-8')
                 
                 schedule = self.client.create_job(request={
@@ -95,7 +96,7 @@ class Scheduler:
                 session_start_time += timedelta(minutes=(operation_duration + d_gap))
         else:
             date_range = end_date - start_date
-            for i in range(date_range.days + 1):
+            for i in range(date_range.days):
                 current_date = start_date + timedelta(days=i)
 
                 day = current_date.day
