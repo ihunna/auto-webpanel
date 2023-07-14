@@ -46,8 +46,7 @@ class Scheduler:
                         },
                         "schedule": day['cron'].strip(),
                         "time_zone": "UTC",
-                        "state": scheduler_v1.Job.State.ENABLED,
-                        "description": json.dumps(payload)
+                        "state": scheduler_v1.Job.State.ENABLED
                     }
                 }).name
 
