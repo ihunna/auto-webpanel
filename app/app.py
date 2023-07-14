@@ -2009,12 +2009,9 @@ def delete_item():
 		if not check_values([image_list]):raise ValueError('No image uploaded, supply at least one image file')
 		sub_list = sublist(image_list, 20)
 		threads = []
-		_bucket_name = platform_creds['images_bucket'] if type != 'verification' else platform_creds['v_images_bucket']
-		bucket = Storage.bucket(_bucket_name)
-		def _delete(image):
+		def _delete(image,bucket):
 			image_id = image['id']
 			image_upload_type = image['upload_type']
-			type = image['type']
 			image_name = f'{admin_id}/{platform_id}/{model_id}/{image["name"]}'
 			image_blob = bucket.blob(image_name)
 			image_blob.delete()
@@ -2022,9 +2019,12 @@ def delete_item():
 		for chunk in sub_list:
 			for image in chunk:
 				try:
+					type = image['type']
+					_bucket_name = platform_creds['images_bucket'] if type != 'verification' else platform_creds['v_images_bucket']
+					bucket = Storage.bucket(_bucket_name)
 					if not check_values([image.get('upload_type'),image.get('id')]):
 						raise ValueError('Image does not exist or is not of supported type')
-					thread = Thread(target=_delete, args=(image,))
+					thread = Thread(target=_delete, args=(image,bucket))
 					threads.append(thread)
 					thread.start()
 				except Exception as error:
