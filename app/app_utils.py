@@ -48,8 +48,8 @@ def share_daily_percent(day_specs:dict):
     return daily_swipe_percent
 
 def get_image_from_gdrive(url):
-    image_data = requests.get(url)
-    print(image_data.status_code)
+    headers = {'referer':'https://atowebpanel.com/'}
+    image_data = requests.get(url,headers=headers)
     if image_data.status_code < 400:
         return True, image_data.content
     else: return False, 'error with getting google drive images'
