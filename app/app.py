@@ -1385,6 +1385,8 @@ def create_accounts():
 				creds = [cred for cred in creds if cred not in used_emails.json()['accounts']]
 			else:raise ValueError(f'{used_emails.json()["message"]}')
 		else:raise Exception('error with getting used emails')
+		if not check_values([creds]):raise ValueError('all emails already used')
+		
 		task_id = str(uuid.uuid4())
 		task_status = 'running'
 		task_progress = 0
