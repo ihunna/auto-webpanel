@@ -2014,6 +2014,7 @@ def delete_item():
 		def _delete(image):
 			image_id = image['id']
 			image_upload_type = image['upload_type']
+			type = image['type']
 			image_name = f'{admin_id}/{platform_id}/{model_id}/{image["name"]}'
 			image_blob = bucket.blob(image_name)
 			image_blob.delete()
