@@ -1340,7 +1340,7 @@ def create_accounts():
 		
 
 		if not check_values([swipe_schedule]):
-			return jsonify({'msg':'no swipe schedule for the selected model'}),400
+			raise ValueError('no swipe schedule for the selected model')
 		schedule = schedules_ref.document(swipe_schedule).get()
 		if not schedule.exists:raise ValueError('No swiping schedule for selected model')
 		swipe_configs = schedule.to_dict()
