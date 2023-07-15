@@ -1339,40 +1339,41 @@ def create_accounts():
 		 for h in handle['handles']]
 		
 
-		if check_values([swipe_schedule]):
-			schedule = schedules_ref.document(swipe_schedule).get()
-			if not schedule.exists:raise ValueError('No swiping schedule for selected model')
-			swipe_configs = schedule.to_dict()
+		if not check_values([swipe_schedule]):
+			return jsonify({'msg':'no swipe schedule for the selected model'}),400
+		schedule = schedules_ref.document(swipe_schedule).get()
+		if not schedule.exists:raise ValueError('No swiping schedule for selected model')
+		swipe_configs = schedule.to_dict()
 
-			start_date = swipe_configs['op_start_at']
-			if datetime.fromisoformat(start_date) < datetime.now():
-				return jsonify({'msg':'scheduled date is passed, please update!'}),400
-			daily_percent = json.loads(swipe_configs['daily_percent'])
-			swipe_configs['daily_percent'] = daily_percent
+		start_date = swipe_configs['op_start_at']
+		if datetime.fromisoformat(start_date) < datetime.now():
+			return jsonify({'msg':'scheduled date is passed, please update!'}),400
+		daily_percent = json.loads(swipe_configs['daily_percent'])
+		swipe_configs['daily_percent'] = daily_percent
 
-			swipe_delay_start = swipe_configs['swipe_delay'].split('-')[0]
-			swipe_delay_end = swipe_configs['swipe_delay'].split('-')[1]
-			swipe_configs['swipe_delay'] = random.randint(int(swipe_delay_start),int(swipe_delay_end))
-			swipe_configs['min_wait'] = int(swipe_delay_start)
-			swipe_configs['max_wait'] = int(swipe_delay_end)
+		swipe_delay_start = swipe_configs['swipe_delay'].split('-')[0]
+		swipe_delay_end = swipe_configs['swipe_delay'].split('-')[1]
+		swipe_configs['swipe_delay'] = random.randint(int(swipe_delay_start),int(swipe_delay_end))
+		swipe_configs['min_wait'] = int(swipe_delay_start)
+		swipe_configs['max_wait'] = int(swipe_delay_end)
 
-			
-			swipe_duration_start = swipe_configs['swipe_duration'].split('-')[0]
-			swipe_duration_end = swipe_configs['swipe_duration'].split('-')[1]
-			swipe_configs['swipe_duration'] = random.randint(int(swipe_duration_start),int(swipe_duration_end))
-
-			swipe_session_count_start = swipe_configs['swipe_session_count'].split('-')[0]
-			swipe_session_count_end= swipe_configs['swipe_session_count'].split('-')[1]
-			swipe_configs['swipe_session_count'] = random.randint(int(swipe_session_count_start),int(swipe_session_count_end))
-
-			swipe_configs['first_swipe'] = True
-
-			swipe_configs['session'] = {
-				'admin':session['ADMIN']['id'],
-				'platform':platform_id,
-				'model':model_id
-			}
 		
+		swipe_duration_start = swipe_configs['swipe_duration'].split('-')[0]
+		swipe_duration_end = swipe_configs['swipe_duration'].split('-')[1]
+		swipe_configs['swipe_duration'] = random.randint(int(swipe_duration_start),int(swipe_duration_end))
+
+		swipe_session_count_start = swipe_configs['swipe_session_count'].split('-')[0]
+		swipe_session_count_end= swipe_configs['swipe_session_count'].split('-')[1]
+		swipe_configs['swipe_session_count'] = random.randint(int(swipe_session_count_start),int(swipe_session_count_end))
+
+		swipe_configs['first_swipe'] = True
+
+		swipe_configs['session'] = {
+			'admin':session['ADMIN']['id'],
+			'platform':platform_id,
+			'model':model_id
+		}
+
 		TOKEN = api.get_token(panel_email, panel_pass, panel_key)
 		if not TOKEN[0]:
 			return jsonify({'msg': TOKEN[1]}), 403
@@ -1579,7 +1580,7 @@ def swipe_page_p():
 	try:
 		config = request.get_json()
 		job_path = config['job_path']
-		# Scheduler().delete(job_path)
+		Scheduler().delete(job_path)
 
 
 		s_sess = config['session']
