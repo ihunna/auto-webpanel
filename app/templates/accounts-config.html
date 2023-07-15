@@ -59,6 +59,10 @@
                             <h5 class="input-highlight" style="padding: 5px 10px; font-size: 13px;"> <i class="fas fas fa-exclamation-circle"></i> 
                                 biographies must be seperated by double newlines (double enter key)
                             </h5>
+                        {%elif config.title|lower == 'proxies'%}
+                            <h5 class="input-highlight" style="padding: 5px 10px; font-size: 13px;"> <i class="fas fas fa-exclamation-circle"></i> 
+                                proxies must be in this format: myusername:mypassword@myhost.com:myport
+                            </h5>
                         {%endif%}
                         <div class="config-header">
                             <h3 style="padding: 10px 10px;">
@@ -358,7 +362,7 @@
             };
 
             if (String(textarea.value).length > 0){
-
+                let msg;
                 // Send the POST request to the server
                     fetch('/account-configs', {
                         method: 'POST',
@@ -371,14 +375,14 @@
                         // Handle the response
                         if (response.ok) {
                             return response.json().then(data => {
-                                const msg = data.message;
+                                msg = data.message;
                                 message.textContent = msg;
                                 message.style.color = 'green';
                                 message.style.display = 'block';
                             });
                         } else {
                             return response.json().then(data => {
-                                console.log(message);
+                                msg = data.message;
                                 message.textContent = msg;
                                 message.style.color = 'red';
                                 message.style.display = 'block';

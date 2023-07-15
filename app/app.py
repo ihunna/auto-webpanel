@@ -1,5 +1,5 @@
 from app_configs import *
-from app_utils import create_edit_menu,share_daily_percent,get_image_from_gdrive
+from app_utils import create_edit_menu,share_daily_percent,get_image_from_gdrive,check_proxies_format
 from app_actions import TASKS
 from scheduler import Scheduler
 
@@ -1831,6 +1831,9 @@ def update_file_content():
 			for city in new_content:
 				if city.strip().replace('\n','') not in working_cities.split('\n'):
 					new_content.remove(city)
+		elif title.lower() == 'proxies':
+			if not check_proxies_format(new_content):
+				raise ValueError('proxies not in the right format')
 
 		configs = {'title':title,'content':new_content}
 		configs_ref.document(title).set(configs)

@@ -53,3 +53,9 @@ def get_image_from_gdrive(url):
     if image_data.status_code < 400:
         return True, image_data.content
     else: return False, 'error with getting google drive images'
+
+def check_proxies_format(proxies):
+    for proxy in proxies:
+        if len(proxy.split(':')) > 3 or ('http://' in proxy or 'https://' in proxy):
+            return False
+    return True
