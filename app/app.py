@@ -273,14 +273,14 @@ def index():
 @login_required
 @blocked
 def add_platform():
-	return jsonify({'msg':'not authorized'}),403
 	try:
 		platform_name = request.form.get('platform-name')
-		user_id = session.get('ADMIN')['id']
-		admin_name = session.get('ADMIN')['full_name']
-		platform_names = [p['name'] for p in list(session['PLATFORMS'].values())]
-		if str(platform_name).upper() not in platform_names:
-		
+		platforms = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms').get()
+		if platforms.exists:
+			platforms = [platform.to_dict()['name'].lower() for platform in platforms]
+			if str(platform_name).lower() in platforms:
+				return jsonify({'msg':'platform already exists'}), 400
+		if str(platform_name).capitalize() in app.config['PLATFORMS']:
 			platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 			platform_id = str(uuid.uuid4())
 			platform_data = {
@@ -291,7 +291,7 @@ def add_platform():
 			platforms_ref.document(platform_id).set(platform_data)
 
 			return jsonify({'msg': 'platform added successfully'}), 200
-		return jsonify({'msg': 'platform already exists'}), 400
+		return jsonify({'msg': 'not authorized'}), 403
 	except Exception as error:
 		print(error)
 		return jsonify({'msg': 'error adding platform'}), 500
