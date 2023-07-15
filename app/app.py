@@ -276,10 +276,12 @@ def add_platform():
 	try:
 		platform_name = request.form.get('platform-name')
 		platforms = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms').get()
-		if platforms.exists:
+
+		if len(platforms) > 0:
 			platforms = [platform.to_dict()['name'].lower() for platform in platforms]
 			if str(platform_name).lower() in platforms:
 				return jsonify({'msg':'platform already exists'}), 400
+		
 		if str(platform_name).capitalize() in app.config['PLATFORMS']:
 			platforms_ref = app.config['ADMINS_REF'].document(session['ADMIN']['id']).collection('platforms')
 			platform_id = str(uuid.uuid4())
