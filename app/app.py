@@ -1639,6 +1639,7 @@ def swipe_page_p():
 			'session':s_sess,
 			'proxies':proxies['content']
 			}
+		print(payload)
 
 		swipe = api.send_swipes(panel_creds['url'],TOKEN,json_data=payload)
 		if swipe[0] and swipe[1].status_code == 200:
