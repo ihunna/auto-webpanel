@@ -56,6 +56,6 @@ def get_image_from_gdrive(url):
 
 def check_proxies_format(proxies):
     for proxy in proxies:
-        if len(proxy.split(':')) > 3 or ('http://' in proxy or 'https://' in proxy):
+        if (len(proxy.split(':')) or '@' not in proxy) > 3 or ('http://' in proxy or 'https://' in proxy):
             return False
     return True
