@@ -147,6 +147,7 @@ class TASKS:
 				flow = session.put(URL,json=json_data)
 				if flow.status_code > 299:return False,flow.text
 				
+				wait = 900 if server_option == 'emulator' else 60
 				print(f'\nWaiting for account to be created for: {account}')
 				status = 'PENDING_CREATION'
 				account_id = flow.json()['accounts'][0].get('id')
@@ -154,7 +155,7 @@ class TASKS:
 					flow = session.get(f"{URL}/{account_id}")
 					if flow.status_code  > 299:return False,flow.text
 					status = flow.json()['status']
-					time.sleep(60)
+					time.sleep(wait)
 				account_details = flow.json()
 				print(f'\nAccount created for: {account}')
 				return True,account_details
@@ -169,6 +170,7 @@ class TASKS:
 			worker:str = None,
 			SERVER:str = None,
 			server_option:str ='webapi',
+			nb_of_accounts:int = 1,
 			nb_of_images:int=None,
 			op_count:int = 1,
 			names:list=None,
@@ -197,7 +199,7 @@ class TASKS:
 			kwargs=[{
 				'account':f'account {i + 1}',
 				'server_option':server_option,
-				'nb_of_accounts':1,
+				'nb_of_accounts':nb_of_accounts,
 				'names':names[i],
 				'accounts':accounts[i],
 				'bios':bios[i],

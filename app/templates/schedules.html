@@ -470,7 +470,7 @@
                                     <div class="inputs">
                                         <div>
                                             <label for="s-day-1">Days</label>
-                                            <input type="text" id="s-day-1" name="s-day" value="{%if interval / 2 > 1%}1 - 2{%else%}{{interval}}{%endif%}" required>
+                                            <input type="text" id="s-day-1" name="s-day" value="{%if interval / 2 > 0%}1 - 2{%else%}{{interval}}{%endif%}" required>
                                             <h5 class="input-highlight"> 
                                                 <i class="fas fas fa-exclamation-circle"></i> 
                                                 enter a set of days e.g 1 - 2
@@ -626,65 +626,33 @@
         </div>
         {%if action%}
          
-        <script>
-            const action = "{{ action }}";
-            {% if schedule %}
+            <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+            <script>
+                const action = "{{ action }}";
+                {% if schedule %}
                 const schedule = JSON.parse(JSON.stringify({{ schedule|tojson|safe }})) || null;
-            {% endif %}
-            const sD = document.getElementById('s-start');
-            const eD = document.getElementById('s-end');
-            const sscStart = document.getElementById('s-session-count-start');
-            const sscEnd = document.getElementById('s-session-count-end');
-            const sdStart = document.getElementById('s-swipe-delay-start');
-            const sdEnd = document.getElementById('s-swipe-delay-end');
-            const sdurationStart = document.getElementById('s-duration-start');
-            const sdurationEnd = document.getElementById('s-duration-end');
-
-            let currentDate = new Date().toISOString().slice(0, 19);
-            let currentTime = new Date().toISOString().slice(0, 19);
-
-            sD.min = (action === 'add-schedule' || !schedule) ? currentDate : schedule.op_start_at;
-            sD.value = (action === 'add-schedule' || !schedule) ? currentDate : schedule.op_start_at;
-
-            let startDate = new Date(sD.value);
-            let nextDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
-
-            eD.min = (action === 'add-schedule' || !schedule) ? nextDate.toISOString().slice(0, 19) : schedule.op_end_at;
-            eD.value = (action === 'add-schedule' || !schedule) ? nextDate.toISOString().slice(0, 19) : schedule.op_end_at;
-
-            console.log(eD.value);
-            sD.addEventListener('change', (e) => {
-                startDate = new Date(e.target.value);
-                e.target.min = startDate;
-                
-                nextDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
-                eD.min = nextDate.toISOString().slice(0, 19);
-                eD.value = nextDate.toISOString().slice(0, 19);
-                console.log(sD.value)
-                console.log(eD.value);
-            });
-
-            try {
-                sscStart.addEventListener('input', (e) => {
-                    let fV = parseInt(e.target.value) + 1;
-                    sscEnd.min = isNaN(fV) ? '1' : fV.toString();
-                    sscEnd.value = parseInt(sscEnd.min);
+                {% endif %}
+            
+                const sD = flatpickr("#s-start", {
+                  enableTime: true,
+                  minDate: (action === 'add-schedule' || !schedule) ? 'today' : schedule.op_start_at,
+                  defaultDate: (action === 'add-schedule' || !schedule) ? 'today' : schedule.op_start_at,
+                  dateFormat: 'Y-m-d\\TH:i:S',
+                  onChange: function(selectedDates, dateStr, instance) {
+                    const startDate = selectedDates[0];
+                    instance.set('minDate', startDate);
+                    const nextDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+                    eD.set('minDate', nextDate);
+                    eD.setDate(nextDate);
+                  },
                 });
-
-                sdStart.addEventListener('input', (e) => {
-                    let fV = parseInt(e.target.value) + 1;
-                    sdEnd.min = isNaN(fV) ? '1' : fV.toString();
-                    sdEnd.value = parseInt(sdEnd.min);
+            
+                const eD = flatpickr("#s-end", {
+                  enableTime: true,
+                  minDate: (action === 'add-schedule' || !schedule) ? new Date().fp_incr(1) : schedule.op_end_at,
+                  defaultDate: (action === 'add-schedule' || !schedule) ? new Date().fp_incr(1) : schedule.op_end_at,
+                  dateFormat: 'Y-m-d\\TH:i:S',
                 });
-
-                sdurationStart.addEventListener('input', (e) => {
-                    let fV = parseInt(e.target.value) + 1;
-                    sdurationEnd.min = isNaN(fV) ? '10' : fV.toString();
-                    sdurationEnd.value = parseInt(sdurationEnd.min);
-                });
-            } catch (error) {
-                console.log(error);
-            }
-        </script>                  
+              </script>
         {%endif%}
     {% endblock%}

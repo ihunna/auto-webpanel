@@ -1265,9 +1265,12 @@ def create_accounts():
 
 		op_count = request.form.get('op-count',None)
 		bio = request.form.get('bio',None)
+
+		op_server_option = request.form.get('op-server-option')
 		max_workers = request.form.get('max-workers',10)
 		max_workers = int(max_workers) if max_workers != '' else 10
-		op_server_option = request.form.get('op-server-option')
+
+		if op_server_option == 'emulator':max_workers = 1
 
 		profile_image_count = request.form.get('image-count',5)
 		profile_image_count = int(profile_image_count)
@@ -1401,6 +1404,7 @@ def create_accounts():
 			'worker':panel_worker_key,
 			'SERVER':SERVER,
 			'server_option':op_server_option,
+			'nb_of_accounts':op_count if op_server_option == 'emulator' else 1,
 			'op_count': op_count,
 			'nb_of_images':profile_image_count,
 			'handles':[handles[:] for _ in range(op_count)],

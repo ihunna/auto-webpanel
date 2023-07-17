@@ -250,6 +250,20 @@ td.actions{
 .main > 
 .main-box > 
 .main-container > 
+.profile-holder > .profile-details{
+    height: auto;
+}
+
+.main > 
+.main-box > 
+.main-container > 
+.profile-holder > .profile-details > .map{
+    height: 200px;
+}
+
+.main > 
+.main-box > 
+.main-container > 
 .profile-holder > 
 .profile-details > .p-details-actions{
     grid-template-columns: repeat(1,1fr);
@@ -744,21 +758,6 @@ td.actions{
     .profile-card > 
     .profile-card-details > .d-status{
         flex-direction: column;
-    }
-
-
-    .main > 
-    .main-box > 
-    .main-container > 
-    .profile-holder > .profile-details{
-        height: auto;
-    }
-
-    .main > 
-    .main-box > 
-    .main-container > 
-    .profile-holder > .profile-details > .map{
-        height: 200px;
     }
 
     .form-holder > form{
