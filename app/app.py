@@ -1276,7 +1276,7 @@ def create_accounts():
 		age_range_end = request.form.get('op-age-range-end')
 
 		op_gender = request.form.get('op-gender')
-		gender = op_gender
+		gender = op_gender if op_server_option == 'webapi' else 'female'
 		gender_data = {
 			'id': 'id_women' if gender == 'male' else 'id_men',
 			'intersex_experience': 'no',

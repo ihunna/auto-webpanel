@@ -137,6 +137,19 @@
                                     </div>
                                 </div>
                                 <div class="radio-check-menu">
+                                    <label>Select server option</label>
+                                    <div>
+                                        <div class="radio-box">
+                                            <input type="radio" id="op-server-webapi" name="op-server-option" value="webapi" checked>
+                                            <label for="op-server-webapi">Web API</label>
+                                        </div>
+                                        <div class="radio-box">
+                                            <input type="radio" id="op-server-docker" name="op-server-option" value="emulator">
+                                            <label for="op-server-docker">Docker Emulator</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="radio-check-menu">
                                     <label>Choose preferred gender</label>
                                     <div>
                                         <div class="radio-box">
@@ -282,19 +295,6 @@
                                     <textarea type="text" id="bio" name="bio"></textarea>
                                     <h5 class="input-highlight"> <i class="fas fas fa-exclamation-circle"></i> the biography for the account(s), not required</h5>
                                 </div> -->
-                                <div class="radio-check-menu">
-                                    <label>Select server option</label>
-                                    <div>
-                                        <div class="radio-box">
-                                            <input type="radio" id="op-server-webapi" name="op-server-option" value="webapi" checked>
-                                            <label for="op-server-webapi">Web API</label>
-                                        </div>
-                                        <div class="radio-box">
-                                            <input type="radio" id="op-server-docker" name="op-server-option" value="emulator">
-                                            <label for="op-server-docker">Docker Emulator</label>
-                                        </div>
-                                    </div>
-                                </div>
                                 <input type="submit" value="Submit">
                             </form>
                         </div>
@@ -305,15 +305,32 @@
         <script>
             const opGender = document.getElementsByName('op-gender');
             const opGenderDetails = document.getElementById('op-gender-details');
-
             for (let i = 0; i < opGender.length; i++) {
-                opGender[i].addEventListener('change', function() {
-                    if (opGender[i].value === 'other') {
-                        opGenderDetails.style.display = 'block';
-                    } else {
+                opGender[i].addEventListener('change', () => {
+                    const docker = document.getElementById('op-server-docker');
+                    if (docker.checked) {
+                        if (opGender[i].value !== 'female') {
+                            opGender[i].checked = false;
+                            document.getElementById('op-gender-female').checked = true;
+                        }
+                        for (let j = 0; j < opGender.length; j++) {
+                            if (opGender[j].value !== 'female') {
+                                opGender[j].setAttribute('disabled', '');
+                            }
+                        }
                         opGenderDetails.style.display = 'none';
+                    } else {
+                        for (let j = 0; j < opGender.length; j++) {
+                            opGender[j].removeAttribute('disabled');
+                        }
+                        if (opGender[i].value === 'other') {
+                            opGenderDetails.style.display = 'block';
+                        } else {
+                            opGenderDetails.style.display = 'none';
+                        }
                     }
                 });
             }
+
         </script>
     {%endblock%}

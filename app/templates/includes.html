@@ -20,6 +20,107 @@
             const gcloudkey = "{{g.gcloudkey}}";
             const signup_url = "{%if g.page and g.page == 'signup-hidden'%}adminonlyallowedtosignup__________{%else%}signup{%endif%}"
         </script>
+            {%if g.page in ['schedules','create-accounts','account-page']%}
+                {%if g.page != 'account-page'%}
+                    <style>
+                        .map{
+                            position: absolute;
+                            bottom: 80%;
+                            left: -100px;
+                            width: 300px;
+                            height: 200px;
+                            border: 10px solid var(--soft-white);
+                    }
+                
+                    .map.show{
+                        display: block;
+                    }
+                
+                    .map.no-show{
+                        display: none;
+                    }
+                
+                    .double-field > .inputs > .map-btn > #toggle-map{
+                        margin: 20px auto;
+                        padding: 5px 16px;
+                        background: var(--soft-white);
+                        color: #333;
+                        border-radius: 20px;
+                
+                    }
+                
+                    @media screen  and (max-width:768.99px){
+                        .map{
+                            left: 0;
+                            /* bottom: 0;
+                            top: 90%; */
+                            width: 100%;
+                        }
+                
+                        .double-field > .inputs > .map-btn > #toggle-map{
+                            margin: 5px auto;
+                        }
+                    }
+                    </style>
+                {%endif%}
+                <script>
+                    const scriptElement = document.createElement('script');
+                    const mapUrl = `https://maps.googleapis.com/maps/api/js?key=${gcloudkey}&callback=initMap`;
+                    scriptElement.src = `${mapUrl}`;
+                    scriptElement.defer = true;
+                    document.body.appendChild(scriptElement);
+                </script>
+                <script>
+                    function initMap() {
+                        const usaBounds = new google.maps.LatLngBounds(
+                            new google.maps.LatLng(24.396308, -125.000000), // Southwest corner
+                            new google.maps.LatLng(49.384358, -66.934570) // Northeast corner
+                        );
+            
+                        const map = new google.maps.Map(document.getElementById("op-map"), {
+                            zoom: 4,
+                            center: { lat: 39.8283, lng: -98.5795 },
+                            restriction: {
+                                latLngBounds: usaBounds,
+                                strictBounds: true
+                            }
+                        });
+            
+                        // Create the initial InfoWindow.
+                        let infoWindow = new google.maps.InfoWindow({
+                            content: "Click the map to get Lat/Lng!",
+                            position: { lat: 39.8283, lng: -98.5795 }
+                        });
+            
+                        infoWindow.open(map);
+            
+                        // Configure the click listener.
+                        map.addListener("click", (mapsMouseEvent) => {
+                            // Close the current InfoWindow.
+                            infoWindow.close();
+            
+                            // Create a new InfoWindow.
+                            const latLng = mapsMouseEvent.latLng;
+                            const latitude = latLng.lat();
+                            const longitude = latLng.lng();
+            
+                            // Update the value of the input field.
+                            document.getElementById("op-location").value = `${latitude}, ${longitude}`;
+            
+                            infoWindow = new google.maps.InfoWindow({
+                                position: mapsMouseEvent.latLng
+                            });
+            
+                            infoWindow.setContent(JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2));
+                            infoWindow.open(map);
+                        });
+                    }
+            
+                    window.initMap = initMap;
+                </script>
+    
+           
+        {%endif%}
         <script src="{{ url_for('static', filename='js/configs.js') }}"></script>
         <script type="module" src="{{ url_for('static', filename='js/settings.mjs') }}"></script>
     </body>

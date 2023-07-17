@@ -460,6 +460,9 @@ td.actions{
 }
 
 @media screen and (max-width:472.99px){
+    .radio-check-menu > div{
+        flex-direction: column;
+    }
     .table-bottom > div, .table-bottom > div:last-child > a > i{
         font-size: 13px;
       }
