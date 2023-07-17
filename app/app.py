@@ -1156,6 +1156,8 @@ def account_action(action):
 				account_data['stats']['disliked'] = 0
 
 				account_data['status'] = account_stats['status']
+				for stat in account_data['stats']:
+					if stat < 0:account_data['status'] = 'BANNED'
 				accounts_ref.document(account_id).update(account_data)
 
 				return jsonify({'msg':'details updated successfully'}), 200
