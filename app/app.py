@@ -1408,7 +1408,7 @@ def create_accounts():
 		kwargs = {
 			'accounts_ref':accounts_ref,
 			'tasks_ref':tasks_ref,
-			'session':task_session,
+			'task_session':task_session,
 			'swipe_configs':swipe_configs,
 			'worker':panel_worker_key,
 			'SERVER':SERVER,
@@ -1439,51 +1439,56 @@ def create_accounts():
 				'server_option':op_server_option,
 				'nb_of_accounts':op_count if op_server_option == 'emulator' else 1,
 				'nb_of_images':profile_image_count,
-				'handles':[handles[:] for _ in range(op_count)],
-				'bios': [bios[:] for _ in range(op_count)],
-				'session':task_session,
+				'handles':handles,
+				'bios': bios,
+				'task_session':task_session,
 				'task_id':task_id,
 				'profile_images': images,
 				'verification_images':verification_images,
 				'age_range':age_range,
 				'gender':gender,
 				'gender_data':gender_data,
-				'names':[names[:] for _ in range(op_count)],
-				'cities': [cities[:] for _ in range(op_count)],
-				'proxies':[proxies[:] for _ in range(op_count)],
-				'user_agents':[user_agents[:] for _ in range(op_count)],
-				'accounts':[creds[:] for _ in range(op_count)],
+				'names':names,
+				'cities': cities,
+				'proxies':proxies,
+				'user_agents':user_agents,
+				'accounts':creds,
 				'url':platform_host,
 				'token': TOKEN
 			}
 
 			task = TASKS().create_accounts(**kwargs)
 			if task[0]:
-				tasks_ref.document(task_id).set({
-					'id':task_id,
-					'type': 'Account Creation Operation',
-					"start_time":firestore.SERVER_TIMESTAMP,
-					'status': task_status,
-					'progress': task_progress,
-					'running':True,
-					'failed':0,
-					'successful':0,
-					'task_count':op_count,
-					'created_accounts':[],
-					'swipe_config':swipe_configs,
-					'message':'Account creation just started'
-				})
-
-				session['MODEL']['TASKS'] = {
-					'account_task':{
+				task = task[1]
+				if task.status_code == 200:
+					tasks_ref.document(task_id).set({
 						'id':task_id,
-						'task_status':task_status,
+						'type': 'Account Creation Operation',
+						"start_time":firestore.SERVER_TIMESTAMP,
+						'status': task_status,
+						'progress': task_progress,
 						'running':True,
+						'failed':0,
+						'successful':0,
+						'task_count':op_count,
+						'created_accounts':[],
+						'swipe_config':swipe_configs,
+						'message':'Account creation just started'
+					})
+
+					session['MODEL']['TASKS'] = {
+						'account_task':{
+							'id':task_id,
+							'task_status':task_status,
+							'running':True,
+						}
 					}
-				}
-				return jsonify({'msg': 'Task started, please wait while it finishes'}), 200
+					return jsonify({'msg': 'Task started, please wait while it finishes'}), 200
+				else:
+					print(task.json())
+					return jsonify({'msg':task.json()['message']}),task.status_code
 			else:
-				return jsonify({'msg':task[1]}), 400
+				raise Exception(task[1])
 
 		account_task = Thread(target=TASKS().start_account_creation, kwargs=kwargs)
 		account_task.start()
