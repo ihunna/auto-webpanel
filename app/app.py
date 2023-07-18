@@ -1156,8 +1156,8 @@ def account_action(action):
 				account_data['stats']['disliked'] = 0
 
 				account_data['status'] = account_stats['status']
-				for stat in account_data['stats']:
-					if stat < 0:account_data['status'] = 'BANNED'
+				for key,value in account_data['stats'].items():
+					if key in ['likes','messages','matches'] and value < 0:account_data['status'] = 'BANNED'
 				accounts_ref.document(account_id).update(account_data)
 
 				return jsonify({'msg':'details updated successfully'}), 200
@@ -1900,7 +1900,7 @@ def update_task(type):
 				'successful':passes,
 				'failed': fails,
 				'created_accounts':created_accounts,
-				'progress':(completed / op_count) * 100
+				'progress':round((completed / op_count) * 100)
 				})
 			else:
 				tasks_ref.document(task_id).update({
@@ -1909,7 +1909,7 @@ def update_task(type):
 				'successful':passes,
 				'failed': fails,
 				'created_accounts':created_accounts,
-				'progress':(completed / op_count) * 100
+				'progress':round((completed / op_count) * 100)
 				})
 
 			return jsonify({'msg':'task updated successfully'}),200
