@@ -1465,7 +1465,7 @@ def create_accounts():
 						'successful':0,
 						'task_count':op_count,
 						'created_accounts':[],
-						'swipe_config':swipe_configs,
+						'swipe_configs':swipe_configs,
 						'message':'Account creation just started'
 					})
 
@@ -1861,8 +1861,9 @@ def update_task(type):
 				fails+=1
 				msg = f'{fails} account of {op_count} failed and {op_count - (fails+passes)} waiting to be created'
 			elif account_data['status'] in ['FULL','NO_FACIAL']:
-				passes += 1
-				created_accounts.append(account_id)
+				if account_id not in created_accounts:
+					passes += 1
+					created_accounts.append(account_id)
 				msg = f'{passes} account of {op_count} created successfully and {op_count - (passes+fails)} waiting to be created'
 			elif account_data['status'] == 'PROXY_ERROR':
 				msg = f'proxy error on {account_id}, retrying'
@@ -1881,15 +1882,15 @@ def update_task(type):
 								'duration':swipe_configs['swipe_duration'] * 60},
 								'schedule':swipe_configs['id'],
 								'schedule_name':swipe_configs['name'],
-								'session':swipe_configs['session']}
-						schedule = TASKS.create_scheduler(scheduler,url,swipe_configs,payload=payload)
+								'session':s_sess}
+						schedule = TASKS().create_scheduler(scheduler,url,swipe_configs,payload=payload)
 						print(f'\n {schedule[1]} \n')
 						if schedule[0]:msg += '\n\nSchedule created for successful accounts'
 						else: print(schedule[1])
 				except Exception as error:
 					print(error)
 					msg += '\n\nError creating schedule.'
-				msg = f'{passes} account of {op_count} created successfully and {op_count - (passes+fails)}'
+				msg = f'{passes} account of {op_count} created successfully'
 				tasks_ref.document(task_id).update({
 				'status':'failed' if passes == 0 else 'completed',
 				'running':False,
