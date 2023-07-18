@@ -1859,6 +1859,7 @@ def update_task(type):
 				msg = f'{fails} account of {op_count} failed and {op_count - (fails+passes)} waiting to be created'
 			elif account_data['status'] in ['FULL','NO_FACIAL']:
 				account_snap = accounts_ref.document(account_id).get()
+				account_data['last_updated'] = str(datetime.now())
 				if account_snap.exists:accounts_ref.document(account_id).update(account_data)
 				else:accounts_ref.document(account_id).set(account_data)
 				
