@@ -1484,9 +1484,7 @@ def create_accounts():
 						}
 					}
 					return jsonify({'msg': 'Task started, please wait while it finishes'}), 200
-				else:
-					print(task.json())
-					return jsonify({'msg':task.json()['message']}),task.status_code
+				else:return jsonify({'msg':task.json()['message']}),task.status_code
 			else:
 				raise Exception(task[1])
 
@@ -1826,7 +1824,10 @@ def update_task(type):
 		platform_ref = app.config['ADMINS_REF'].document(admin_id).collection('platforms').document(platform_id)
 		tasks_ref = platform_ref.collection('models').document(model_id).collection('tasks')
 		
-		panel_creds = app.config['PANEL_AUTH_CREDS'][session['PLATFORM']['name'].lower()]
+		platform = platform_ref.get()
+		if not platform_ref.exists:raise ValueError('platform does not exists')
+		platform = platform_ref.to_dict()
+		panel_creds = app.config['PANEL_AUTH_CREDS'][platform['name'].lower()]
 		panel_edit_configs = panel_creds['edit_configs']
 		panel_email = panel_creds['email']
 		panel_pass = panel_creds['password']
