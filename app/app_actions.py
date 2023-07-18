@@ -101,6 +101,7 @@ class TASKS:
 	def create_accounts(self,
 			account:int =None,
 			server_option:str = None,
+			session:dict=None,
 			nb_of_images:int=5,
 			nb_of_accounts:int = 1,
 			names:list=None,
@@ -127,6 +128,8 @@ class TASKS:
 				}
 
 				json_data = {
+					'session':session,
+					'task_id':task_id,
 					'server_option':server_option,
 					'nb_of_accounts':nb_of_accounts,
 					'names':names,
@@ -145,9 +148,11 @@ class TASKS:
 				}
 
 				flow = session.put(URL,json=json_data)
-				if flow.status_code > 299:return False,flow.text
+				if flow.status_code > 299 and flow.status_code <= 400:return False,flow.json()['message']
+				elif flow.status_code > 400:return False,flow.text
+
+				if server_option == 'emulator':return flow.json()
 				
-				wait = 900 if server_option == 'emulator' else 60
 				print(f'\nWaiting for account to be created for: {account}')
 				status = 'PENDING_CREATION'
 				account_id = flow.json()['accounts'][0].get('id')
@@ -155,7 +160,7 @@ class TASKS:
 					flow = session.get(f"{URL}/{account_id}")
 					if flow.status_code  > 299:return False,flow.text
 					status = flow.json()['status']
-					time.sleep(wait)
+					time.sleep(60)
 				account_details = flow.json()
 				print(f'\nAccount created for: {account}')
 				return True,account_details
@@ -166,6 +171,7 @@ class TASKS:
 	def start_account_creation(self,
 			accounts_ref=None,
 			tasks_ref=None,
+			session:dict=None,
 			swipe_configs:dict=None,
 			worker:str = None,
 			SERVER:str = None,
@@ -197,6 +203,8 @@ class TASKS:
 
 		try:
 			kwargs=[{
+				'session':session,
+				'task_id':task_id,
 				'account':f'account {i + 1}',
 				'server_option':server_option,
 				'nb_of_accounts':nb_of_accounts,
