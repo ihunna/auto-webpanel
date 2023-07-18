@@ -1374,13 +1374,6 @@ def create_accounts():
 		swipe_configs['swipe_session_count'] = random.randint(int(swipe_session_count_start),int(swipe_session_count_end))
 
 		swipe_configs['first_swipe'] = True
-
-		swipe_configs['session'] = {
-			'admin':session['ADMIN']['id'],
-			'platform':platform_id,
-			'model':model_id
-		}
-
 		TOKEN = api.get_token(panel_email, panel_pass, panel_key)
 		if not TOKEN[0]:
 			return jsonify({'msg': TOKEN[1]}), 403
@@ -1823,15 +1816,6 @@ def update_task(type):
 		admin_id,platform_id,model_id = s_sess['admin'],s_sess['platform'],s_sess['model']
 		platform_ref = app.config['ADMINS_REF'].document(admin_id).collection('platforms').document(platform_id)
 		tasks_ref = platform_ref.collection('models').document(model_id).collection('tasks')
-		
-		platform = platform_ref.get()
-		if not platform_ref.exists:raise ValueError('platform does not exists')
-		platform = platform_ref.to_dict()
-		panel_creds = app.config['PANEL_AUTH_CREDS'][platform['name'].lower()]
-		panel_edit_configs = panel_creds['edit_configs']
-		panel_email = panel_creds['email']
-		panel_pass = panel_creds['password']
-		panel_key = panel_creds['key']
 
 		if type in ['swiping','swipe']:
 			msg = report['result']
@@ -1850,91 +1834,82 @@ def update_task(type):
 						'swipe_lefts':swipe_lefts,
 						'message': f'Task completed with {passes} successful swipes'
 			})
-			return jsonify({'msg':'task updated successfully'})
+			return jsonify({'msg':'task updated successfully'}),200
 		
 		elif type == 'account':
 			accounts_ref = platform_ref.collection('models').document(model_id).collection('accounts')
 			account_id = report['account_id']
-
-			TOKEN = api.get_token(panel_email, panel_pass, panel_key)
-			if not TOKEN[0]:
-				return jsonify({'msg': TOKEN[1]}), 403
-			TOKEN = TOKEN[1]['idToken']
-
-			account_snapshot = api.get_profile(panel_creds['url'],account_id,TOKEN)
-
-			if account_snapshot[0]:
-				account_data = account_snapshot[1]
-				if account_data.status_code > 200 and account_data.status_code <= 400:
-					return jsonify('msg',account_data.json()['message']), account_data.status_code
+			account_data = report['account_details']
 				
-				exists = accounts_ref.document(account_id).get().exists
+			account_snap = accounts_ref.document(account_id).get()
+			if account_snap.exists:accounts_ref.document(account_id).update(account_data)
+			else:accounts_ref.document(account_id).set(account_data)
+			
+			task = tasks_ref.document(task_id).get()
+			if not task.exists:raise ValueError('task id does not exist')
 
-				if exists:accounts_ref.document(account_id).update(account_data)
-				else:accounts_ref.document(account_id).set(account_data)
-				
-				task = tasks_ref.document(task_id).get()
-				if not task.exists:raise ValueError('task id does not exist')
+			task = task.to_dict()
 
-				task = task.to_dict()
+			passes = task['successful']
+			fails = task['failed']
+			op_count = task['task_count']
+			created_accounts = task['created_accounts']
+			swipe_configs = task['swipe_configs']
 
-				passes = task['successful']
-				fails = task['failed']
-				op_count = task['task_count']
-				created_accounts = task['created_accounts']
-				swipe_configs = task['swipe_configs']
-
+			msg = f'{passes} account of {op_count} created successfully and {op_count - (passes+fails)} waiting to be created'
+			if account_data['status'] == 'CREATION_ERROR':
+				fails+=1
+				msg = f'{fails} account of {op_count} failed and {op_count - (fails+passes)} waiting to be created'
+			elif account_data['status'] in ['FULL','NO_FACIAL']:
+				passes += 1
+				created_accounts.append(account_id)
 				msg = f'{passes} account of {op_count} created successfully and {op_count - (passes+fails)} waiting to be created'
-				if account_data['status'] == 'CREATION_ERROR':
-					fails+=1
-					msg = f'{fails} account of {op_count} failed and {op_count - (fails+passes)} waiting to be created'
-				elif account_data['status'] in ['FULL','NO_FACIAL']:
-					passes += 1
-					msg = f'{passes} account of {op_count} created successfully and {op_count - (passes+fails)} waiting to be created'
-				elif account_data['status'] == 'PROXY_ERROR':
-					msg = f'proxy error on {account_id}, retrying'
+			elif account_data['status'] == 'PROXY_ERROR':
+				msg = f'proxy error on {account_id}, retrying'
 
-				completed = passes + fails
-				if completed == op_count:
-					try:
-						if len(created_accounts) >= 1:
-							print('\nCREATING SCHEDULES\n')
-							scheduler = Scheduler()
-							url = f"https://{app.config['SERVER']}/start-swipe"
-							payload = {'data':{
-									'accounts':created_accounts,
-									'min_wait':swipe_configs['min_wait'],
-									'max_wait':swipe_configs['max_wait'],
-									'duration':swipe_configs['swipe_duration'] * 60},
-									'schedule':swipe_configs['id'],
-									'schedule_name':swipe_configs['name'],
-									'session':swipe_configs['session']}
-							schedule = TASKS.create_scheduler(scheduler,url,swipe_configs,payload=payload)
-							print(f'\n {schedule[1]} \n')
-							if schedule[0]:msg += '\n\nSchedule created for successful accounts'
-							else: print(schedule[1])
-					except Exception as error:
-						print(error)
-						msg += '\n\nError creating schedule.'
-					msg = f'{passes} account of {op_count} created successfully and {op_count - (passes+fails)}'
-					tasks_ref.document(task_id).update({
-					'status':'failed' if passes == 0 else 'completed',
-					'running':False,
-					'message':msg,
-					'successful':passes,
-					'failed': fails,
-					'progress':(completed / op_count) * 100
-					})
-				else:
-					tasks_ref.document(task_id).update({
-					'running':False,
-					'message':msg,
-					'successful':passes,
-					'failed': fails,
-					'progress':(completed / op_count) * 100
-					})
+			completed = passes + fails
+			if completed == op_count:
+				try:
+					if len(created_accounts) >= 1:
+						print('\nCREATING SCHEDULES\n')
+						scheduler = Scheduler()
+						url = f"https://{app.config['SERVER']}/start-swipe"
+						payload = {'data':{
+								'accounts':created_accounts,
+								'min_wait':swipe_configs['min_wait'],
+								'max_wait':swipe_configs['max_wait'],
+								'duration':swipe_configs['swipe_duration'] * 60},
+								'schedule':swipe_configs['id'],
+								'schedule_name':swipe_configs['name'],
+								'session':swipe_configs['session']}
+						schedule = TASKS.create_scheduler(scheduler,url,swipe_configs,payload=payload)
+						print(f'\n {schedule[1]} \n')
+						if schedule[0]:msg += '\n\nSchedule created for successful accounts'
+						else: print(schedule[1])
+				except Exception as error:
+					print(error)
+					msg += '\n\nError creating schedule.'
+				msg = f'{passes} account of {op_count} created successfully and {op_count - (passes+fails)}'
+				tasks_ref.document(task_id).update({
+				'status':'failed' if passes == 0 else 'completed',
+				'running':False,
+				'message':msg,
+				'successful':passes,
+				'failed': fails,
+				'created_accounts':created_accounts,
+				'progress':(completed / op_count) * 100
+				})
+			else:
+				tasks_ref.document(task_id).update({
+				'running':False,
+				'message':msg,
+				'successful':passes,
+				'failed': fails,
+				'created_accounts':created_accounts,
+				'progress':(completed / op_count) * 100
+				})
 
-	
+			return jsonify({'msg':'task updated successfully'}),200
 	except ValueError as error:
 		print(error)
 		return jsonify({'msg':f'{error}'}),400
