@@ -1841,9 +1841,6 @@ def update_task(type):
 			account_id = report['account_id']
 			account_data = report['account_details']
 				
-			account_snap = accounts_ref.document(account_id).get()
-			if account_snap.exists:accounts_ref.document(account_id).update(account_data)
-			else:accounts_ref.document(account_id).set(account_data)
 			
 			task = tasks_ref.document(task_id).get()
 			if not task.exists:raise ValueError('task id does not exist')
@@ -1861,6 +1858,10 @@ def update_task(type):
 				fails+=1
 				msg = f'{fails} account of {op_count} failed and {op_count - (fails+passes)} waiting to be created'
 			elif account_data['status'] in ['FULL','NO_FACIAL']:
+				account_snap = accounts_ref.document(account_id).get()
+				if account_snap.exists:accounts_ref.document(account_id).update(account_data)
+				else:accounts_ref.document(account_id).set(account_data)
+				
 				if account_id not in created_accounts:
 					passes += 1
 					created_accounts.append(account_id)
