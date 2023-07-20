@@ -744,7 +744,7 @@ def schedules():
 
 	elif action == 'next':
 		if action_type == 'edit':
-			day_specs = session['MODEL']['SCHEDULE']['day_specs']
+			day_specs = json.loads(session['MODEL']['SCHEDULE']['day_specs'])
 			return render_template('schedules.html', action=action, s_id=s_id, action_type=action_type,
 								   day_specs=day_specs, next=next,interval=interval)
 
@@ -910,9 +910,10 @@ def scheduler(action):
 				}
 
 				if date_interval <= 1:
+					session['MODEL']['SCHEDULE']['day_specs'] = []
 					schedule_ref = schedules_ref.document(s_id)
 					schedule = session['MODEL']['SCHEDULE']
-					schedule['day_specs'] = json.dumps(day_specs)
+					schedule['day_specs'] = json.dumps([])
 					schedule['daily_percent'] = json.dumps([{'day':1,'swipe_percent':swipe_percent}])
 					schedule_ref.update(schedule)
 				return jsonify({'msg': 'schedule updated successfully, add date specs', 'schedule': s_id, 'action': 'finish-schedule', 'action_type': 'edit', 'next': next,'date_interval':date_interval}), 200
@@ -1456,6 +1457,7 @@ def create_accounts():
 				if task.status_code == 200:
 					tasks_ref.document(task_id).set({
 						'id':task_id,
+						'server':op_server_option,
 						'type': 'Account Creation Operation',
 						"start_time":firestore.SERVER_TIMESTAMP,
 						'status': task_status,
@@ -1480,13 +1482,14 @@ def create_accounts():
 				else:return jsonify({'msg':task.json()['message']}),task.status_code
 			else:
 				raise Exception(task[1])
-
-		account_task = Thread(target=TASKS().start_account_creation, kwargs=kwargs)
+		task = TASKS()
+		account_task = Thread(target=task.start_account_creation, kwargs=kwargs)
 		account_task.start()
 
 		if account_task.is_alive():
 			tasks_ref.document(task_id).set({
 				'id':task_id,
+				'server':op_server_option,
 				'type': 'Account Creation Operation',
 				"start_time":firestore.SERVER_TIMESTAMP,
 				'status': task_status,
@@ -1919,7 +1922,34 @@ def update_task(type):
 	except Exception as error:
 		print(error)
 		return jsonify({'msg':'error updating task'}), 500
+	
+@app.route('/cancel-task/<type>/<task_id>',methods=['POST'])
+def cancel_task(type,task_id):
+	try:
+		admin_id,platform_id,model_id = session['ADMIN']['id'],session['PLATFORM']['id'],session['MODEL']['id']
+		platform_ref = app.config['ADMINS_REF'].document(admin_id).collection('platforms').document(platform_id)
+		tasks_ref = platform_ref.collection('models').document(model_id).collection('tasks')
+		
+		type = type if '_task' in type else f'{type}_task'
+		session_task = session['MODEL']['TASKS'][type]
+		if task_id != session_task['id']:return jsonify({'msg':'task is not session'}), 400
 
+		session_task['running'] = False,
+		session_task['status'] = 'cancelled'
+		
+		task_ref = tasks_ref.document(task_id).get()
+		if not task_ref.exists:return jsonify({'msg':f'task id {task_id} not record'}),400
+		tasks_ref.document(task_id).update({
+			'status':'cancelled',
+			'running':False,
+			'message':'Task cancelled waiting for any already running tasks to finish'
+		})
+
+		return jsonify({'msg':f'task with the id {task_id} is cancelled'}),200
+	except Exception as error:
+		print(error)
+		return jsonify({'msg':"couldn't cancel operation"})
+	
 @app.route('/account-configs',methods=['GET'])
 @login_required
 @blocked

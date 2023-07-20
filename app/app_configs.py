@@ -6,7 +6,7 @@ from dateutil.parser import parse
 from PIL import Image
 from tempfile import mkdtemp
 
-from threading import Thread
+from threading import Thread,Event
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from uszipcode import SearchEngine
 from dotenv import load_dotenv,dotenv_values, set_key

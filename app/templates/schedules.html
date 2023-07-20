@@ -470,7 +470,7 @@
                                     <div class="inputs">
                                         <div>
                                             <label for="s-day-1">Days</label>
-                                            <input type="text" id="s-day-1" name="s-day" value="{%if interval / 2 > 0%}1 - 2{%else%}{{interval}}{%endif%}" required>
+                                            <input type="text" id="s-day-1" name="s-day" value="{%if interval // 2 > 0%}1 - 2{%else%}{{interval}} - {{interval}}{%endif%}" required>
                                             <h5 class="input-highlight"> 
                                                 <i class="fas fas fa-exclamation-circle"></i> 
                                                 enter a set of days e.g 1 - 2

@@ -858,6 +858,33 @@ li >
 .op-holder > .task-display > .task-header{
     margin: 0 auto 10px auto;
 }
+.op-holder > .task-display > .task-header.running{
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    margin: 0 auto 20px auto;
+    width: 100%;
+    padding: 5px 20px;
+}
+
+.op-holder > .task-display > .task-header > h3{
+    margin: auto auto auto 0;
+}
+
+.op-holder > .task-display > .task-header > .task-action{
+    margin: auto 0 auto auto;
+    padding: 4px 16px 6.5px 16px;
+    border-radius: 20px;
+    width: fit-content;
+    background: var(--danger);
+    color: var(--soft-white);
+    font-weight: 500;
+}
+
+.op-holder > .task-display > .task-header > .task-action:hover{
+    background: var(--soft-white);
+    color: #333;
+    box-shadow: none;
+}
 
 .op-holder > .task-display > .detail{
     display: grid;
@@ -867,6 +894,11 @@ li >
     border-bottom: 2px solid var(--soft-white);
     padding: 3px 10px;
 }
+
+/* .op-holder > .task-display > .detail.status{
+    padding-top: 10px;
+    border-top: 2px solid var(--soft-white);
+} */
 
 .op-holder > .task-display > .detail > .key{
     text-align: left;
@@ -886,6 +918,7 @@ li >
 .op-holder > .task-display > .detail.message{
     grid-template-columns: repeat(1,1fr);
     border: none;
+    width: 100%;
 }
 
 .op-holder > .task-display > .detail.message > .key{
@@ -902,11 +935,13 @@ li >
     padding: 5px;
     color: #333;
     margin-top: 5px;
-    border-radius: 20px;
+    border-radius: 5px;
     padding: 10px 16px;
     text-align: center;
     font-weight: 500;
-    max-width: 90%;
+    width: 100%;
+    height: auto;
+    white-space: wrap;
 }
 
 .op-holder > .op-card{

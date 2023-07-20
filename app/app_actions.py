@@ -1,81 +1,81 @@
-from app_configs import httpx,SearchEngine,time,random,ThreadPoolExecutor,as_completed,json,datetime
+from app_configs import httpx,SearchEngine,time,random,ThreadPoolExecutor,as_completed,json,datetime,Thread,Event
 from scheduler import Scheduler
 
 
+def get_location(self,zipcode):
+	try:
+		states = {
+			"AL": "Alabama",
+			"AK": "Alaska",
+			"AZ": "Arizona",
+			"AR": "Arkansas",
+			"CA": "California",
+			"CO": "Colorado",
+			"CT": "Connecticut",
+			"DE": "Delaware",
+			"FL": "Florida",
+			"GA": "Georgia",
+			"HI": "Hawaii",
+			"ID": "Idaho",
+			"IL": "Illinois",
+			"IN": "Indiana",
+			"IA": "Iowa",
+			"KS": "Kansas",
+			"KY": "Kentucky",
+			"LA": "Louisiana",
+			"ME": "Maine",
+			"MD": "Maryland",
+			"MA": "Massachusetts",
+			"MI": "Michigan",
+			"MN": "Minnesota",
+			"MS": "Mississippi",
+			"MO": "Missouri",
+			"MT": "Montana",
+			"NE": "Nebraska",
+			"NV": "Nevada",
+			"NH": "New Hampshire",
+			"NJ": "New Jersey",
+			"NM": "New Mexico",
+			"NY": "New York",
+			"NC": "North Carolina",
+			"ND": "North Dakota",
+			"OH": "Ohio",
+			"OK": "Oklahoma",
+			"OR": "Oregon",
+			"PA": "Pennsylvania",
+			"RI": "Rhode Island",
+			"SC": "South Carolina",
+			"SD": "South Dakota",
+			"TN": "Tennessee",
+			"TX": "Texas",
+			"UT": "Utah",
+			"VT": "Vermont",
+			"VA": "Virginia",
+			"WA": "Washington",
+			"WV": "West Virginia",
+			"WI": "Wisconsin",
+			"WY": "Wyoming"
+		}
+
+		search = SearchEngine()
+		location = search.by_zipcode(zipcode=zipcode)
+		city = location.major_city
+		state = states.get(location.state)
+		area_code = str(location.area_code_list).split(',')
+		area_code = random.choice(area_code)
+
+		locaion = {
+			'city':city,
+			'state':state,
+			'area_code':area_code
+		}
+		return True,locaion
+	except Exception as error:
+		return False, error
+
 class TASKS:
-	def __init__(self) -> None:
-		pass
-	
-	def get_location(self,zipcode):
-		try:
-			states = {
-				"AL": "Alabama",
-				"AK": "Alaska",
-				"AZ": "Arizona",
-				"AR": "Arkansas",
-				"CA": "California",
-				"CO": "Colorado",
-				"CT": "Connecticut",
-				"DE": "Delaware",
-				"FL": "Florida",
-				"GA": "Georgia",
-				"HI": "Hawaii",
-				"ID": "Idaho",
-				"IL": "Illinois",
-				"IN": "Indiana",
-				"IA": "Iowa",
-				"KS": "Kansas",
-				"KY": "Kentucky",
-				"LA": "Louisiana",
-				"ME": "Maine",
-				"MD": "Maryland",
-				"MA": "Massachusetts",
-				"MI": "Michigan",
-				"MN": "Minnesota",
-				"MS": "Mississippi",
-				"MO": "Missouri",
-				"MT": "Montana",
-				"NE": "Nebraska",
-				"NV": "Nevada",
-				"NH": "New Hampshire",
-				"NJ": "New Jersey",
-				"NM": "New Mexico",
-				"NY": "New York",
-				"NC": "North Carolina",
-				"ND": "North Dakota",
-				"OH": "Ohio",
-				"OK": "Oklahoma",
-				"OR": "Oregon",
-				"PA": "Pennsylvania",
-				"RI": "Rhode Island",
-				"SC": "South Carolina",
-				"SD": "South Dakota",
-				"TN": "Tennessee",
-				"TX": "Texas",
-				"UT": "Utah",
-				"VT": "Vermont",
-				"VA": "Virginia",
-				"WA": "Washington",
-				"WV": "West Virginia",
-				"WI": "Wisconsin",
-				"WY": "Wyoming"
-			}
-
-			search = SearchEngine()
-			location = search.by_zipcode(zipcode=zipcode)
-			city = location.major_city
-			state = states.get(location.state)
-			area_code = str(location.area_code_list).split(',')
-			area_code = random.choice(area_code)
-
-			locaion = {
-				'city':city,
-				'state':state,
-				'area_code':area_code
-			}
-			return True,locaion
-		except Exception as error:
-			return False, error
+	def __init__(self):
+		self.cancelled = False
 
 	def create_scheduler(self,scheduler,host,swipe_configs,payload:dict={}):
 		try:
@@ -107,6 +107,7 @@ class TASKS:
 			names:list=None,
 			handles:list=None,
 			bios:list = None,
+			tasks_ref=None,
 			task_id:str = None,
 			profile_images:list = None,
 			verification_images:dict = None,
@@ -146,6 +147,8 @@ class TASKS:
 					'user_agents':user_agents,
 					'accounts':accounts,
 				}
+
+				if self.is_cancelled(tasks_ref.document(task_id)):return False,'task cancelled'
 
 				flow = session.put(URL,json=json_data)
 				if server_option == 'emulator':
@@ -206,6 +209,7 @@ class TASKS:
 			kwargs=[{
 				'task_session':task_session,
 				'task_id':task_id,
+				'tasks_ref':tasks_ref,
 				'account':f'account {i + 1}',
 				'server_option':server_option,
 				'nb_of_accounts':nb_of_accounts,
@@ -229,8 +233,9 @@ class TASKS:
 			with ThreadPoolExecutor(max_workers=max_workers) as executor:
 				futures = []
 				for kwargs in kwargs:
-					future = executor.submit(self.create_accounts, **kwargs)
-					futures.append(future)
+					if not self.is_cancelled(tasks_ref.document(task_id)):
+						future = executor.submit(self.create_accounts, **kwargs)
+						futures.append(future)
 
 				for future in as_completed(futures):
 					result = future.result()
@@ -241,11 +246,13 @@ class TASKS:
 						if account.get('status') == 'CREATION_ERROR':
 							fails += 1
 							msg = f'{fails} account of {op_count} failed and {op_count - (fails+passes)} waiting to be created'
+							error = account.get('message')
 							tasks_ref.document(task_id).update({
 								'message':msg,
 								'progress':(completed / op_count) * 100,
 								'successful':passes,
-								'failed':fails
+								'failed':fails,
+								'error_message':error
 								})
 							continue
 						account['last_updated'] = str(datetime.now())
@@ -262,7 +269,7 @@ class TASKS:
 							})
 						
 					else:
-						fails += 1
+						if result[1] != 'task cancelled':fails += 1
 						msg = f'{fails} account of {op_count} failed and {op_count - (fails+passes)} waiting to be created'
 						tasks_ref.document(task_id).update({
 							'message':msg,
@@ -271,7 +278,7 @@ class TASKS:
 							'failed':fails
 							})
 						print(result[1])
-			task_status ='completed'
+			task_status ='completed' if not self.is_cancelled(tasks_ref.document(task_id)) else 'cancelled'
 			msg = f'Task completed, {passes} accounts created'
 		except Exception as error:
 			print(error)
@@ -311,11 +318,11 @@ class TASKS:
 			return success,msg 
 
 	def add_account(self,
-      proxies:list = None,
-      email: str = None,
-      password: str= None,
-      url:str = None,
-      token:str = None):
+	  proxies:list = None,
+	  email: str = None,
+	  password: str= None,
+	  url:str = None,
+	  token:str = None):
 		URL = f'{url}/account/login_and_create_account'
 		try:
 			with httpx.Client(timeout=httpx.Timeout(200.0)) as session:
@@ -347,15 +354,15 @@ class TASKS:
 			return False,'Adding account failed',error
 
 	def start_add_acccounts(self,
-      proxies: str= None,
-      accounts_ref=None,
-      op_count: int = None,
-      tasks_ref=None,
-      task_id:str = None,
-      max_workers:int = 10,
-      email_password_pairs: list = None,
-      url:str=None,
-      token:str = None):
+	  proxies: str= None,
+	  accounts_ref=None,
+	  op_count: int = None,
+	  tasks_ref=None,
+	  task_id:str = None,
+	  max_workers:int = 10,
+	  email_password_pairs: list = None,
+	  url:str=None,
+	  token:str = None):
   
 		print('ACCOUNT UPLOAD STARTED')
 
@@ -437,3 +444,8 @@ class TASKS:
 			'failed': already_present+banned+proxy_error
 			})
 			return msg
+	
+	def is_cancelled(self,task_ref):
+		task_state = task_ref.get()
+		if task_state.to_dict()['status'].lower() == 'cancelled':return True
+		return False

@@ -315,6 +315,17 @@ td.actions{
         font-size: 13px;
     }
 
+    .op-holder > .task-display > .task-header.running{
+        grid-template-columns:repeat(1,1fr);
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .op-holder > .task-display > .task-header.running > h3,
+    .op-holder > .task-display > .task-header.running >.task-action{
+        margin: auto;
+    }
+
     .navbar > .user-card{
         position: fixed;
         top: 0;
@@ -471,6 +482,8 @@ td.actions{
     .main-container > .image-holder > .images > li{
         height: 150px;
     }
+
+    
 }
 
 @media screen and (max-width:472.99px){

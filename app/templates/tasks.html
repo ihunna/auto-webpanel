@@ -13,14 +13,22 @@
                     <a href="/accounts" class="eleveted-a">
                         accounts
                     </a>
-                    <a href="/create-accounts" class="eleveted-a">
-                        create accounts
-                    </a>
                     {%if action and action == 'view-task'%}
                         <a href="/tasks" class="eleveted-a">
                             tasks
                         </a>
+                        <a href="" class="eleveted-a action"
+                            data-action-id="{{task_status.id}}" 
+                            data-action="/account_task/{{task_status.id}}" 
+                            data-action-prompt="do you want to cancel this operation?" 
+                            data-action-message="cancel operation, please wait..." 
+                            data-url="/cancel-task">
+                            cancel task
+                        </a>
                     {%else%}
+                        <a href="/create-accounts" class="eleveted-a">
+                            create accounts
+                        </a>
                         <a href="#" class="eleveted-a">
                             sort by
                         </a>
@@ -31,23 +39,49 @@
             <div class="main-container">
                 {%if action and action == 'view-task'%}
                 <div class="holder op-holder task-holder t-d-holder scroll">
-                   <div class="task-display">
-                        <div class="task-header">
-                            <h3>
-                                {{task_status.type}}
-                            </h3>
-                        </div>
+                   <div class="task-display  scroll">
+                        {%if task_status.running and task_status.type|lower == 'account creation operation'%}
+                            <div class="task-header running">
+                                <h3>
+                                    {{task_status.type}}
+                                </h3>
+                                <div class="task-action eleveted-a action"
+                                    data-action-id="{{task_status.id}}" 
+                                    data-action="/account_task/{{task_status.id}}" 
+                                    data-action-prompt="do you want to cancel this operation?" 
+                                    data-action-message="cancel operation, please wait..." 
+                                    data-url="/cancel-task">
+                                    cancel operation
+                                </div>
+                            </div>
+                        {%else%}
+                            <div class="task-header">
+                                <h3>
+                                    {{task_status.type}}
+                                </h3>
+                            </div>
+                        {%endif%}
                         <div class="detail status">
                            <div class="key">
                                 Status
                            </div>
                            <div class="val {%if task_status.status|lower == 'running'%}bg-warning
-                            {%elif task_status.status|lower == 'failed'%}bg-danger
+                            {%elif task_status.status|lower in ['failed','cancelled']%}bg-danger
                             {%elif task_status.status|lower == 'completed'%}bg-success
                             {%endif%}">
                                 {{task_status.status|capitalize}}
                            </div>
                         </div>
+                        {%if task_status.server%}
+                            <div class="detail">
+                                <div class="key">
+                                    Server
+                                </div>
+                                <div class="val">
+                                    {{task_status.server|capitalize}}
+                                </div>
+                            </div>
+                        {%endif%}
                         <div class="detail">
                             <div class="key">
                                  Start at
@@ -80,6 +114,13 @@
                                  {{task_status.message}}
                              </div>
                          </div>
+                         {%if task_status.error_message and task_status.error_message != ''%}
+                            <div class="detail  message">
+                                <div class="val scroll">
+                                    {{task_status.error_message}}
+                                </div>
+                            </div>
+                        {%endif%}
                    </div>
                 </div>
                 {%else%}
@@ -113,7 +154,7 @@
                                     <div>
                                         <progress id="progressbar" class="success" value="{{task.progress}}" max="100"></progress>
                                     </div>
-                                {%elif task.status|lower == "failed"%}
+                                {%elif task.status|lower in ['failed','cancelled']%}
                                 <span class="op-spinner bg-danger">
                                     <i class="fa fa-close"></i>
                                 </span>
