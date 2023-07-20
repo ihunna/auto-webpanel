@@ -300,7 +300,7 @@ class TASKS:
 							'session':task_session}
 					schedule = self.create_scheduler(scheduler,url,swipe_configs,payload=payload)
 					print(f'\n {schedule[1]} \n')
-					if schedule[0]:msg += '\n\nSchedule created for successful accounts'
+					if schedule[0]:msg += '\n\n  and schedule created for successful accounts'
 					else: print(schedule[1])
 			except Exception as error:
 				print(error)

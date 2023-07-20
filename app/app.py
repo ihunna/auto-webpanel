@@ -1924,6 +1924,10 @@ def update_task(type):
 		return jsonify({'msg':'error updating task'}), 500
 	
 @app.route('/cancel-task/<type>/<task_id>',methods=['POST'])
+@login_required
+@blocked
+@check_platform
+@check_model
 def cancel_task(type,task_id):
 	try:
 		admin_id,platform_id,model_id = session['ADMIN']['id'],session['PLATFORM']['id'],session['MODEL']['id']
